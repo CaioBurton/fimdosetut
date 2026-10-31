@@ -66,7 +66,7 @@ export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess
           value={tipo}
           aria-label="Tipo de problema"
           onChange={(e) => setTipo(e.target.value as TipoProblema)}
-          className="w-full rounded-xl border border-brand-green/30 bg-white px-3 py-3 text-base text-brand-green-dark"
+          className="input-brand"
         >
           {TIPOS.map((t) => (
             <option key={t} value={t}>
@@ -86,7 +86,7 @@ export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess
           onChange={(e) => setDescricao(e.target.value)}
           rows={3}
           placeholder="Descreva o que está acontecendo..."
-          className="w-full rounded-xl border border-brand-green/30 bg-white px-3 py-3 text-base text-brand-green-dark"
+          className="input-brand !py-3"
         />
       </div>
 

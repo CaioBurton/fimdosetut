@@ -18,12 +18,26 @@ export function ListaPage() {
 
   return (
     <AppLayout title="Denúncias">
-      <div className="space-y-3 p-4">
+      <section className="relative h-[170px] overflow-hidden border-b-[3px] border-brand-green bg-brand-green">
+        <img
+          src="/brand/onibus-bandeira.svg"
+          alt=""
+          aria-hidden="true"
+          className="tom-sobre-tom absolute -bottom-3.5 -right-16 w-[330px] max-w-none"
+        />
+        <div className="relative flex flex-col gap-2 p-5 text-brand-cream">
+          <h2 className="ttl text-4xl">Denúncias</h2>
+          <p className="max-w-[220px] text-sm font-medium leading-snug">
+            Ônibus quebrados avisados por quem usa o transporte todo dia.
+          </p>
+        </div>
+      </section>
+      <div className="space-y-4 p-4">
         <select
           value={filtroZona}
           aria-label="Filtrar por zona"
           onChange={(e) => setFiltroZona(e.target.value as Zona | 'todas')}
-          className="w-full rounded-xl border border-brand-green/30 bg-white px-3 py-2.5 text-sm text-brand-green-dark"
+          className="input-brand !min-h-11 !text-sm"
         >
           <option value="todas">Todas as zonas</option>
           {ORDEM_ZONAS.map((zona) => (
@@ -35,10 +49,10 @@ export function ListaPage() {
 
         {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
 
-        {loading && <p className="text-center text-brand-green-dark/60">Carregando...</p>}
+        {loading && <p className="text-center text-brand-green-dark/70">Carregando...</p>}
 
         {!loading && !error && filtradas.length === 0 && (
-          <p className="py-10 text-center text-brand-green-dark/60">
+          <p className="py-10 text-center text-brand-green-dark/70">
             Nenhuma denúncia encontrada.
           </p>
         )}

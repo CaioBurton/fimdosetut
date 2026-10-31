@@ -25,7 +25,7 @@ body,
 
 body {
   background-color: var(--color-brand-cream);
-  color: #141a10;
+  color: var(--color-brand-green-dark);
   font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
 }
@@ -39,4 +39,42 @@ h3,
 
 * {
   box-sizing: border-box;
+}
+
+/* ---- Identidade visual: estética de cartaz ---- */
+.ttl {
+  font-family: 'Proxima Nova', system-ui, sans-serif;
+  font-style: italic;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+}
+
+.card-brand {
+  background: #fff;
+  border: 2px solid var(--color-brand-green);
+  border-radius: 2px;
+  box-shadow: 4px 4px 0 var(--color-brand-green);
+}
+
+.input-brand {
+  width: 100%;
+  min-height: 48px;
+  background: #fff;
+  border: 2px solid var(--color-brand-green);
+  border-radius: 2px;
+  padding: 0 12px;
+  font-size: 16px;
+  color: var(--color-brand-green-dark);
+}
+
+.input-brand:focus {
+  outline: 3px solid #307800;
+  outline-offset: 1px;
+}
+
+.tom-sobre-tom {
+  filter: brightness(1.7);
+  opacity: 0.9;
 }
