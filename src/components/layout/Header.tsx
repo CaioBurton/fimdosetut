@@ -13,7 +13,7 @@ export function Header({ title }: { title: string }) {
           className="block h-12 w-auto max-w-none"
         />
       </Link>
-      <h1 className="ttl min-w-0 flex-1 truncate text-right text-xl">{title}</h1>
+      <h1 className="ttl min-w-0 flex-1 truncate py-1 pr-1.5 text-right text-xl">{title}</h1>
       {user && (
         <button
           onClick={() => signOut()}

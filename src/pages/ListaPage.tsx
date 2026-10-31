@@ -3,7 +3,7 @@ import { AppLayout } from '../components/layout/AppLayout'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { useDenuncias } from '../hooks/useDenuncias'
 import { useLinhas } from '../hooks/useLinhas'
-import { ZONA_LABELS, type Zona } from '../types'
+import { ZONA_COLORS, ZONA_LABELS, type Zona } from '../types'
 
 const ORDEM_ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
 
@@ -33,19 +33,31 @@ export function ListaPage() {
         </div>
       </section>
       <div className="space-y-4 p-4">
-        <select
-          value={filtroZona}
-          aria-label="Filtrar por zona"
-          onChange={(e) => setFiltroZona(e.target.value as Zona | 'todas')}
-          className="input-brand !min-h-11 !text-sm"
-        >
-          <option value="todas">Todas as zonas</option>
-          {ORDEM_ZONAS.map((zona) => (
-            <option key={zona} value={zona}>
+        <div className="sem-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Filtrar por zona">
+          <button
+            type="button"
+            onClick={() => setFiltroZona('todas')}
+            aria-pressed={filtroZona === 'todas'}
+            className={`chip-brand ${filtroZona === 'todas' ? 'chip-brand-ativo' : ''}`}
+          >
+            Todas
+          </button>
+          {ORDEM_ZONAS.filter((zona) => zona !== 'outras').map((zona) => (
+            <button
+              key={zona}
+              type="button"
+              onClick={() => setFiltroZona(zona)}
+              aria-pressed={filtroZona === zona}
+              className={`chip-brand ${filtroZona === zona ? 'chip-brand-ativo' : ''}`}
+            >
+              <i
+                className="block h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: ZONA_COLORS[zona] }}
+              />
               {ZONA_LABELS[zona]}
-            </option>
+            </button>
           ))}
-        </select>
+        </div>
 
         {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
 

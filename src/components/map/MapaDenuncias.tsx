@@ -42,7 +42,7 @@ export function MapaDenuncias({ denuncias }: { denuncias: Denuncia[] }) {
   const zonaSel = selecionada?.linha?.zona ?? 'outras'
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative isolate h-full w-full">
       <MapContainer
         center={TERESINA_CENTER}
         zoom={12}
@@ -74,7 +74,7 @@ export function MapaDenuncias({ denuncias }: { denuncias: Denuncia[] }) {
         })}
       </MapContainer>
 
-      <div className="absolute inset-x-0 top-3 z-[500] flex gap-2 overflow-x-auto px-3 pb-1">
+      <div className="absolute inset-x-0 top-3 z-[500] flex gap-2 overflow-x-auto px-3 pb-1 sem-scrollbar">
         <button
           type="button"
           onClick={() => setFiltro('todas')}

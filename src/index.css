@@ -114,3 +114,12 @@ h3,
   background: var(--color-brand-green);
   color: var(--color-brand-cream);
 }
+
+/* esconde a barra de rolagem mantendo a rolagem */
+.sem-scrollbar {
+  scrollbar-width: none;
+}
+
+.sem-scrollbar::-webkit-scrollbar {
+  display: none;
+}
