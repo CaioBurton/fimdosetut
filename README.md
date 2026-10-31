@@ -1,4 +1,4 @@
-# Ônibus Quebrado
+# Deu o Prego!
 
 App colaborativo mobile-first para avisar sobre ônibus quebrados (e outros problemas) nas linhas de Teresina-PI. Qualquer pessoa pode ver o mapa de denúncias; cadastrar uma denúncia exige login.
 
