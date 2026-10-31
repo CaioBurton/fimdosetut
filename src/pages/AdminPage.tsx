@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { AppLayout } from '../components/layout/AppLayout'
+import { DashboardDenuncias } from '../components/admin/DashboardDenuncias'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -69,7 +70,15 @@ export function AdminPage() {
                 Nenhuma denúncia cadastrada.
               </p>
             )}
-            {denuncias.map((denuncia) => (
+            <DashboardDenuncias denuncias={denuncias} linhas={linhas}>
+              {(filtradas) => (
+                <div className="space-y-3">
+                  {filtradas.length === 0 && denuncias.length > 0 && (
+                    <p className="py-6 text-center text-brand-green-dark/60">
+                      Nenhuma denúncia com esses filtros.
+                    </p>
+                  )}
+                  {filtradas.map((denuncia) => (
               <DenunciaCard
                 key={denuncia.id}
                 denuncia={denuncia}
@@ -111,7 +120,10 @@ export function AdminPage() {
                   )
                 }
               />
-            ))}
+                  ))}
+                </div>
+              )}
+            </DashboardDenuncias>
           </>
         ) : (
           <UsuariosAdmin totalPorUsuario={totalPorUsuario} onErro={setAcaoErro} />
