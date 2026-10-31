@@ -8,7 +8,7 @@ export function MapaPage() {
   const { denuncias, loading, error } = useDenuncias(linhas)
 
   return (
-    <AppLayout title="Ônibus Quebrado" noScroll>
+    <AppLayout title="Deu o Prego!" noScroll>
       {error && (
         <div className="absolute top-16 z-20 w-full bg-zona-leste px-4 py-2 text-center text-sm text-white">
           {error}
