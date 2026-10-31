@@ -56,7 +56,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
   return (
     <div className="space-y-2">
       <div className="h-56 w-full overflow-hidden rounded-xl border border-brand-green/20">
-        <MapContainer center={center} zoom={value ? 15 : 12} className="h-full w-full">
+        <MapContainer center={center} zoom={value ? 15 : 12} className="isolate h-full w-full">
           <TileLayer
             attribution='&copy; OpenStreetMap'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

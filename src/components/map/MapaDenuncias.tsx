@@ -10,7 +10,7 @@ export function MapaDenuncias({ denuncias }: { denuncias: Denuncia[] }) {
       center={TERESINA_CENTER}
       zoom={12}
       scrollWheelZoom
-      className="h-full w-full"
+      className="isolate h-full w-full"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
