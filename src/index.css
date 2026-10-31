@@ -84,11 +84,6 @@ h3,
   background: #e3f2da;
 }
 
-/* tinge os tiles claros do CARTO de verde, como no design */
-.mapa-brand .leaflet-tile-pane {
-  filter: sepia(0.9) hue-rotate(60deg) saturate(0.55) brightness(1.03) contrast(0.95);
-}
-
 .mapa-brand .leaflet-control-attribution {
   background: rgba(243, 252, 238, 0.85);
   color: var(--color-brand-green-dark);
