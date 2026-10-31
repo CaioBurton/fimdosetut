@@ -1,0 +1,107 @@
+import { useState, type FormEvent } from 'react'
+import { useAuth } from '../../hooks/useAuth'
+import { supabase } from '../../lib/supabaseClient'
+import { TIPO_LABELS, type Linha, type TipoProblema } from '../../types'
+import { Button } from '../ui/Button'
+import { LocationPicker } from '../map/LocationPicker'
+import { LinhaSelect } from './LinhaSelect'
+
+const TIPOS: TipoProblema[] = ['quebrado', 'acidente', 'atraso', 'lotacao', 'outro']
+
+export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess: () => void }) {
+  const { user } = useAuth()
+  const [linhaId, setLinhaId] = useState('')
+  const [tipo, setTipo] = useState<TipoProblema>('quebrado')
+  const [descricao, setDescricao] = useState('')
+  const [local, setLocal] = useState<{ lat: number; lng: number } | null>(null)
+  const [enviando, setEnviando] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!user) return
+    if (!linhaId) {
+      setErro('Selecione a linha.')
+      return
+    }
+    if (!local) {
+      setErro('Marque a localização no mapa.')
+      return
+    }
+
+    setEnviando(true)
+    setErro(null)
+
+    const { error } = await supabase.from('denuncias').insert({
+      user_id: user.id,
+      linha_id: linhaId,
+      tipo,
+      descricao,
+      latitude: local.lat,
+      longitude: local.lng,
+    })
+
+    setEnviando(false)
+
+    if (error) {
+      setErro('Não foi possível enviar a denúncia. Verifique sua conexão e tente novamente.')
+      return
+    }
+
+    onSuccess()
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 p-4">
+      <div>
+        <label className="mb-1 block text-sm font-semibold text-brand-green-dark">Linha</label>
+        <LinhaSelect linhas={linhas} value={linhaId} onChange={setLinhaId} />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-semibold text-brand-green-dark">
+          Tipo de problema
+        </label>
+        <select
+          value={tipo}
+          aria-label="Tipo de problema"
+          onChange={(e) => setTipo(e.target.value as TipoProblema)}
+          className="w-full rounded-xl border border-brand-green/30 bg-white px-3 py-3 text-base text-brand-green-dark"
+        >
+          {TIPOS.map((t) => (
+            <option key={t} value={t}>
+              {TIPO_LABELS[t]}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-semibold text-brand-green-dark">
+          Descrição
+        </label>
+        <textarea
+          required
+          value={descricao}
+          onChange={(e) => setDescricao(e.target.value)}
+          rows={3}
+          placeholder="Descreva o que está acontecendo..."
+          className="w-full rounded-xl border border-brand-green/30 bg-white px-3 py-3 text-base text-brand-green-dark"
+        />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-semibold text-brand-green-dark">
+          Localização
+        </label>
+        <LocationPicker value={local} onChange={(lat, lng) => setLocal({ lat, lng })} />
+      </div>
+
+      {erro && <p className="text-sm text-zona-leste">{erro}</p>}
+
+      <Button type="submit" disabled={enviando}>
+        {enviando ? 'Enviando...' : 'Enviar denúncia'}
+      </Button>
+    </form>
+  )
+}
