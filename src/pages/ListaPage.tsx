@@ -13,7 +13,7 @@ export function ListaPage() {
   const [filtroZona, setFiltroZona] = useState<Zona | 'todas'>('todas')
 
   const filtradas = denuncias.filter(
-    (d) => filtroZona === 'todas' || d.linha?.zona === filtroZona
+    (d) => filtroZona === 'todas' || (d.linha?.zona ?? 'outras') === filtroZona
   )
 
   return (
@@ -42,7 +42,7 @@ export function ListaPage() {
           >
             Todas
           </button>
-          {ORDEM_ZONAS.filter((zona) => zona !== 'outras').map((zona) => (
+          {ORDEM_ZONAS.map((zona) => (
             <button
               key={zona}
               type="button"

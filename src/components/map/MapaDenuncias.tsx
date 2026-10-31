@@ -13,7 +13,7 @@ import { agruparDenuncias, normalizarVeiculo } from '../../lib/agruparDenuncias'
 import { criarIconeZona } from './markerIcon'
 
 const TERESINA_CENTER: [number, number] = [-5.0892, -42.8019]
-const ZONAS_FILTRO: Zona[] = ['norte', 'sul', 'leste', 'sudeste']
+const ZONAS_FILTRO: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
 
 function tempoRelativo(iso: string) {
   const min = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60000))
