@@ -9,6 +9,7 @@ import {
   type Denuncia,
   type Zona,
 } from '../../types'
+import { agruparDenuncias, normalizarVeiculo } from '../../lib/agruparDenuncias'
 import { criarIconeZona } from './markerIcon'
 
 const TERESINA_CENTER: [number, number] = [-5.0892, -42.8019]
@@ -35,10 +36,17 @@ export function MapaDenuncias({ denuncias }: { denuncias: Denuncia[] }) {
     () => denuncias.filter((d) => filtro === 'todas' || (d.linha?.zona ?? 'outras') === filtro),
     [denuncias, filtro]
   )
-  const selecionada = visiveis.find((d) => d.id === selecionadaId) ?? null
-  const relatos = selecionada
-    ? denuncias.filter((d) => d.linha_id === selecionada.linha_id).length
-    : 0
+  const grupos = useMemo(() => agruparDenuncias(visiveis), [visiveis])
+  const grupoSelecionado = grupos.find((g) => g.principal.id === selecionadaId) ?? null
+  const selecionada = grupoSelecionado?.principal ?? null
+  const relatos = grupoSelecionado?.denuncias.length ?? 0
+  const veiculos = grupoSelecionado
+    ? [
+        ...new Set(
+          grupoSelecionado.denuncias.map((d) => normalizarVeiculo(d.numero_veiculo)).filter(Boolean)
+        ),
+      ]
+    : []
   const zonaSel = selecionada?.linha?.zona ?? 'outras'
 
   return (
@@ -55,7 +63,7 @@ export function MapaDenuncias({ denuncias }: { denuncias: Denuncia[] }) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <FecharAoClicarNoMapa onClick={() => setSelecionadaId(null)} />
-        {visiveis.map((denuncia) => {
+        {grupos.map(({ principal: denuncia, denuncias: membros }) => {
           const zona = denuncia.linha?.zona ?? 'outras'
           return (
             <Marker
@@ -65,7 +73,8 @@ export function MapaDenuncias({ denuncias }: { denuncias: Denuncia[] }) {
                 ZONA_COLORS[zona],
                 denuncia.status === 'resolvido',
                 denuncia.linha?.codigo ?? '',
-                denuncia.id === selecionadaId
+                denuncia.id === selecionadaId,
+                membros.length
               )}
               zIndexOffset={denuncia.id === selecionadaId ? 1000 : 0}
               eventHandlers={{ click: () => setSelecionadaId(denuncia.id) }}
@@ -112,6 +121,7 @@ export function MapaDenuncias({ denuncias }: { denuncias: Denuncia[] }) {
               </p>
               <p className="mt-0.5 text-[13px] text-brand-green-dark/70">
                 {tempoRelativo(selecionada.created_at)} · {TIPO_LABELS[selecionada.tipo]}
+                {veiculos.length > 0 && ` · Veículo ${veiculos.join(', ')}`}
               </p>
             </div>
             <span

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { AppLayout } from '../components/layout/AppLayout'
 import { MapaDenuncias } from '../components/map/MapaDenuncias'
 import { useDenuncias } from '../hooks/useDenuncias'
@@ -5,7 +6,13 @@ import { useLinhas } from '../hooks/useLinhas'
 
 export function MapaPage() {
   const { linhas } = useLinhas()
-  const { denuncias, loading, error } = useDenuncias(linhas)
+  const { denuncias: todas, loading, error } = useDenuncias(linhas)
+
+  const denuncias = useMemo(() => {
+    const inicioDoDia = new Date()
+    inicioDoDia.setHours(0, 0, 0, 0)
+    return todas.filter((d) => new Date(d.created_at) >= inicioDoDia)
+  }, [todas])
 
   return (
     <AppLayout title="Deu o Prego!" noScroll>

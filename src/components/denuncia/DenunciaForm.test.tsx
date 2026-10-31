@@ -106,10 +106,26 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
       linha_id: 'l1',
       tipo: 'quebrado',
       descricao: 'Ônibus parado.',
+      numero_veiculo: null,
       latitude: -5.09,
       longitude: -42.8,
     })
     expect(onSuccess).toHaveBeenCalled()
+  })
+
+  it('envia o número do veículo quando informado', async () => {
+    vi.mocked(supabase.from).mockReturnValue(createChainable({ error: null }) as never)
+    const user = userEvent.setup()
+    render(<DenunciaForm linhas={linhas} onSuccess={vi.fn()} />)
+
+    await preencherELocalizar(user)
+    await user.type(screen.getByLabelText(/número do veículo/i), ' 12345 ')
+    await user.click(screen.getByRole('button', { name: 'Enviar denúncia' }))
+
+    const chain = vi.mocked(supabase.from).mock.results[0].value
+    expect(chain.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ numero_veiculo: '12345' })
+    )
   })
 
   it('mostra uma mensagem amigável e não chama onSuccess quando o envio falha', async () => {

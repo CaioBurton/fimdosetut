@@ -13,6 +13,7 @@ export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess
   const [linhaId, setLinhaId] = useState('')
   const [tipo, setTipo] = useState<TipoProblema>('quebrado')
   const [descricao, setDescricao] = useState('')
+  const [numeroVeiculo, setNumeroVeiculo] = useState('')
   const [local, setLocal] = useState<{ lat: number; lng: number } | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
@@ -37,6 +38,7 @@ export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess
       linha_id: linhaId,
       tipo,
       descricao,
+      numero_veiculo: numeroVeiculo.trim() || null,
       latitude: local.lat,
       longitude: local.lng,
     })
@@ -74,6 +76,24 @@ export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess
             </option>
           ))}
         </select>
+      </div>
+
+      <div>
+        <label
+          htmlFor="numero-veiculo"
+          className="mb-1 block text-sm font-semibold text-brand-green-dark"
+        >
+          Número do veículo (opcional)
+        </label>
+        <input
+          id="numero-veiculo"
+          type="text"
+          value={numeroVeiculo}
+          onChange={(e) => setNumeroVeiculo(e.target.value)}
+          maxLength={20}
+          placeholder="Ex.: 12345 (número no painel ou na lateral)"
+          className="input-brand"
+        />
       </div>
 
       <div>

@@ -7,8 +7,13 @@ export function criarIconeZona(
   cor: string,
   resolvido: boolean,
   codigo = '',
-  selecionado = false
+  selecionado = false,
+  quantidade = 1
 ) {
+  const contador =
+    quantidade > 1
+      ? `<span style="position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #084400; color: #fff; border: 2px solid #fff; font-family: 'Proxima Nova', sans-serif; font-weight: 800; font-size: 11px; line-height: 1;">${quantidade}</span>`
+      : ''
   const opacidade = resolvido ? 0.45 : 1
   const rotulo = codigo || (resolvido ? '✓' : '!')
   const largura = selecionado ? 92 : 62
@@ -23,6 +28,7 @@ export function criarIconeZona(
         <path fill="${cor}" stroke="#084400" stroke-width="6" stroke-linejoin="round" d="${EXPLOSAO}" />
       </svg>
       <span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: ${corTexto}; font-family: 'Proxima Nova', sans-serif; font-weight: 800; font-size: ${fonte}px;">${rotulo}</span>
+      ${contador}
     </div>`,
     iconSize: [largura, altura],
     iconAnchor: [largura / 2, altura / 2],

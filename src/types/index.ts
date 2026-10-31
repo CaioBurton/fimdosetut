@@ -18,6 +18,7 @@ export interface Denuncia {
   tipo: TipoProblema
   status: StatusDenuncia
   descricao: string
+  numero_veiculo?: string | null
   latitude: number
   longitude: number
   created_at: string

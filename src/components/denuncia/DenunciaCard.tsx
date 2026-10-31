@@ -33,6 +33,11 @@ export function DenunciaCard({ denuncia, actions }: { denuncia: Denuncia; action
         <Badge color="#084400" outlined>
           {TIPO_LABELS[denuncia.tipo]}
         </Badge>
+        {denuncia.numero_veiculo && (
+          <Badge color="#084400" outlined>
+            Veículo {denuncia.numero_veiculo}
+          </Badge>
+        )}
       </div>
       <p className="mt-2 text-sm text-brand-green-dark/90">{denuncia.descricao}</p>
       {actions && <div className="mt-3 flex gap-2">{actions}</div>}
