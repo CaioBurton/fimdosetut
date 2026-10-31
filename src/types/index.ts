@@ -11,6 +11,16 @@ export interface Linha {
   zona: Zona
 }
 
+export type Papel = 'user' | 'admin'
+
+export interface Perfil {
+  id: string
+  email: string
+  role: Papel
+  banido: boolean
+  created_at: string
+}
+
 export interface Denuncia {
   id: string
   user_id: string

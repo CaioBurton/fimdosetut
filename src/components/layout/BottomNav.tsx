@@ -9,7 +9,7 @@ function activeClass(isActive: boolean) {
 }
 
 export function BottomNav() {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t-[3px] border-brand-green bg-brand-cream pb-[env(safe-area-inset-bottom)]">
@@ -41,6 +41,12 @@ export function BottomNav() {
         <UserIcon />
         {user ? 'Minhas' : 'Entrar'}
       </NavLink>
+      {isAdmin && (
+        <NavLink to="/admin" className={({ isActive }) => `${linkBase} ${activeClass(isActive)}`}>
+          <ShieldIcon />
+          Admin
+        </NavLink>
+      )}
     </nav>
   )
 }
@@ -66,6 +72,15 @@ function PlusIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
       <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+function ShieldIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z" />
+      <path d="M9 12l2 2 4-4" />
     </svg>
   )
 }
