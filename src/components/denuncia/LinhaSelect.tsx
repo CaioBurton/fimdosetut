@@ -20,7 +20,7 @@ export function LinhaSelect({ linhas, value, onChange }: LinhaSelectProps) {
       aria-label="Linha"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-xl border border-brand-green/30 bg-white px-3 py-3 text-base text-brand-green-dark"
+      className="input-brand"
     >
       <option value="" disabled>
         Selecione a linha do ônibus

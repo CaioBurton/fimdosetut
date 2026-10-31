@@ -6,21 +6,19 @@ export function criarIconeZona(cor: string, resolvido: boolean) {
 
   return L.divIcon({
     className: 'denuncia-marker',
-    html: `<div style="
+    html: `<div style="filter: drop-shadow(2px 2px 0 #084400);">
+      <div style="
         width: 30px;
         height: 30px;
-        border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
+        clip-path: polygon(0.0% 51.6%, 20.1% 53.7%, 17.9% 27.7%, 29.5% 33.5%, 32.5% 19.0%, 42.7% 28.6%, 42.7% 0.0%, 56.4% 24.1%, 62.6% 4.5%, 69.9% 31.0%, 86.0% 15.2%, 82.7% 37.2%, 92.6% 33.5%, 92.7% 44.0%, 100.0% 47.2%, 91.4% 54.3%, 98.0% 73.6%, 84.4% 60.1%, 86.3% 100.0%, 66.6% 74.0%, 61.5% 96.7%, 46.4% 79.2%, 44.2% 96.0%, 33.9% 78.4%, 21.0% 91.2%, 26.9% 77.8%, 11.8% 87.7%, 17.6% 63.5%);
         background: ${cor};
         opacity: ${opacidade};
-        border: 2px solid white;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.4);
         display: flex;
         align-items: center;
         justify-content: center;
       ">
-        <span style="transform: rotate(45deg); color: white; font-weight: 700; font-size: 14px;">${simbolo}</span>
-      </div>`,
+        <span style="color: #fff; font-weight: 800; font-size: 13px; text-shadow: 0 0 2px #084400;">${simbolo}</span>
+      </div></div>`,
     iconSize: [30, 30],
     iconAnchor: [15, 30],
     popupAnchor: [0, -28],

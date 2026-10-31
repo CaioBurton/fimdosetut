@@ -2,17 +2,17 @@ import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
 const linkBase =
-  'flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-xs font-medium'
+  'mx-1 flex flex-1 flex-col items-center justify-center gap-0.5 rounded-[2px] py-2 text-xs font-bold'
 
 function activeClass(isActive: boolean) {
-  return isActive ? 'text-brand-green' : 'text-brand-green-dark/50'
+  return isActive ? 'bg-brand-green text-brand-cream' : 'text-brand-green'
 }
 
 export function BottomNav() {
   const { user } = useAuth()
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-brand-green/15 bg-white/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t-[3px] border-brand-green bg-brand-cream pb-[env(safe-area-inset-bottom)]">
       <NavLink to="/" end className={({ isActive }) => `${linkBase} ${activeClass(isActive)}`}>
         <MapIcon />
         Mapa
@@ -26,12 +26,13 @@ export function BottomNav() {
       </NavLink>
       <NavLink
         to="/nova"
-        className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-xs font-medium"
+        className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-xs font-bold"
       >
-        <span className="-mt-6 flex h-12 w-12 items-center justify-center rounded-full bg-brand-green text-white shadow-lg shadow-brand-green/30">
-          <PlusIcon />
+        <span className="relative -mt-7 flex h-12 w-[78px] items-center justify-center text-brand-cream">
+          <img src="/brand/explosao-cheia.svg" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full" />
+          <span className="relative"><PlusIcon /></span>
         </span>
-        <span className="text-brand-green-dark/50">Reportar</span>
+        <span className="mt-1 text-brand-green">Reportar</span>
       </NavLink>
       <NavLink
         to={user ? '/minhas' : '/login'}

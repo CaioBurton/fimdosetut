@@ -16,15 +16,15 @@ export function DenunciaCard({ denuncia, actions }: { denuncia: Denuncia; action
   const cor = ZONA_COLORS[zona]
 
   return (
-    <div className="rounded-xl border border-brand-green/15 bg-white p-3 shadow-sm">
+    <div className="card-brand p-3.5">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-display font-bold text-brand-green-dark">
+          <p className="font-bold text-brand-green-dark">
             {denuncia.linha ? `${denuncia.linha.codigo} - ${denuncia.linha.nome}` : 'Linha removida'}
           </p>
-          <p className="text-xs text-brand-green-dark/60">{formatarData(denuncia.created_at)}</p>
+          <p className="text-xs text-brand-green-dark/70">{formatarData(denuncia.created_at)}</p>
         </div>
-        <Badge color={denuncia.status === 'resolvido' ? '#6b7280' : '#d64545'}>
+        <Badge color={denuncia.status === 'resolvido' ? '#6b7280' : '#c23838'}>
           {STATUS_LABELS[denuncia.status]}
         </Badge>
       </div>
