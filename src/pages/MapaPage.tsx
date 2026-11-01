@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
 import { AppLayout } from '../components/layout/AppLayout'
 import { MapaDenuncias, tempoRelativo } from '../components/map/MapaDenuncias'
+import { useConfirmacoes } from '../hooks/useConfirmacoes'
 import { useDenuncias } from '../hooks/useDenuncias'
 import { useDesktop } from '../hooks/useDesktop'
 import { useLinhas } from '../hooks/useLinhas'
@@ -16,7 +18,15 @@ function normalizar(texto: string) {
 export function MapaPage() {
   const desktop = useDesktop()
   const { linhas } = useLinhas()
-  const { denuncias: todas, loading, error } = useDenuncias(linhas)
+  const { denuncias: todas, loading, error, atualizarDenuncia } = useDenuncias(linhas)
+  const navigate = useNavigate()
+  const {
+    confirmadas,
+    pendentes: confirmando,
+    erro: erroConfirmacao,
+    alternar,
+    logado,
+  } = useConfirmacoes((id, total) => atualizarDenuncia(id, { confirmacoes: total }))
   const [busca, setBusca] = useState('')
   const [status, setStatus] = useState<Denuncia['status'] | 'todas'>('todas')
 
@@ -44,6 +54,11 @@ export function MapaPage() {
           {error}
         </div>
       )}
+      {erroConfirmacao && (
+        <div role="alert" className="absolute top-16 z-[600] w-full bg-zona-leste px-4 py-2 text-center text-sm text-white">
+          {erroConfirmacao}
+        </div>
+      )}
       {loading ? (
         <div className="flex h-full items-center justify-center text-brand-green-dark">
           Carregando mapa...
@@ -51,7 +66,22 @@ export function MapaPage() {
       ) : (
         <div className="flex h-full">
           <div className="relative min-w-0 flex-1">
-            <MapaDenuncias denuncias={visiveis} semFiltroZona={desktop} />
+            <MapaDenuncias
+              denuncias={visiveis}
+              semFiltroZona={desktop}
+              acoesSelecionada={(d) => (
+                <BotaoTambemVi
+                  total={d.confirmacoes ?? 0}
+                  confirmado={confirmadas.has(d.id)}
+                  carregando={confirmando.has(d.id)}
+                  onClick={() =>
+                    logado
+                      ? alternar(d.id)
+                      : navigate('/login', { state: { from: { pathname: '/' } } })
+                  }
+                />
+              )}
+            />
             {desktop && (
               <>
                 <div className="absolute left-6 right-6 top-6 z-[500] flex flex-wrap items-center gap-3">

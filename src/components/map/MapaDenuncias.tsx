@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet'
 import {
@@ -31,8 +31,11 @@ function FecharAoClicarNoMapa({ onClick }: { onClick: () => void }) {
 export function MapaDenuncias({
   denuncias,
   semFiltroZona = false,
+  acoesSelecionada,
 }: {
   denuncias: Denuncia[]
+  /** Ações extras no cartão da denúncia selecionada (ex.: o botão "Também vi"). */
+  acoesSelecionada?: (denuncia: Denuncia) => ReactNode
   /** No desktop o filtro fica fora do mapa e a legenda das zonas aparece no lugar. */
   semFiltroZona?: boolean
 }) {
@@ -158,6 +161,7 @@ export function MapaDenuncias({
               Ver detalhes →
             </Link>
           </div>
+          {acoesSelecionada && <div className="flex gap-2">{acoesSelecionada(selecionada)}</div>}
         </div>
       )}
     </div>

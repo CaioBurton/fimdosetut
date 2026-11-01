@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { CabecalhoPagina } from '../components/ui/CabecalhoPagina'
 import { RodapeTabela } from '../components/admin/TabelaAdmin'
 import { useDesktop } from '../hooks/useDesktop'
 import { AppLayout } from '../components/layout/AppLayout'
 import { LinhaSelect } from '../components/denuncia/LinhaSelect'
+import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
+import { useConfirmacoes } from '../hooks/useConfirmacoes'
 import { DIAS_PADRAO, useDenuncias } from '../hooks/useDenuncias'
 import { useLinhas } from '../hooks/useLinhas'
 import { TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Denuncia, type TipoProblema, type Zona } from '../types'
@@ -28,7 +31,15 @@ const diaMinimo = () => diaLocal(new Date(Date.now() - DIAS_PADRAO * 24 * 60 * 6
 
 export function ListaPage() {
   const { linhas } = useLinhas()
-  const { denuncias, loading, error } = useDenuncias(linhas)
+  const { denuncias, loading, error, atualizarDenuncia } = useDenuncias(linhas)
+  const navigate = useNavigate()
+  const {
+    confirmadas,
+    pendentes: confirmando,
+    erro: erroConfirmacao,
+    alternar,
+    logado,
+  } = useConfirmacoes((id, total) => atualizarDenuncia(id, { confirmacoes: total }))
   const desktop = useDesktop()
   const [filtroStatus, setFiltroStatus] = useState<Denuncia['status'] | 'todos'>('todos')
   const [filtroTipo, setFiltroTipo] = useState<TipoProblema | 'todos'>('todos')
@@ -179,6 +190,8 @@ export function ListaPage() {
 
         {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
 
+        {erroConfirmacao && <p className="text-center text-sm text-zona-leste">{erroConfirmacao}</p>}
+
         {loading && <p className="text-center text-brand-green-dark/70">Carregando...</p>}
 
         {!loading && !error && filtradas.length === 0 && (
@@ -189,7 +202,22 @@ export function ListaPage() {
 
         <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 xl:grid-cols-3">
           {visiveis.map((denuncia) => (
-            <DenunciaCard key={denuncia.id} denuncia={denuncia} />
+            <DenunciaCard
+              key={denuncia.id}
+              denuncia={denuncia}
+              actions={
+                <BotaoTambemVi
+                  total={denuncia.confirmacoes ?? 0}
+                  confirmado={confirmadas.has(denuncia.id)}
+                  carregando={confirmando.has(denuncia.id)}
+                  onClick={() =>
+                    logado
+                      ? alternar(denuncia.id)
+                      : navigate('/login', { state: { from: { pathname: '/denuncias' } } })
+                  }
+                />
+              }
+            />
           ))}
         </div>
         {desktop && (
