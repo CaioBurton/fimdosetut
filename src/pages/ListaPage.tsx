@@ -22,7 +22,7 @@ export function ListaPage() {
   const [filtroZona, setFiltroZona] = useState<Zona | 'todas'>('todas')
 
   const [filtroLinha, setFiltroLinha] = useState('')
-  const [filtroDia, setFiltroDia] = useState('')
+  const [filtroDia, setFiltroDia] = useState(() => diaLocal(new Date().toISOString()))
 
   const filtradas = denuncias.filter(
     (d) =>
