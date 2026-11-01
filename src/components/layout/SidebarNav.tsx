@@ -36,6 +36,13 @@ export function SidebarNav() {
 
   return (
     <aside className="relative flex w-60 shrink-0 flex-col gap-6 overflow-hidden bg-brand-green px-4 py-6 text-brand-cream">
+      {/* Vem primeiro no DOM: assim fica atrás dos itens do menu, que são `relative`. */}
+      <img
+        src="/brand/catraca.svg"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-7 left-5 w-44 max-w-none opacity-35 brightness-[2.2]"
+      />
       <Link to="/" aria-label="Fórum Piauiense de Luta pelo Transporte Público" className="relative self-start">
         <img
           src="/brand/logo-horizontal-claro.svg"
@@ -71,9 +78,10 @@ export function SidebarNav() {
       </nav>
 
       {naAdmin && (
-        <div className="relative">
-          <p className="mb-1.5 px-1 text-xs font-bold uppercase tracking-[0.08em] opacity-80">Administração</p>
-          <nav aria-label="Seções do admin" className="flex flex-col gap-1">
+        <div className="relative flex min-h-0 flex-col">
+          {/* min-h-0 + overflow: se faltar altura, só as seções do admin rolam; "Reportar" e "Sair" ficam sempre visíveis. */}
+          <p className="mb-1.5 shrink-0 px-1 text-xs font-bold uppercase tracking-[0.08em] opacity-80">Administração</p>
+          <nav aria-label="Seções do admin" className="scroll-visivel flex min-h-0 flex-col gap-1 overflow-y-auto">
             {SECOES_ADMIN.map((s) => (
               <Link
                 key={s.id}
@@ -106,12 +114,6 @@ export function SidebarNav() {
         </button>
       )}
 
-      <img
-        src="/brand/catraca.svg"
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-7 left-5 w-44 max-w-none opacity-35 brightness-[2.2]"
-      />
     </aside>
   )
 }

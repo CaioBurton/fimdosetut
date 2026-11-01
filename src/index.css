@@ -132,3 +132,25 @@ select.input-brand {
 *::-webkit-scrollbar {
   display: none;
 }
+
+/* barra de rolagem visível, para listas que rolam dentro de um fundo verde (ex.: menu lateral do admin) */
+.scroll-visivel {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand-cream) rgb(243 252 238 / 0.18);
+  padding-right: 6px;
+}
+
+.scroll-visivel::-webkit-scrollbar {
+  display: block;
+  width: 8px;
+}
+
+.scroll-visivel::-webkit-scrollbar-track {
+  background: rgb(243 252 238 / 0.18);
+  border-radius: 4px;
+}
+
+.scroll-visivel::-webkit-scrollbar-thumb {
+  background: var(--color-brand-cream);
+  border-radius: 4px;
+}
