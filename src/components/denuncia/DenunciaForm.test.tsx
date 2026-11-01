@@ -45,7 +45,8 @@ function mockarGeolocalizacao(lat = -5.09, lng = -42.8) {
 }
 
 async function preencherELocalizar(user: ReturnType<typeof userEvent.setup>) {
-  await user.selectOptions(screen.getByRole('combobox', { name: 'Linha' }), '103 - MOCAMBINHO')
+  await user.click(screen.getByRole('combobox', { name: 'Linha' }))
+  await user.click(screen.getByRole('option', { name: /103.*MOCAMBINHO/ }))
   await user.type(
     screen.getByPlaceholderText('Descreva o que está acontecendo...'),
     'Ônibus parado.'
@@ -60,15 +61,18 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
     vi.mocked(supabase.from).mockReset()
   })
 
-  it('impede o envio sem selecionar uma linha, bloqueado pela validação nativa do campo obrigatório', async () => {
+  it('impede o envio sem selecionar uma linha', async () => {
     const user = userEvent.setup()
     const onSuccess = vi.fn()
     render(<DenunciaForm linhas={linhas} onSuccess={onSuccess} />)
 
-    const selectLinha = screen.getByRole('combobox', { name: 'Linha' }) as HTMLSelectElement
+    await user.type(
+      screen.getByPlaceholderText('Descreva o que está acontecendo...'),
+      'Ônibus parado.'
+    )
     await user.click(screen.getByRole('button', { name: 'Enviar denúncia' }))
 
-    expect(selectLinha.validity.valid).toBe(false)
+    expect(screen.getByText('Selecione a linha.')).toBeInTheDocument()
     expect(supabase.from).not.toHaveBeenCalled()
     expect(onSuccess).not.toHaveBeenCalled()
   })
@@ -78,7 +82,8 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
     const onSuccess = vi.fn()
     render(<DenunciaForm linhas={linhas} onSuccess={onSuccess} />)
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Linha' }), '103 - MOCAMBINHO')
+    await user.click(screen.getByRole('combobox', { name: 'Linha' }))
+  await user.click(screen.getByRole('option', { name: /103.*MOCAMBINHO/ }))
     await user.type(
       screen.getByPlaceholderText('Descreva o que está acontecendo...'),
       'Ônibus parado.'
