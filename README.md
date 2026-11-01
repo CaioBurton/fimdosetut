@@ -10,7 +10,7 @@ Qualquer pessoa vê o mapa, a lista e o painel de denúncias. Para registrar uma
 
 | Tela | Rota | Quem acessa |
 | --- | --- | --- |
-| Mapa com as denúncias do dia (tempo real) | `/` | todos |
+| Mapa com as denúncias do dia (tempo real) e botão "Também vi" no cartão da denúncia | `/` | todos |
 | Lista de denúncias, com filtros por zona, linha, dia, status e tipo, e botão "Também vi" (confirmar com conta) | `/denuncias` | todos |
 | Painel público com totais, gráfico por dia, zonas e linhas mais citadas | `/painel` | todos |
 | Nova denúncia (linha, tipo, descrição e local no mapa) | `/nova` | quem tem conta |
