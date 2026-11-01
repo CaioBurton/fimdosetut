@@ -16,7 +16,7 @@ const POR_PAGINA = 5
 export function MinhasDenunciasPage() {
   const { user } = useAuth()
   const { linhas } = useLinhas()
-  const { denuncias, loading, error } = useDenuncias(linhas, null)
+  const { denuncias, loading, error } = useDenuncias(linhas, null, user?.id)
   const [acaoErro, setAcaoErro] = useState<string | null>(null)
   const [pagina, setPagina] = useState(1)
 

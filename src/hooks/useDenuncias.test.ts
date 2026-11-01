@@ -203,4 +203,68 @@ describe('useDenuncias (integração com Supabase + realtime)', () => {
       'Não foi possível carregar as denúncias. Verifique sua conexão.'
     )
   })
+
+  it('não faz join com linhas e pede só as colunas usadas', async () => {
+    const cadeia = createChainable({ data: [], error: null })
+    vi.mocked(supabase.from).mockReturnValue(cadeia as never)
+    mockChannelComHandlers()
+
+    const { result } = renderHook(() => useDenuncias(linhas))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    const colunas = vi.mocked(cadeia.select as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    expect(colunas).not.toContain('linhas(')
+    expect(colunas).not.toBe('*')
+    expect(colunas).toContain('numero_veiculo')
+  })
+
+  it('anexa a linha às denúncias mesmo quando as linhas chegam depois', async () => {
+    vi.mocked(supabase.from).mockReturnValue(
+      createChainable({
+        data: [
+          {
+            id: 'd1',
+            user_id: 'u1',
+            linha_id: 'l1',
+            tipo: 'quebrado',
+            status: 'pendente',
+            descricao: 'teste',
+            latitude: 0,
+            longitude: 0,
+            created_at: '2026-01-01T00:00:00.000Z',
+            updated_at: '2026-01-01T00:00:00.000Z',
+          },
+        ],
+        error: null,
+      }) as never
+    )
+    mockChannelComHandlers()
+
+    const { result, rerender } = renderHook(({ ls }) => useDenuncias(ls), {
+      initialProps: { ls: [] as Linha[] },
+    })
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.denuncias[0].linha).toBeUndefined()
+
+    rerender({ ls: linhas })
+
+    expect(result.current.denuncias[0].linha).toEqual(linhas[0])
+  })
+
+  it('com userId, busca e escuta só as denúncias desse usuário', async () => {
+    const cadeia = createChainable({ data: [], error: null })
+    vi.mocked(supabase.from).mockReturnValue(cadeia as never)
+    const canal: Record<string, unknown> = {
+      on: vi.fn(() => canal),
+      subscribe: vi.fn(() => canal),
+    }
+    vi.mocked(supabase.channel).mockReturnValue(canal as never)
+
+    const { result } = renderHook(() => useDenuncias(linhas, null, 'u1'))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(cadeia.eq).toHaveBeenCalledWith('user_id', 'u1')
+    const filtros = vi.mocked(canal.on as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[1])
+    expect(filtros.filter((f) => f.event !== 'DELETE').every((f) => f.filter === 'user_id=eq.u1')).toBe(true)
+  })
 })
