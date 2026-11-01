@@ -182,7 +182,8 @@ describe('MinhasDenunciasPage (integração: UI + hooks + Supabase)', () => {
     renderPagina()
 
     await screen.findByText('Nenhuma linha cadastrada.')
-    await user.selectOptions(screen.getByLabelText('Linha'), 'l1')
+    await user.click(screen.getByRole('combobox', { name: 'Linha' }))
+    await user.click(screen.getByRole('option', { name: /103/ }))
     await user.click(screen.getByRole('button', { name: 'Adicionar linha' }))
 
     expect(await screen.findByRole('button', { name: 'Remover linha 103' })).toBeInTheDocument()

@@ -1,6 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import {
-  calcularEstatisticas,
   filtrarDenuncias,
   FILTROS_INICIAIS,
   PERIODO_LABELS,
@@ -27,54 +26,10 @@ interface Props {
   children: (filtradas: Denuncia[]) => ReactNode
 }
 
-function Kpi({ rotulo, valor, destaque }: { rotulo: string; valor: string | number; destaque?: string }) {
-  return (
-    <div className="card-brand p-3">
-      <p className="text-xs font-bold uppercase text-brand-green-dark/70">{rotulo}</p>
-      <p className="ttl text-3xl" style={destaque ? { color: destaque } : undefined}>
-        {valor}
-      </p>
-    </div>
-  )
-}
-
-function Barras({
-  titulo,
-  itens,
-}: {
-  titulo: string
-  itens: { rotulo: string; total: number; cor: string }[]
-}) {
-  const max = Math.max(1, ...itens.map((i) => i.total))
-  return (
-    <div className="card-brand p-3.5">
-      <h3 className="mb-2 text-sm font-bold text-brand-green-dark">{titulo}</h3>
-      {itens.length === 0 ? (
-        <p className="text-sm text-brand-green-dark/60">Sem dados.</p>
-      ) : (
-        <ul className="space-y-1.5">
-          {itens.map((i) => (
-            <li key={i.rotulo} className="text-xs">
-              <div className="flex justify-between gap-2 font-semibold">
-                <span className="truncate">{i.rotulo}</span>
-                <span>{i.total}</span>
-              </div>
-              <div className="h-2 bg-brand-cream">
-                <div className="h-full" style={{ width: `${(i.total / max) * 100}%`, backgroundColor: i.cor }} />
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  )
-}
-
 export function DashboardDenuncias({ denuncias, linhas, children }: Props) {
   const [filtros, setFiltros] = useState<FiltrosDashboard>(FILTROS_INICIAIS)
 
   const filtradas = useMemo(() => filtrarDenuncias(denuncias, filtros), [denuncias, filtros])
-  const stats = useMemo(() => calcularEstatisticas(filtradas), [filtradas])
 
   const filtrosAtivos = JSON.stringify(filtros) !== JSON.stringify(FILTROS_INICIAIS)
 
@@ -181,30 +136,6 @@ export function DashboardDenuncias({ denuncias, linhas, children }: Props) {
           </button>
         )}
       </section>
-
-      <section aria-label="Resumo" className="grid grid-cols-2 gap-2">
-        <Kpi rotulo="Total" valor={stats.total} />
-        <Kpi rotulo="Pendentes" valor={stats.pendentes} destaque="#c23838" />
-        <Kpi rotulo="Resolvidas" valor={stats.resolvidas} />
-        <Kpi rotulo="Taxa de resolução" valor={`${stats.taxaResolucao}%`} />
-      </section>
-
-      <Barras
-        titulo="Por zona"
-        itens={stats.porZona.map((i) => ({
-          rotulo: ZONA_LABELS[i.chave],
-          total: i.total,
-          cor: ZONA_COLORS[i.chave],
-        }))}
-      />
-      <Barras
-        titulo="Por tipo de problema"
-        itens={stats.porTipo.map((i) => ({ rotulo: TIPO_LABELS[i.chave], total: i.total, cor: '#084400' }))}
-      />
-      <Barras
-        titulo="Linhas com mais denúncias"
-        itens={stats.topLinhas.map((i) => ({ rotulo: i.rotulo, total: i.total, cor: '#307800' }))}
-      />
 
       <h3 className="pt-1 text-sm font-bold text-brand-green-dark">
         {filtradas.length} {filtradas.length === 1 ? 'denúncia' : 'denúncias'}

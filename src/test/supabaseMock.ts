@@ -17,6 +17,7 @@ export function createChainable(result: QueryResult) {
     order: vi.fn(() => chain),
     eq: vi.fn(() => chain),
     maybeSingle: vi.fn(() => chain),
+    single: vi.fn(() => chain),
     insert: vi.fn(() => chain),
     upsert: vi.fn(() => chain),
     update: vi.fn(() => chain),
