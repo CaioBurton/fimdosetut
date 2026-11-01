@@ -2,14 +2,20 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import type { Denuncia, Linha } from '../types'
 
+// Só as colunas usadas pelo app (sem o join com `linhas`: as linhas já são carregadas à parte
+// e anexadas no cliente), para gastar menos tráfego de saída do Supabase.
+const COLUNAS =
+  'id, user_id, linha_id, tipo, status, descricao, numero_veiculo, latitude, longitude, created_at, updated_at'
+
 // O Supabase devolve no máximo 1000 linhas por consulta; busca página a página
 // para não cortar as denúncias mais antigas sem avisar.
 const TAMANHO_PAGINA = 1000
 
-async function buscarTodasDenuncias(desde: string | null) {
+async function buscarTodasDenuncias(desde: string | null, userId?: string) {
   const todas: Denuncia[] = []
   for (let inicio = 0; ; inicio += TAMANHO_PAGINA) {
-    let consulta = supabase.from('denuncias').select('*, linha:linhas(*)')
+    let consulta = supabase.from('denuncias').select(COLUNAS)
+    if (userId) consulta = consulta.eq('user_id', userId)
     if (desde) consulta = consulta.gte('created_at', desde)
     const { data, error } = await consulta
       .order('created_at', { ascending: false })
@@ -28,18 +34,25 @@ export const DIAS_PADRAO = 30
 
 /**
  * Carrega as denúncias dos últimos `dias` dias (padrão 30). Passe `null` para carregar
- * todo o histórico (usado no painel admin e em "minhas denúncias").
+ * todo o histórico (usado no painel admin e em "minhas denúncias"). Com `userId`, busca (e
+ * escuta em tempo real) só as denúncias desse usuário.
  */
-export function useDenuncias(linhas: Linha[], dias: number | null = DIAS_PADRAO) {
-  const [denuncias, setDenuncias] = useState<Denuncia[]>([])
+export function useDenuncias(
+  linhas: Linha[],
+  dias: number | null = DIAS_PADRAO,
+  userId?: string
+) {
+  // Denúncias sem a linha anexada: a linha é ligada abaixo, pelo `linha_id`, assim a lista
+  // se completa sozinha quando as linhas terminam de carregar.
+  const [brutas, setBrutas] = useState<Denuncia[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const linhasPorId = useMemo(() => {
-    const map = new Map<string, Linha>()
-    for (const linha of linhas) map.set(linha.id, linha)
-    return map
-  }, [linhas])
+  const denuncias = useMemo(() => {
+    const porId = new Map<string, Linha>()
+    for (const linha of linhas) porId.set(linha.id, linha)
+    return brutas.map((d) => ({ ...d, linha: porId.get(d.linha_id) }))
+  }, [brutas, linhas])
 
   useEffect(() => {
     let active = true
@@ -47,12 +60,12 @@ export function useDenuncias(linhas: Linha[], dias: number | null = DIAS_PADRAO)
     const desde =
       dias === null ? null : new Date(Date.now() - dias * 24 * 60 * 60 * 1000).toISOString()
 
-    buscarTodasDenuncias(desde).then(({ data, error }) => {
+    buscarTodasDenuncias(desde, userId).then(({ data, error }) => {
       if (!active) return
       if (error || !data) {
         setError('Não foi possível carregar as denúncias. Verifique sua conexão.')
       } else {
-        setDenuncias(data)
+        setBrutas(data)
       }
       setLoading(false)
     })
@@ -60,29 +73,26 @@ export function useDenuncias(linhas: Linha[], dias: number | null = DIAS_PADRAO)
     return () => {
       active = false
     }
-  }, [dias])
+  }, [dias, userId])
 
   useEffect(() => {
+    const filtro = userId ? { filter: `user_id=eq.${userId}` } : {}
     const channel = supabase
-      .channel('denuncias-realtime')
+      .channel(userId ? `denuncias-realtime-${userId}` : 'denuncias-realtime')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'denuncias' },
+        { event: 'INSERT', schema: 'public', table: 'denuncias', ...filtro },
         (payload) => {
-          const novaDenuncia = payload.new as Denuncia
-          novaDenuncia.linha = linhasPorId.get(novaDenuncia.linha_id)
-          setDenuncias((atual) => [novaDenuncia, ...atual])
+          const nova = payload.new as Denuncia
+          setBrutas((atual) => [nova, ...atual])
         }
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'denuncias' },
+        { event: 'UPDATE', schema: 'public', table: 'denuncias', ...filtro },
         (payload) => {
           const atualizada = payload.new as Denuncia
-          atualizada.linha = linhasPorId.get(atualizada.linha_id)
-          setDenuncias((atual) =>
-            atual.map((d) => (d.id === atualizada.id ? atualizada : d))
-          )
+          setBrutas((atual) => atual.map((d) => (d.id === atualizada.id ? atualizada : d)))
         }
       )
       .on(
@@ -90,7 +100,7 @@ export function useDenuncias(linhas: Linha[], dias: number | null = DIAS_PADRAO)
         { event: 'DELETE', schema: 'public', table: 'denuncias' },
         (payload) => {
           const removidaId = (payload.old as Denuncia).id
-          setDenuncias((atual) => atual.filter((d) => d.id !== removidaId))
+          setBrutas((atual) => atual.filter((d) => d.id !== removidaId))
         }
       )
       .subscribe()
@@ -98,7 +108,7 @@ export function useDenuncias(linhas: Linha[], dias: number | null = DIAS_PADRAO)
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [linhasPorId])
+  }, [userId])
 
   return { denuncias, loading, error }
 }
