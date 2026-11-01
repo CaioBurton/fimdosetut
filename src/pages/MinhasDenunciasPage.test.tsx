@@ -207,4 +207,41 @@ describe('MinhasDenunciasPage (integração: UI + hooks + Supabase)', () => {
     expect(within(resumo).getByText('Resolvidas').previousSibling).toHaveTextContent('1')
     expect(within(resumo).getByText('Minhas linhas').previousSibling).toHaveTextContent('1')
   })
+
+  it('pagina as denúncias do usuário, 5 por vez', async () => {
+    const muitas = Array.from({ length: 7 }, (_, i) =>
+      denunciaDoUsuario({ id: `d${i + 1}`, descricao: `Problema ${i + 1}` })
+    )
+    mockarTabelas({
+      linhas: { data: linhasFalsas, error: null },
+      denuncias: { data: muitas, error: null },
+    })
+
+    const user = userEvent.setup()
+    renderPagina()
+
+    expect(await screen.findByText('Problema 1')).toBeInTheDocument()
+    expect(screen.getByText('Problema 5')).toBeInTheDocument()
+    expect(screen.queryByText('Problema 6')).not.toBeInTheDocument()
+    expect(screen.getByText('Página 1 de 2')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Próxima/ }))
+
+    expect(screen.getByText('Problema 6')).toBeInTheDocument()
+    expect(screen.getByText('Problema 7')).toBeInTheDocument()
+    expect(screen.queryByText('Problema 1')).not.toBeInTheDocument()
+    expect(screen.getByText('Página 2 de 2')).toBeInTheDocument()
+  })
+
+  it('não mostra a paginação quando as denúncias cabem numa página', async () => {
+    mockarTabelas({
+      linhas: { data: linhasFalsas, error: null },
+      denuncias: { data: [denunciaDoUsuario()], error: null },
+    })
+
+    renderPagina()
+
+    await screen.findByText('Ônibus parado.')
+    expect(screen.queryByRole('navigation', { name: 'Paginação' })).not.toBeInTheDocument()
+  })
 })

@@ -124,11 +124,11 @@ select.input-brand {
   color: var(--color-brand-cream);
 }
 
-/* esconde a barra de rolagem mantendo a rolagem */
-.sem-scrollbar {
+/* esconde todas as barras de rolagem do app, mantendo a rolagem (toque, roda e teclado) */
+* {
   scrollbar-width: none;
 }
 
-.sem-scrollbar::-webkit-scrollbar {
+*::-webkit-scrollbar {
   display: none;
 }
