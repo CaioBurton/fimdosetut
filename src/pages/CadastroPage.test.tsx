@@ -125,4 +125,22 @@ describe('CadastroPage (integração: UI + useAuth + Supabase)', () => {
     expect(politica).toHaveAttribute('target', '_blank')
     expect(screen.getByRole('link', { name: 'Termos de Uso' })).toHaveAttribute('href', '/termos')
   })
+
+  it('no desktop mostra a tela dividida, com o mesmo formulário', () => {
+    window.matchMedia = vi.fn().mockImplementation(() => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })) as never
+    try {
+      renderCadastro()
+      expect(screen.getByRole('heading', { name: 'Criar conta' })).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Nome')).toBeInTheDocument()
+      expect(screen.getByRole('checkbox', { name: /Li e concordo/ })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', '/login')
+    } finally {
+      // @ts-expect-error volta ao ambiente sem matchMedia
+      delete window.matchMedia
+    }
+  })
 })
