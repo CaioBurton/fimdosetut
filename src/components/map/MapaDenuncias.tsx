@@ -15,7 +15,7 @@ import { criarIconeZona } from './markerIcon'
 const TERESINA_CENTER: [number, number] = [-5.0892, -42.8019]
 const ZONAS_FILTRO: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
 
-function tempoRelativo(iso: string) {
+export function tempoRelativo(iso: string) {
   const min = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60000))
   if (min < 60) return `há ${min} min`
   const h = Math.round(min / 60)
@@ -28,7 +28,14 @@ function FecharAoClicarNoMapa({ onClick }: { onClick: () => void }) {
   return null
 }
 
-export function MapaDenuncias({ denuncias }: { denuncias: Denuncia[] }) {
+export function MapaDenuncias({
+  denuncias,
+  semFiltroZona = false,
+}: {
+  denuncias: Denuncia[]
+  /** No desktop o filtro fica fora do mapa e a legenda das zonas aparece no lugar. */
+  semFiltroZona?: boolean
+}) {
   const [filtro, setFiltro] = useState<Zona | 'todas'>('todas')
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null)
 
@@ -83,6 +90,7 @@ export function MapaDenuncias({ denuncias }: { denuncias: Denuncia[] }) {
         })}
       </MapContainer>
 
+      {!semFiltroZona && (
       <div className="absolute inset-x-0 top-3 z-[500] flex gap-2 overflow-x-auto px-3 pb-1 sem-scrollbar">
         <button
           type="button"
@@ -108,6 +116,7 @@ export function MapaDenuncias({ denuncias }: { denuncias: Denuncia[] }) {
           </button>
         ))}
       </div>
+      )}
 
       {selecionada && (
         <div className="card-brand absolute inset-x-3 bottom-3.5 z-[500] flex flex-col gap-2.5 !bg-brand-cream p-3.5">

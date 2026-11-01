@@ -1,3 +1,4 @@
+import { useDesktop } from '../../hooks/useDesktop'
 import { PERIODO_LABELS, type Periodo } from '../../lib/dashboardDenuncias'
 import { taxaResolucao, type ResumoPainel } from '../../lib/resumoPainel'
 import { TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Zona } from '../../types'
@@ -72,6 +73,7 @@ export function PainelConteudo({
   onGerenciarLinhas,
   carregando = false,
 }: Props) {
+  const desktop = useDesktop()
   const porDia = resumo.porDia
   const maxDia = Math.max(1, ...porDia.map((d) => d.total))
   const maxLinha = Math.max(1, ...resumo.topLinhas.map((l) => l.total))
@@ -79,11 +81,11 @@ export function PainelConteudo({
 
   return (
     <div className={`space-y-4 transition-opacity lg:grid lg:grid-cols-2 lg:items-start lg:gap-5 lg:space-y-0 ${carregando ? 'opacity-60' : ''}`} aria-busy={carregando}>
-      <div className="space-y-2.5 lg:col-span-2">
+      <div className="space-y-2.5 lg:col-span-2 lg:flex lg:flex-wrap lg:items-center lg:gap-4 lg:space-y-0">
         <div
           role="group"
           aria-label="Período"
-          className="grid grid-cols-3 overflow-hidden rounded-[2px] border-2 border-brand-green"
+          className="grid grid-cols-3 overflow-hidden rounded-[2px] border-2 border-brand-green lg:w-80"
         >
           {PERIODOS.map((p, i) => (
             <button
@@ -124,6 +126,7 @@ export function PainelConteudo({
         </div>
       </div>
 
+      {!desktop && (
       <section
         aria-label="Resumo"
         className="relative overflow-hidden rounded-[2px] border-2 border-brand-green bg-brand-green p-[18px] text-brand-cream shadow-[4px_4px_0_#052d00]"
@@ -146,26 +149,36 @@ export function PainelConteudo({
           <p className="mt-1.5 text-[13px] font-bold">{taxa}% resolvidas</p>
         </div>
       </section>
+      )}
 
-      <section className="grid grid-cols-3 gap-2.5">
-        <Kpi rotulo="Total" valor={resumo.total} />
-        <Kpi rotulo="Resolvidas" valor={resumo.resolvidas} />
-        <Kpi rotulo="Hoje" valor={resumo.hoje} cor="#c23838" />
-      </section>
+      {desktop ? (
+        <section aria-label="Resumo" className="grid grid-cols-4 gap-5 lg:col-span-2">
+          <Kpi rotulo="Total" valor={resumo.total} />
+          <Kpi rotulo="Pendentes" valor={resumo.pendentes} cor="#c23838" />
+          <Kpi rotulo="Resolvidas" valor={resumo.resolvidas} />
+          <Kpi rotulo="Hoje" valor={resumo.hoje} />
+        </section>
+      ) : (
+        <section className="grid grid-cols-3 gap-2.5">
+          <Kpi rotulo="Total" valor={resumo.total} />
+          <Kpi rotulo="Resolvidas" valor={resumo.resolvidas} />
+          <Kpi rotulo="Hoje" valor={resumo.hoje} cor="#c23838" />
+        </section>
+      )}
 
-      <section className="card-brand p-3.5" aria-label="Denúncias por dia">
+      <section className="card-brand p-3.5 lg:col-span-2 lg:p-5" aria-label="Denúncias por dia">
         <div className="flex items-baseline justify-between">
           <h3 className="ttl text-lg">Por dia</h3>
           <span className="text-xs font-bold text-brand-green-dark/70">últimos {porDia.length} dias</span>
         </div>
-        <div className="mt-3.5 flex h-[130px] items-end gap-1 border-b-2 border-brand-green">
+        <div className="mt-3.5 flex h-[130px] items-end gap-1 border-b-2 border-brand-green lg:h-[170px]">
           {porDia.map((d, i) => (
             <div key={d.data.toISOString()} className="flex h-full flex-1 flex-col items-center justify-end">
               <span className="mb-0.5 text-[11px] font-bold">{d.total}</span>
               <div
                 className="w-full"
                 style={{
-                  height: `${(d.total / maxDia) * 100}px`,
+                  height: `${(d.total / maxDia) * (desktop ? 140 : 100)}px`,
                   backgroundColor: i === porDia.length - 1 ? '#c23838' : '#084400',
                 }}
               />
@@ -194,12 +207,12 @@ export function PainelConteudo({
         itens={resumo.porTipo.map((i) => ({ rotulo: TIPO_LABELS[i.chave], total: i.total, cor: '#084400' }))}
       />
 
-      <section className="card-brand overflow-hidden" aria-label="Linhas com mais denúncias">
+      <section className="card-brand overflow-hidden lg:col-span-2" aria-label="Linhas com mais denúncias">
         <h3 className="ttl px-3.5 pb-2.5 pt-3.5 text-lg">Linhas com mais denúncias</h3>
         {resumo.topLinhas.length === 0 ? (
           <p className="px-3.5 pb-3.5 text-sm text-brand-green-dark/70">Sem dados.</p>
         ) : (
-          <ol>
+          <ol className="lg:grid lg:grid-cols-2 lg:gap-x-7">
             {resumo.topLinhas.map((l, i) => {
               return (
                 <li key={`${l.linhaId}-${i}`} className="flex items-center gap-3 border-t border-[#cfe3c6] px-3.5 py-2.5">

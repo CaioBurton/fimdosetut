@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '../../hooks/useAuth'
+import { useDesktop } from '../../hooks/useDesktop'
+import { CabecalhoPagina } from '../ui/CabecalhoPagina'
 import { supabase } from '../../lib/supabaseClient'
 import type { Linha, TipoProblema } from '../../types'
 import { SecaoNumerada } from '../ui/SecaoNumerada'
@@ -9,6 +11,7 @@ import { TipoSelect } from './TipoSelect'
 
 export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess: () => void }) {
   const { user } = useAuth()
+  const desktop = useDesktop()
   const [linhaId, setLinhaId] = useState('')
   const [tipo, setTipo] = useState<TipoProblema>('quebrado')
   const [descricao, setDescricao] = useState('')
@@ -56,7 +59,18 @@ export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess
   const dica = erro === 'Marque a localização no mapa.' ? 'Sem o local, a denúncia não aparece no mapa.' : null
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-7 p-4">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-7 p-4 lg:grid lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)] lg:items-start lg:gap-x-7 lg:gap-y-7 lg:space-y-0 lg:p-0"
+    >
+      {desktop ? (
+        <div className="lg:col-span-2">
+          <CabecalhoPagina
+            titulo="Deu o prego?"
+            subtitulo="Conte o que aconteceu e marque o local no mapa. Leva menos de um minuto."
+          />
+        </div>
+      ) : (
       <section className="relative overflow-hidden rounded-[2px] border-2 border-brand-green bg-brand-green p-5 text-brand-cream shadow-[4px_4px_0_#052d00]">
         <img
           src="/brand/explosao-contorno.svg"
@@ -73,6 +87,7 @@ export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess
           </p>
         </div>
       </section>
+      )}
 
       <SecaoNumerada numero={1} titulo="Qual ônibus?" subtitulo="A linha em que você estava">
         <div>
@@ -122,6 +137,7 @@ export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess
         </div>
       </SecaoNumerada>
 
+      <div className="lg:col-start-2 lg:row-span-6 lg:row-start-2">
       <SecaoNumerada numero={3} titulo="Onde?" subtitulo="Marque o local exato no mapa">
         <LocationPicker
           value={local}
@@ -129,6 +145,7 @@ export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess
           invalido={erro === 'Marque a localização no mapa.'}
         />
       </SecaoNumerada>
+      </div>
 
       <p className="text-xs font-semibold leading-snug text-brand-green-dark/80">
         Sua denúncia (local, descrição e número do veículo) aparece para todos no mapa, sem o seu
