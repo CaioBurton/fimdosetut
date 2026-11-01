@@ -84,6 +84,27 @@ describe('useDenuncias (integração com Supabase + realtime)', () => {
     expect(segunda.range).toHaveBeenCalledWith(1000, 1999)
   })
 
+  it('carrega só os últimos 30 dias por padrão e o histórico inteiro com null', async () => {
+    const recente = createChainable({ data: [], error: null })
+    const historico = createChainable({ data: [], error: null })
+    vi.mocked(supabase.from)
+      .mockReturnValueOnce(recente as never)
+      .mockReturnValueOnce(historico as never)
+    mockChannelComHandlers()
+
+    const antes = Date.now()
+    const padrao = renderHook(() => useDenuncias(linhas))
+    await waitFor(() => expect(padrao.result.current.loading).toBe(false))
+    const [, desde] = vi.mocked(recente.gte as ReturnType<typeof vi.fn>).mock.calls[0]
+    const diasAtras = (antes - new Date(desde).getTime()) / (24 * 60 * 60 * 1000)
+    expect(diasAtras).toBeGreaterThan(29.99)
+    expect(diasAtras).toBeLessThan(30.01)
+
+    const tudo = renderHook(() => useDenuncias(linhas, null))
+    await waitFor(() => expect(tudo.result.current.loading).toBe(false))
+    expect(historico.gte).not.toHaveBeenCalled()
+  })
+
   it('adiciona uma nova denúncia recebida via realtime (INSERT) à frente da lista', async () => {
     vi.mocked(supabase.from).mockReturnValue(createChainable({ data: [], error: null }) as never)
     const handlers = mockChannelComHandlers()

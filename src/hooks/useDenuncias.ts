@@ -6,12 +6,12 @@ import type { Denuncia, Linha } from '../types'
 // para não cortar as denúncias mais antigas sem avisar.
 const TAMANHO_PAGINA = 1000
 
-async function buscarTodasDenuncias() {
+async function buscarTodasDenuncias(desde: string | null) {
   const todas: Denuncia[] = []
   for (let inicio = 0; ; inicio += TAMANHO_PAGINA) {
-    const { data, error } = await supabase
-      .from('denuncias')
-      .select('*, linha:linhas(*)')
+    let consulta = supabase.from('denuncias').select('*, linha:linhas(*)')
+    if (desde) consulta = consulta.gte('created_at', desde)
+    const { data, error } = await consulta
       .order('created_at', { ascending: false })
       .order('id')
       .range(inicio, inicio + TAMANHO_PAGINA - 1)
@@ -23,7 +23,14 @@ async function buscarTodasDenuncias() {
   return { data: todas, error: null }
 }
 
-export function useDenuncias(linhas: Linha[]) {
+/** Janela padrão de denúncias carregadas, para o app não ficar pesado com o tempo. */
+export const DIAS_PADRAO = 30
+
+/**
+ * Carrega as denúncias dos últimos `dias` dias (padrão 30). Passe `null` para carregar
+ * todo o histórico (usado no painel admin e em "minhas denúncias").
+ */
+export function useDenuncias(linhas: Linha[], dias: number | null = DIAS_PADRAO) {
   const [denuncias, setDenuncias] = useState<Denuncia[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +44,10 @@ export function useDenuncias(linhas: Linha[]) {
   useEffect(() => {
     let active = true
 
-    buscarTodasDenuncias().then(({ data, error }) => {
+    const desde =
+      dias === null ? null : new Date(Date.now() - dias * 24 * 60 * 60 * 1000).toISOString()
+
+    buscarTodasDenuncias(desde).then(({ data, error }) => {
       if (!active) return
       if (error || !data) {
         setError('Não foi possível carregar as denúncias. Verifique sua conexão.')
@@ -50,7 +60,7 @@ export function useDenuncias(linhas: Linha[]) {
     return () => {
       active = false
     }
-  }, [])
+  }, [dias])
 
   useEffect(() => {
     const channel = supabase

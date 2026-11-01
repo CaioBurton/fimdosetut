@@ -13,7 +13,7 @@ import { supabase } from '../lib/supabaseClient'
 export function MinhasDenunciasPage() {
   const { user } = useAuth()
   const { linhas } = useLinhas()
-  const { denuncias, loading, error } = useDenuncias(linhas)
+  const { denuncias, loading, error } = useDenuncias(linhas, null)
   const [acaoErro, setAcaoErro] = useState<string | null>(null)
 
   const minhas = denuncias.filter((d) => d.user_id === user?.id)

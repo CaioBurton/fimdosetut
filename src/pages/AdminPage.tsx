@@ -25,7 +25,7 @@ const ABAS: { id: Aba; rotulo: string }[] = [
 export function AdminPage() {
   const [aba, setAba] = useState<Aba>('painel')
   const { linhas, criar, atualizar, excluir: excluirLinha } = useLinhas()
-  const { denuncias, loading, error } = useDenuncias(linhas)
+  const { denuncias, loading, error } = useDenuncias(linhas, null)
   const [acaoErro, setAcaoErro] = useState<string | null>(null)
   const [confirmando, setConfirmando] = useState<string | null>(null)
   const totalPorUsuario = useMemo(() => {

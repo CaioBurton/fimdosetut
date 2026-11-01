@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { AppLayout } from '../components/layout/AppLayout'
 import { LinhaSelect } from '../components/denuncia/LinhaSelect'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
-import { useDenuncias } from '../hooks/useDenuncias'
+import { DIAS_PADRAO, useDenuncias } from '../hooks/useDenuncias'
 import { useLinhas } from '../hooks/useLinhas'
 import { ZONA_COLORS, ZONA_LABELS, type Zona } from '../types'
 
@@ -16,13 +16,17 @@ function diaLocal(iso: string) {
   return `${data.getFullYear()}-${mes}-${dia}`
 }
 
+const hoje = () => diaLocal(new Date().toISOString())
+// A lista só carrega os últimos DIAS_PADRAO dias; datas anteriores ficariam sempre vazias.
+const diaMinimo = () => diaLocal(new Date(Date.now() - DIAS_PADRAO * 24 * 60 * 60 * 1000).toISOString())
+
 export function ListaPage() {
   const { linhas } = useLinhas()
   const { denuncias, loading, error } = useDenuncias(linhas)
   const [filtroZona, setFiltroZona] = useState<Zona | 'todas'>('todas')
 
   const [filtroLinha, setFiltroLinha] = useState('')
-  const [filtroDia, setFiltroDia] = useState(() => diaLocal(new Date().toISOString()))
+  const [filtroDia, setFiltroDia] = useState(hoje)
 
   const filtradas = denuncias.filter(
     (d) =>
@@ -87,6 +91,8 @@ export function ListaPage() {
           <div className="w-[9.5rem] shrink-0">
             <input
               type="date"
+              min={diaMinimo()}
+              max={hoje()}
               aria-label="Filtrar por dia"
               value={filtroDia}
               onChange={(e) => setFiltroDia(e.target.value)}
