@@ -188,4 +188,23 @@ describe('MinhasDenunciasPage (integração: UI + hooks + Supabase)', () => {
 
     expect(await screen.findByRole('button', { name: 'Remover linha 103' })).toBeInTheDocument()
   })
+
+  it('mostra no resumo do perfil o total de denúncias, resolvidas e linhas do usuário', async () => {
+    mockarTabelas({
+      linhas: { data: linhasFalsas, error: null },
+      denuncias: {
+        data: [denunciaDoUsuario(), { ...denunciaDoUsuario(), id: 'd2', status: 'resolvido' }],
+        error: null,
+      },
+      usuario_linhas: { data: [{ linha_id: 'l1' }], error: null },
+    })
+
+    renderPagina()
+
+    const resumo = await screen.findByRole('region', { name: 'Resumo do perfil' })
+    await screen.findByRole('button', { name: 'Remover linha 103' })
+    expect(within(resumo).getByText('Denúncias').previousSibling).toHaveTextContent('2')
+    expect(within(resumo).getByText('Resolvidas').previousSibling).toHaveTextContent('1')
+    expect(within(resumo).getByText('Minhas linhas').previousSibling).toHaveTextContent('1')
+  })
 })
