@@ -15,6 +15,7 @@ export function createChainable(result: QueryResult) {
   const chain: Record<string, unknown> = {
     select: vi.fn(() => chain),
     order: vi.fn(() => chain),
+    range: vi.fn(() => chain),
     eq: vi.fn(() => chain),
     maybeSingle: vi.fn(() => chain),
     single: vi.fn(() => chain),

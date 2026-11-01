@@ -54,6 +54,36 @@ describe('useDenuncias (integração com Supabase + realtime)', () => {
     expect(result.current.denuncias).toEqual([denunciaFalsa])
   })
 
+  it('busca todas as páginas quando há mais de 1000 denúncias', async () => {
+    const gerar = (quantidade: number, prefixo: string) =>
+      Array.from({ length: quantidade }, (_, i) => ({
+        id: `${prefixo}${i}`,
+        user_id: 'u1',
+        linha_id: 'l1',
+        tipo: 'quebrado',
+        status: 'pendente',
+        descricao: 'teste',
+        latitude: -5.09,
+        longitude: -42.8,
+        created_at: '2026-01-01T00:00:00.000Z',
+        updated_at: '2026-01-01T00:00:00.000Z',
+      }))
+    const primeira = createChainable({ data: gerar(1000, 'a'), error: null })
+    const segunda = createChainable({ data: gerar(250, 'b'), error: null })
+    vi.mocked(supabase.from)
+      .mockReturnValueOnce(primeira as never)
+      .mockReturnValueOnce(segunda as never)
+    mockChannelComHandlers()
+
+    const { result } = renderHook(() => useDenuncias(linhas))
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(result.current.denuncias).toHaveLength(1250)
+    expect(primeira.range).toHaveBeenCalledWith(0, 999)
+    expect(segunda.range).toHaveBeenCalledWith(1000, 1999)
+  })
+
   it('adiciona uma nova denúncia recebida via realtime (INSERT) à frente da lista', async () => {
     vi.mocked(supabase.from).mockReturnValue(createChainable({ data: [], error: null }) as never)
     const handlers = mockChannelComHandlers()
