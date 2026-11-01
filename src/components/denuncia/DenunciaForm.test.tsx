@@ -91,6 +91,7 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
     await user.click(screen.getByRole('button', { name: 'Enviar denúncia' }))
 
     expect(screen.getByText('Marque a localização no mapa.')).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('Sem o local, a denúncia não aparece no mapa.')
     expect(supabase.from).not.toHaveBeenCalled()
     expect(onSuccess).not.toHaveBeenCalled()
   })
