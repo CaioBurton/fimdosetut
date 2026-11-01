@@ -6,7 +6,6 @@ const BASE = new Date('2026-10-31T12:00:00Z').getTime()
 
 function denuncia(parcial: Partial<Denuncia> & { id: string }): Denuncia {
   return {
-    user_id: 'u',
     linha_id: 'l1',
     tipo: 'quebrado',
     status: 'pendente',

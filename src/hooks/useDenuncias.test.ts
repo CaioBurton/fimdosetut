@@ -31,7 +31,6 @@ describe('useDenuncias (integração com Supabase + realtime)', () => {
   it('carrega a lista inicial de denúncias', async () => {
     const denunciaFalsa = {
       id: 'd1',
-      user_id: 'u1',
       linha_id: 'l1',
       tipo: 'quebrado',
       status: 'pendente',
@@ -58,7 +57,6 @@ describe('useDenuncias (integração com Supabase + realtime)', () => {
     const gerar = (quantidade: number, prefixo: string) =>
       Array.from({ length: quantidade }, (_, i) => ({
         id: `${prefixo}${i}`,
-        user_id: 'u1',
         linha_id: 'l1',
         tipo: 'quebrado',
         status: 'pendente',
@@ -136,7 +134,6 @@ describe('useDenuncias (integração com Supabase + realtime)', () => {
   it('atualiza o status de uma denúncia existente via realtime (UPDATE)', async () => {
     const denunciaFalsa = {
       id: 'd1',
-      user_id: 'u1',
       linha_id: 'l1',
       tipo: 'quebrado',
       status: 'pendente',
@@ -164,7 +161,6 @@ describe('useDenuncias (integração com Supabase + realtime)', () => {
   it('remove uma denúncia da lista via realtime (DELETE)', async () => {
     const denunciaFalsa = {
       id: 'd1',
-      user_id: 'u1',
       linha_id: 'l1',
       tipo: 'quebrado',
       status: 'pendente',
@@ -224,7 +220,6 @@ describe('useDenuncias (integração com Supabase + realtime)', () => {
         data: [
           {
             id: 'd1',
-            user_id: 'u1',
             linha_id: 'l1',
             tipo: 'quebrado',
             status: 'pendente',
@@ -251,7 +246,7 @@ describe('useDenuncias (integração com Supabase + realtime)', () => {
     expect(result.current.denuncias[0].linha).toEqual(linhas[0])
   })
 
-  it('com userId, busca e escuta só as denúncias desse usuário', async () => {
+  it('com apenasMinhas, lê a visão minhas_denuncias e escuta só atualização e exclusão', async () => {
     const cadeia = createChainable({ data: [], error: null })
     vi.mocked(supabase.from).mockReturnValue(cadeia as never)
     const canal: Record<string, unknown> = {
@@ -260,11 +255,39 @@ describe('useDenuncias (integração com Supabase + realtime)', () => {
     }
     vi.mocked(supabase.channel).mockReturnValue(canal as never)
 
-    const { result } = renderHook(() => useDenuncias(linhas, null, 'u1'))
+    const { result } = renderHook(() => useDenuncias(linhas, null, true))
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    expect(cadeia.eq).toHaveBeenCalledWith('user_id', 'u1')
-    const filtros = vi.mocked(canal.on as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[1])
-    expect(filtros.filter((f) => f.event !== 'DELETE').every((f) => f.filter === 'user_id=eq.u1')).toBe(true)
+    expect(supabase.from).toHaveBeenCalledWith('minhas_denuncias')
+    const eventos = vi.mocked(canal.on as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[1].event)
+    expect(eventos.sort()).toEqual(['DELETE', 'UPDATE'])
+  })
+
+  it('na lista geral lê a tabela denuncias e escuta também as novas', async () => {
+    vi.mocked(supabase.from).mockReturnValue(createChainable({ data: [], error: null }) as never)
+    const canal: Record<string, unknown> = {
+      on: vi.fn(() => canal),
+      subscribe: vi.fn(() => canal),
+    }
+    vi.mocked(supabase.channel).mockReturnValue(canal as never)
+
+    const { result } = renderHook(() => useDenuncias(linhas))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(supabase.from).toHaveBeenCalledWith('denuncias')
+    const eventos = vi.mocked(canal.on as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[1].event)
+    expect(eventos.sort()).toEqual(['DELETE', 'INSERT', 'UPDATE'])
+  })
+
+  it('não pede a coluna user_id (a autoria não é pública)', async () => {
+    const cadeia = createChainable({ data: [], error: null })
+    vi.mocked(supabase.from).mockReturnValue(cadeia as never)
+    mockChannelComHandlers()
+
+    const { result } = renderHook(() => useDenuncias(linhas))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    const colunas = vi.mocked(cadeia.select as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    expect(colunas).not.toContain('user_id')
   })
 })

@@ -32,14 +32,14 @@ export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess
     setEnviando(true)
     setErro(null)
 
-    const { error } = await supabase.from('denuncias').insert({
-      user_id: user.id,
-      linha_id: linhaId,
-      tipo,
-      descricao,
-      numero_veiculo: numeroVeiculo.trim() || null,
-      latitude: local.lat,
-      longitude: local.lng,
+    // A função do banco grava a denúncia e a autoria (privada) juntas, em nome de quem está logado.
+    const { error } = await supabase.rpc('criar_denuncia', {
+      p_linha_id: linhaId,
+      p_tipo: tipo,
+      p_descricao: descricao,
+      p_numero_veiculo: numeroVeiculo.trim() || null,
+      p_latitude: local.lat,
+      p_longitude: local.lng,
     })
 
     setEnviando(false)

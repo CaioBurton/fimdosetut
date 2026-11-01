@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createChainable, createSupabaseMock } from '../../test/supabaseMock'
+import { createSupabaseMock } from '../../test/supabaseMock'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabaseClient'
 import type { Linha } from '../../types'
@@ -59,6 +59,7 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
     mockarUsuarioLogado()
     mockarGeolocalizacao()
     vi.mocked(supabase.from).mockReset()
+    vi.mocked(supabase.rpc).mockReset()
   })
 
   it('impede o envio sem selecionar uma linha', async () => {
@@ -97,7 +98,7 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
   })
 
   it('envia a denúncia com o payload correto e chama onSuccess', async () => {
-    vi.mocked(supabase.from).mockReturnValue(createChainable({ error: null }) as never)
+    vi.mocked(supabase.rpc).mockReturnValue(Promise.resolve({ data: 'd1', error: null }) as never)
     const user = userEvent.setup()
     const onSuccess = vi.fn()
     render(<DenunciaForm linhas={linhas} onSuccess={onSuccess} />)
@@ -105,22 +106,21 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
     await preencherELocalizar(user)
     await user.click(screen.getByRole('button', { name: 'Enviar denúncia' }))
 
-    const chain = vi.mocked(supabase.from).mock.results[0].value
-    expect(supabase.from).toHaveBeenCalledWith('denuncias')
-    expect(chain.insert).toHaveBeenCalledWith({
-      user_id: 'u1',
-      linha_id: 'l1',
-      tipo: 'quebrado',
-      descricao: 'Ônibus parado.',
-      numero_veiculo: null,
-      latitude: -5.09,
-      longitude: -42.8,
+    // A denúncia é criada por uma função do banco; quem envia vem da sessão, não do app.
+    expect(supabase.rpc).toHaveBeenCalledWith('criar_denuncia', {
+      p_linha_id: 'l1',
+      p_tipo: 'quebrado',
+      p_descricao: 'Ônibus parado.',
+      p_numero_veiculo: null,
+      p_latitude: -5.09,
+      p_longitude: -42.8,
     })
+    expect(supabase.from).not.toHaveBeenCalled()
     expect(onSuccess).toHaveBeenCalled()
   })
 
   it('envia o número do veículo quando informado', async () => {
-    vi.mocked(supabase.from).mockReturnValue(createChainable({ error: null }) as never)
+    vi.mocked(supabase.rpc).mockReturnValue(Promise.resolve({ data: 'd1', error: null }) as never)
     const user = userEvent.setup()
     render(<DenunciaForm linhas={linhas} onSuccess={vi.fn()} />)
 
@@ -128,15 +128,15 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
     await user.type(screen.getByLabelText(/número do veículo/i), ' 12345 ')
     await user.click(screen.getByRole('button', { name: 'Enviar denúncia' }))
 
-    const chain = vi.mocked(supabase.from).mock.results[0].value
-    expect(chain.insert).toHaveBeenCalledWith(
-      expect.objectContaining({ numero_veiculo: '12345' })
+    expect(supabase.rpc).toHaveBeenCalledWith(
+      'criar_denuncia',
+      expect.objectContaining({ p_numero_veiculo: '12345' })
     )
   })
 
   it('mostra uma mensagem amigável e não chama onSuccess quando o envio falha', async () => {
-    vi.mocked(supabase.from).mockReturnValue(
-      createChainable({ error: { message: 'TypeError: Failed to fetch' } }) as never
+    vi.mocked(supabase.rpc).mockReturnValue(
+      Promise.resolve({ data: null, error: { message: 'TypeError: Failed to fetch' } }) as never
     )
     const user = userEvent.setup()
     const onSuccess = vi.fn()

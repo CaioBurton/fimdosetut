@@ -17,11 +17,12 @@ const POR_PAGINA = 5
 export function MinhasDenunciasPage() {
   const { user } = useAuth()
   const { linhas } = useLinhas()
-  const { denuncias, loading, error } = useDenuncias(linhas, null, user?.id)
+  const { denuncias, loading, error } = useDenuncias(linhas, null, true)
   const [acaoErro, setAcaoErro] = useState<string | null>(null)
   const [pagina, setPagina] = useState(1)
 
-  const minhas = denuncias.filter((d) => d.user_id === user?.id)
+  // A visão `minhas_denuncias` já traz só as do usuário logado.
+  const minhas = denuncias
   const totalPaginas = Math.max(1, Math.ceil(minhas.length / POR_PAGINA))
   // Se a lista encolher (ex.: excluir a última denúncia da página), volta para uma página válida.
   const paginaAtual = Math.min(pagina, totalPaginas)

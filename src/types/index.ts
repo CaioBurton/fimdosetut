@@ -23,7 +23,6 @@ export interface Perfil {
 
 export interface Denuncia {
   id: string
-  user_id: string
   linha_id: string
   tipo: TipoProblema
   status: StatusDenuncia

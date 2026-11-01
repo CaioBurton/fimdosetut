@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { AppLayout } from '../components/layout/AppLayout'
 import { FeedbacksAdmin } from '../components/admin/FeedbacksAdmin'
 import { LinhasAdmin } from '../components/admin/LinhasAdmin'
@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../hooks/useAuth'
 import { useDenuncias } from '../hooks/useDenuncias'
+import { useDenunciasPorUsuario } from '../hooks/useDenunciasPorUsuario'
 import { useLinhas } from '../hooks/useLinhas'
 import { useUsuarios } from '../hooks/useUsuarios'
 import { supabase } from '../lib/supabaseClient'
@@ -30,11 +31,6 @@ export function AdminPage() {
   const { denuncias, loading, error } = useDenuncias(linhas, null)
   const [acaoErro, setAcaoErro] = useState<string | null>(null)
   const [confirmando, setConfirmando] = useState<string | null>(null)
-  const totalPorUsuario = useMemo(() => {
-    const mapa = new Map<string, number>()
-    for (const d of denuncias) mapa.set(d.user_id, (mapa.get(d.user_id) ?? 0) + 1)
-    return mapa
-  }, [denuncias])
 
   async function alternarStatus(id: string, statusAtual: string) {
     setAcaoErro(null)
@@ -166,20 +162,15 @@ export function AdminPage() {
         {aba === 'feedbacks' && <FeedbacksAdmin />}
 
         {aba === 'usuarios' && (
-          <UsuariosAdmin totalPorUsuario={totalPorUsuario} onErro={setAcaoErro} />
+          <UsuariosAdmin onErro={setAcaoErro} />
         )}
       </div>
     </AppLayout>
   )
 }
 
-function UsuariosAdmin({
-  totalPorUsuario,
-  onErro,
-}: {
-  totalPorUsuario: Map<string, number>
-  onErro: (mensagem: string | null) => void
-}) {
+function UsuariosAdmin({ onErro }: { onErro: (mensagem: string | null) => void }) {
+  const totalPorUsuario = useDenunciasPorUsuario()
   const { user } = useAuth()
   const { usuarios, loading, error, alterarPapel, alterarBloqueio, excluir } = useUsuarios()
   const [confirmando, setConfirmando] = useState<string | null>(null)
