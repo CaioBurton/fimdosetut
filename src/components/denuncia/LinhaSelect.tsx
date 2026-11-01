@@ -7,6 +7,9 @@ interface LinhaSelectProps {
   linhas: Linha[]
   value: string
   onChange: (linhaId: string) => void
+  placeholder?: string
+  /** Lista suspensa mais larga que o botão (útil quando o botão divide a linha com outro campo). */
+  listaLarga?: boolean
 }
 
 function normalizar(texto: string) {
@@ -16,7 +19,7 @@ function normalizar(texto: string) {
     .toLowerCase()
 }
 
-export function LinhaSelect({ linhas, value, onChange }: LinhaSelectProps) {
+export function LinhaSelect({ linhas, value, onChange, placeholder = 'Selecione a linha do ônibus', listaLarga = false }: LinhaSelectProps) {
   const [aberto, setAberto] = useState(false)
   const [busca, setBusca] = useState('')
   const raiz = useRef<HTMLDivElement>(null)
@@ -79,7 +82,7 @@ export function LinhaSelect({ linhas, value, onChange }: LinhaSelectProps) {
             <span className="truncate font-semibold">{selecionada.nome}</span>
           </span>
         ) : (
-          <span className="text-brand-green-dark/60">Selecione a linha do ônibus</span>
+          <span className="text-brand-green-dark/60">{placeholder}</span>
         )}
         <svg
           width="18"
@@ -98,7 +101,7 @@ export function LinhaSelect({ linhas, value, onChange }: LinhaSelectProps) {
       </button>
 
       {aberto && (
-        <div className="card-brand absolute inset-x-0 top-full z-[1000] mt-2 flex max-h-80 flex-col overflow-hidden !bg-brand-cream">
+        <div className={`card-brand absolute top-full ${listaLarga ? 'left-0 w-[min(24rem,calc(100vw-2rem))]' : 'inset-x-0'} z-[1000] mt-2 flex max-h-80 flex-col overflow-hidden !bg-brand-cream`}>
           <div className="border-b-2 border-brand-green p-2">
             <input
               autoFocus

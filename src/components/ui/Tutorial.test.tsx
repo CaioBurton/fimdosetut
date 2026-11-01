@@ -24,7 +24,7 @@ describe('Tutorial', () => {
     const user = userEvent.setup()
     const { unmount } = render(<Tutorial />)
 
-    for (let i = 0; i < 3; i++) await user.click(screen.getByRole('button', { name: 'Próximo' }))
+    for (let i = 0; i < 4; i++) await user.click(screen.getByRole('button', { name: 'Próximo' }))
     await user.click(screen.getByRole('button', { name: 'Começar' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -33,6 +33,16 @@ describe('Tutorial', () => {
     unmount()
     render(<Tutorial />)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('informa que os dados são protegidos pela LGPD', async () => {
+    const user = userEvent.setup()
+    render(<Tutorial />)
+
+    for (let i = 0; i < 4; i++) await user.click(screen.getByRole('button', { name: 'Próximo' }))
+
+    expect(screen.getByText('Seus dados estão protegidos')).toBeInTheDocument()
+    expect(screen.getByText(/LGPD/)).toBeInTheDocument()
   })
 
   it('permite pular', async () => {

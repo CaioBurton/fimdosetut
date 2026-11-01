@@ -6,7 +6,7 @@ const PASSOS = [
   {
     titulo: 'Bem-vindo ao Deu o Prego!',
     texto:
-      'Aqui a gente avisa quando o ônibus quebra, atrasa ou vem lotado nas linhas de Teresina. Veja como usar em 4 passos.',
+      'Aqui a gente avisa quando o ônibus quebra, atrasa ou vem lotado nas linhas de Teresina. Veja como usar em 5 passos.',
     imagem: '/brand/onibus-bandeira.svg',
   },
   {
@@ -24,8 +24,14 @@ const PASSOS = [
   {
     titulo: 'Acompanhe tudo',
     texto:
-      'Na aba "Lista" você vê todas as denúncias e filtra por zona. Em "Minhas" você marca as suas como resolvidas ou exclui.',
+      'Na aba "Lista" você vê todas as denúncias e filtra por zona, linha e dia. Em "Perfil" você cadastra suas linhas e marca as suas denúncias como resolvidas ou exclui.',
     imagem: '/brand/revolta.svg',
+  },
+  {
+    titulo: 'Seus dados estão protegidos',
+    texto:
+      'Seus dados pessoais são protegidos pela Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018). Usamos suas informações só para o funcionamento do app.',
+    imagem: '/brand/onibus-bandeira.svg',
   },
 ]
 

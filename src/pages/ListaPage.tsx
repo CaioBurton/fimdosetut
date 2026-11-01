@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AppLayout } from '../components/layout/AppLayout'
+import { LinhaSelect } from '../components/denuncia/LinhaSelect'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { useDenuncias } from '../hooks/useDenuncias'
 import { useLinhas } from '../hooks/useLinhas'
@@ -7,13 +8,27 @@ import { ZONA_COLORS, ZONA_LABELS, type Zona } from '../types'
 
 const ORDEM_ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
 
+// Data local no formato yyyy-mm-dd, o mesmo valor do <input type="date">.
+function diaLocal(iso: string) {
+  const data = new Date(iso)
+  const mes = String(data.getMonth() + 1).padStart(2, '0')
+  const dia = String(data.getDate()).padStart(2, '0')
+  return `${data.getFullYear()}-${mes}-${dia}`
+}
+
 export function ListaPage() {
   const { linhas } = useLinhas()
   const { denuncias, loading, error } = useDenuncias(linhas)
   const [filtroZona, setFiltroZona] = useState<Zona | 'todas'>('todas')
 
+  const [filtroLinha, setFiltroLinha] = useState('')
+  const [filtroDia, setFiltroDia] = useState('')
+
   const filtradas = denuncias.filter(
-    (d) => filtroZona === 'todas' || (d.linha?.zona ?? 'outras') === filtroZona
+    (d) =>
+      (filtroZona === 'todas' || (d.linha?.zona ?? 'outras') === filtroZona) &&
+      (!filtroLinha || d.linha_id === filtroLinha) &&
+      (!filtroDia || diaLocal(d.created_at) === filtroDia)
   )
 
   return (
@@ -58,6 +73,39 @@ export function ListaPage() {
             </button>
           ))}
         </div>
+
+        <div className="flex gap-2">
+          <div className="min-w-0 flex-1">
+            <LinhaSelect
+              linhas={linhas}
+              value={filtroLinha}
+              onChange={setFiltroLinha}
+              placeholder="Todas as linhas"
+              listaLarga
+            />
+          </div>
+          <div className="w-[9.5rem] shrink-0">
+            <input
+              type="date"
+              aria-label="Filtrar por dia"
+              value={filtroDia}
+              onChange={(e) => setFiltroDia(e.target.value)}
+              className="input-brand min-w-0"
+            />
+          </div>
+        </div>
+        {(filtroLinha || filtroDia) && (
+          <button
+            type="button"
+            className="text-sm font-bold text-brand-green underline"
+            onClick={() => {
+              setFiltroLinha('')
+              setFiltroDia('')
+            }}
+          >
+            Limpar filtros de linha e dia
+          </button>
+        )}
 
         {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
 
