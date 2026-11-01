@@ -49,7 +49,7 @@ export function EnviarFeedback({ userId }: { userId: string }) {
             {TIPOS.map((t, i) => (
               <label
                 key={t}
-                className={`flex min-h-11 cursor-pointer items-center justify-center px-1 text-center text-[13px] font-bold ${
+                className={`relative flex min-h-11 cursor-pointer items-center justify-center px-1 text-center text-[13px] font-bold ${
                   i > 0 ? 'border-l-2 border-brand-green' : ''
                 } ${tipo === t ? 'bg-brand-green text-brand-cream' : 'bg-brand-cream text-brand-green'}`}
               >

@@ -1,9 +1,13 @@
 import { useState } from 'react'
 import { notificacoesSuportadas, permissaoNotificacao } from '../../lib/notificacaoNavegador'
-import { Button } from '../ui/Button'
-import { TituloSecao } from '../ui/TituloSecao'
 
-export function AtivarNotificacoes({ titleId }: { titleId?: string }) {
+const DICAS = {
+  default: 'Ativar avisos de problemas nas minhas linhas (com o app aberto)',
+  granted: 'Avisos do navegador ativados',
+  denied: 'Avisos bloqueados no navegador. Libere nas configurações do site.',
+} as const
+
+export function AtivarNotificacoes() {
   const [permissao, setPermissao] = useState(permissaoNotificacao)
 
   if (!notificacoesSuportadas()) return null
@@ -12,28 +16,30 @@ export function AtivarNotificacoes({ titleId }: { titleId?: string }) {
     setPermissao(await Notification.requestPermission())
   }
 
+  const estado = permissao === 'granted' || permissao === 'denied' ? permissao : 'default'
+  const ativo = estado === 'granted'
+  const bloqueado = estado === 'denied'
+
   return (
-    <>
-      <TituloSecao id={titleId}>Avisos das minhas linhas</TituloSecao>
-      <div className="card-brand space-y-3 p-4">
-        <p className="text-sm text-brand-green-dark/80">
-          Avisamos quando alguém reportar um problema numa linha cadastrada acima, com o app aberto.
-        </p>
-        {permissao === 'granted' && (
-          <p className="text-sm font-bold text-brand-green">Notificações do navegador ativadas.</p>
-        )}
-        {permissao === 'denied' && (
-          <p className="text-sm text-zona-leste">
-            Notificações bloqueadas no navegador. Libere nas configurações do site. Os avisos dentro
-            do app continuam funcionando.
-          </p>
-        )}
-        {permissao === 'default' && (
-          <Button type="button" variant="secondary" onClick={ativar}>
-            Ativar notificações do navegador
-          </Button>
-        )}
-      </div>
-    </>
+    <button
+      type="button"
+      aria-label={DICAS[estado]}
+      title={DICAS[estado]}
+      aria-pressed={ativo}
+      disabled={estado !== 'default'}
+      onClick={ativar}
+      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border-2 disabled:cursor-default ${
+        ativo
+          ? 'border-brand-green bg-brand-green text-brand-cream'
+          : bloqueado
+            ? 'border-[#c23838] bg-brand-cream text-[#c23838]'
+            : 'border-brand-green bg-brand-cream text-brand-green'
+      }`}
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M6 16V11a6 6 0 0112 0v5l2 2H4l2-2zM10 21h4" />
+        {bloqueado && <path d="M4 4l16 16" />}
+      </svg>
+    </button>
   )
 }

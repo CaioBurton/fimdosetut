@@ -1,4 +1,4 @@
-import { useState, type SyntheticEvent } from 'react'
+import { useState, type ReactNode, type SyntheticEvent } from 'react'
 import { usePerfilUsuario } from '../../hooks/usePerfilUsuario'
 import { ZONA_COLORS, ZONA_LABELS, type Linha, type PerfilDetalhes } from '../../types'
 import { LinhaSelect } from '../denuncia/LinhaSelect'
@@ -15,6 +15,8 @@ interface PerfilUsuarioProps {
   linhas: Linha[]
   totalDenuncias?: number
   totalResolvidas?: number
+  /** Conteúdo exibido entre "Linhas que eu pego" e "Meus dados". */
+  entreLinhasEDados?: ReactNode
 }
 
 type Mensagem = { tipo: 'ok' | 'erro'; texto: string }
@@ -52,6 +54,7 @@ export function PerfilUsuario({
   linhas,
   totalDenuncias = 0,
   totalResolvidas = 0,
+  entreLinhasEDados,
 }: PerfilUsuarioProps) {
   const { detalhes, linhaIds, loading, error, salvarDetalhes, adicionarLinha, removerLinha } =
     usePerfilUsuario(userId)
@@ -211,6 +214,7 @@ export function PerfilUsuario({
                   <path d="M13.5 6.5l4 4" />
                 </svg>
               </button>
+              <AtivarNotificacoes />
             </div>
           )}
           {criadoEm && (
@@ -232,42 +236,6 @@ export function PerfilUsuario({
         <p className="text-sm text-brand-green-dark/60">Carregando perfil...</p>
       ) : (
         <>
-          <section aria-labelledby="perfil-dados">
-            <TituloSecao id="perfil-dados">Meus dados</TituloSecao>
-            <form onSubmit={salvar} className="card-brand space-y-3.5 p-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide">E-mail da conta</p>
-                <p className="mt-1 break-all text-sm font-medium text-brand-green-dark/80">{email}</p>
-              </div>
-              <label className="block text-xs font-bold uppercase tracking-wide">
-                Bairro onde mora
-                <input
-                  className="input-brand mt-1.5 text-base font-normal normal-case tracking-normal"
-                  value={form.bairro_moradia}
-                  onChange={(e) => alterar('bairro_moradia', e.target.value)}
-                />
-              </label>
-              <label className="block text-xs font-bold uppercase tracking-wide">
-                Local de trabalho
-                <input
-                  className="input-brand mt-1.5 text-base font-normal normal-case tracking-normal"
-                  value={form.local_trabalho}
-                  onChange={(e) => alterar('local_trabalho', e.target.value)}
-                />
-              </label>
-              <label className="block text-xs font-bold uppercase tracking-wide">
-                Local de estudo
-                <input
-                  className="input-brand mt-1.5 text-base font-normal normal-case tracking-normal"
-                  value={form.local_estudo}
-                  onChange={(e) => alterar('local_estudo', e.target.value)}
-                />
-              </label>
-              <Button type="submit">Salvar dados</Button>
-              <Aviso mensagem={msgDados} />
-            </form>
-          </section>
-
           <section aria-labelledby="perfil-linhas">
             <TituloSecao id="perfil-linhas">Linhas que eu pego</TituloSecao>
             <div className="card-brand space-y-3 p-4">
@@ -319,8 +287,42 @@ export function PerfilUsuario({
             </div>
           </section>
 
-          <section aria-labelledby="perfil-avisos">
-            <AtivarNotificacoes titleId="perfil-avisos" />
+          {entreLinhasEDados}
+
+          <section aria-labelledby="perfil-dados">
+            <TituloSecao id="perfil-dados">Meus dados</TituloSecao>
+            <form onSubmit={salvar} className="card-brand space-y-3.5 p-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide">E-mail da conta</p>
+                <p className="mt-1 break-all text-sm font-medium text-brand-green-dark/80">{email}</p>
+              </div>
+              <label className="block text-xs font-bold uppercase tracking-wide">
+                Bairro onde mora
+                <input
+                  className="input-brand mt-1.5 text-base font-normal normal-case tracking-normal"
+                  value={form.bairro_moradia}
+                  onChange={(e) => alterar('bairro_moradia', e.target.value)}
+                />
+              </label>
+              <label className="block text-xs font-bold uppercase tracking-wide">
+                Local de trabalho
+                <input
+                  className="input-brand mt-1.5 text-base font-normal normal-case tracking-normal"
+                  value={form.local_trabalho}
+                  onChange={(e) => alterar('local_trabalho', e.target.value)}
+                />
+              </label>
+              <label className="block text-xs font-bold uppercase tracking-wide">
+                Local de estudo
+                <input
+                  className="input-brand mt-1.5 text-base font-normal normal-case tracking-normal"
+                  value={form.local_estudo}
+                  onChange={(e) => alterar('local_estudo', e.target.value)}
+                />
+              </label>
+              <Button type="submit">Salvar dados</Button>
+              <Aviso mensagem={msgDados} />
+            </form>
           </section>
         </>
       )}
