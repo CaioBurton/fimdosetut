@@ -1,6 +1,7 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet'
+import L from 'leaflet'
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import {
   STATUS_LABELS,
   TIPO_LABELS,
@@ -11,6 +12,7 @@ import {
 } from '../../types'
 import { agruparDenuncias, normalizarVeiculo } from '../../lib/agruparDenuncias'
 import { criarIconeZona } from './markerIcon'
+import { BotaoMinhaLocalizacao } from './BotaoMinhaLocalizacao'
 
 const TERESINA_CENTER: [number, number] = [-5.0892, -42.8019]
 const ZONAS_FILTRO: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
@@ -28,6 +30,60 @@ function FecharAoClicarNoMapa({ onClick }: { onClick: () => void }) {
   return null
 }
 
+/** Mira dentro do mapa: centraliza onde a pessoa está (o navegador pede a permissão de localização). */
+function CentralizarNaMinhaLocalizacao({ map }: { map: L.Map | null }) {
+  const [buscando, setBuscando] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
+
+  function buscar() {
+    if (!map) return
+    if (!navigator.geolocation) {
+      setErro('Geolocalização não suportada neste navegador.')
+      return
+    }
+    setBuscando(true)
+    setErro(null)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        map.setView([pos.coords.latitude, pos.coords.longitude], Math.max(map.getZoom(), 15))
+        setBuscando(false)
+      },
+      () => {
+        setErro('Não foi possível obter sua localização.')
+        setBuscando(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    )
+  }
+
+  return (
+    <div
+      ref={(el) => {
+        // Toques no botão não podem chegar ao mapa (fechariam o cartão da denúncia selecionada).
+        if (el) {
+          L.DomEvent.disableClickPropagation(el)
+          L.DomEvent.disableScrollPropagation(el)
+        }
+      }}
+      className="pointer-events-auto flex flex-col items-end gap-1.5"
+    >
+      <BotaoMinhaLocalizacao onClick={buscar} buscando={buscando} />
+      {erro && (
+        <p role="alert" className="card-brand max-w-[200px] !bg-brand-cream px-2 py-1 text-xs font-semibold text-zona-leste">
+          {erro}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** Entrega a instância do mapa a quem está fora do `MapContainer` (como o botão de localização). */
+function CapturarMapa({ onMapa }: { onMapa: (map: L.Map) => void }) {
+  const map = useMap()
+  useEffect(() => onMapa(map), [map, onMapa])
+  return null
+}
+
 export function MapaDenuncias({
   denuncias,
   semFiltroZona = false,
@@ -41,6 +97,7 @@ export function MapaDenuncias({
 }) {
   const [filtro, setFiltro] = useState<Zona | 'todas'>('todas')
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null)
+  const [mapa, setMapa] = useState<L.Map | null>(null)
 
   const visiveis = useMemo(
     () => denuncias.filter((d) => filtro === 'todas' || (d.linha?.zona ?? 'outras') === filtro),
@@ -72,6 +129,7 @@ export function MapaDenuncias({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <CapturarMapa onMapa={setMapa} />
         <FecharAoClicarNoMapa onClick={() => setSelecionadaId(null)} />
         {grupos.map(({ principal: denuncia, denuncias: membros }) => {
           const zona = denuncia.linha?.zona ?? 'outras'
@@ -121,8 +179,10 @@ export function MapaDenuncias({
       </div>
       )}
 
+      <div className="pointer-events-none absolute inset-x-3 bottom-3.5 z-[500] flex flex-col items-end gap-2.5">
+      <CentralizarNaMinhaLocalizacao map={mapa} />
       {selecionada && (
-        <div className="card-brand absolute inset-x-3 bottom-3.5 z-[500] flex flex-col gap-2.5 !bg-brand-cream p-3.5">
+        <div className="card-brand pointer-events-auto flex w-full flex-col gap-2.5 !bg-brand-cream p-3.5">
           <div className="flex items-center gap-3">
             <span className="ttl bg-brand-green px-2.5 py-2 text-xl leading-none text-brand-cream">
               {selecionada.linha?.codigo ?? '—'}
@@ -164,6 +224,7 @@ export function MapaDenuncias({
           {acoesSelecionada && <div className="flex gap-2">{acoesSelecionada(selecionada)}</div>}
         </div>
       )}
+      </div>
     </div>
   )
 }
