@@ -22,8 +22,18 @@ function mockChannel() {
 }
 
 const nova = (extra: Record<string, unknown> = {}) => ({
-  new: { id: 'd1', user_id: 'outro', linha_id: 'l1', tipo: 'quebrado', descricao: 'Parou', ...extra },
+  new: { id: 'd1', linha_id: 'l1', tipo: 'quebrado', descricao: 'Parou', ...extra },
 })
+
+// Responde por tabela: o que o usuário cadastrou (`usuario_linhas`) e se é o autor (`denuncia_autores`).
+function mockarTabelas({ interesse, minha }: { interesse: boolean; minha: boolean }) {
+  vi.mocked(supabase.from).mockImplementation(((tabela: string) => {
+    if (tabela === 'usuario_linhas') {
+      return createChainable({ data: interesse ? { linha_id: 'l1' } : null, error: null })
+    }
+    return createChainable({ data: minha ? { denuncia_id: 'd1' } : null, error: null })
+  }) as never)
+}
 
 describe('useAlertasLinhas', () => {
   beforeEach(() => {
@@ -33,9 +43,7 @@ describe('useAlertasLinhas', () => {
 
   it('cria um alerta quando outra pessoa reporta problema numa linha do perfil', async () => {
     const handlers = mockChannel()
-    vi.mocked(supabase.from).mockReturnValue(
-      createChainable({ data: { linha_id: 'l1' }, error: null }) as never
-    )
+    mockarTabelas({ interesse: true, minha: false })
 
     const { result } = renderHook(() => useAlertasLinhas('u1', linhas))
     act(() => handlers.INSERT(nova()))
@@ -46,21 +54,23 @@ describe('useAlertasLinhas', () => {
 
   it('ignora linhas que o usuário não cadastrou', async () => {
     const handlers = mockChannel()
-    vi.mocked(supabase.from).mockReturnValue(createChainable({ data: null, error: null }) as never)
+    mockarTabelas({ interesse: false, minha: false })
 
     const { result } = renderHook(() => useAlertasLinhas('u1', linhas))
     act(() => handlers.INSERT(nova()))
 
-    await waitFor(() => expect(supabase.from).toHaveBeenCalled())
+    await waitFor(() => expect(supabase.from).toHaveBeenCalledWith('usuario_linhas'))
     expect(result.current.alertas).toHaveLength(0)
   })
 
-  it('não avisa sobre as próprias denúncias', () => {
+  it('não avisa sobre as próprias denúncias (a autoria é consultada na tabela privada)', async () => {
     const handlers = mockChannel()
-    const { result } = renderHook(() => useAlertasLinhas('u1', linhas))
-    act(() => handlers.INSERT(nova({ user_id: 'u1' })))
+    mockarTabelas({ interesse: true, minha: true })
 
-    expect(supabase.from).not.toHaveBeenCalled()
+    const { result } = renderHook(() => useAlertasLinhas('u1', linhas))
+    act(() => handlers.INSERT(nova()))
+
+    await waitFor(() => expect(supabase.from).toHaveBeenCalledWith('denuncia_autores'))
     expect(result.current.alertas).toHaveLength(0)
   })
 })

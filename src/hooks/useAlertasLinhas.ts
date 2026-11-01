@@ -40,17 +40,25 @@ export function useAlertasLinhas(userId: string | undefined, linhas: Linha[]) {
         { event: 'INSERT', schema: 'public', table: 'denuncias' },
         (payload) => {
           const nova = payload.new as Denuncia
-          if (nova.user_id === userId) return
 
-          // Consulta a cada evento para refletir mudanças recentes nas linhas do perfil.
-          supabase
-            .from('usuario_linhas')
-            .select('linha_id')
-            .eq('user_id', userId)
-            .eq('linha_id', nova.linha_id)
-            .maybeSingle()
-            .then(({ data }) => {
-              if (!data) return
+          // Consulta a cada evento para refletir mudanças recentes nas linhas do perfil, e confere
+          // se a denúncia é do próprio usuário (a autoria é privada: só o dono consegue ler a dele).
+          Promise.all([
+            supabase
+              .from('usuario_linhas')
+              .select('linha_id')
+              .eq('user_id', userId)
+              .eq('linha_id', nova.linha_id)
+              .maybeSingle(),
+            supabase
+              .from('denuncia_autores')
+              .select('denuncia_id')
+              .eq('denuncia_id', nova.id)
+              .eq('user_id', userId)
+              .maybeSingle(),
+          ])
+            .then(([interesse, minha]) => {
+              if (!interesse.data || minha.data) return
               const alerta: AlertaLinha = {
                 id: nova.id,
                 linhaId: nova.linha_id,

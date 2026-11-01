@@ -9,7 +9,6 @@ const antigo = new Date(Date.now() - 100 * 24 * 3600 * 1000).toISOString()
 
 function d(p: Partial<Denuncia> & { id: string }): Denuncia {
   return {
-    user_id: 'u1',
     linha_id: 'l1',
     tipo: 'quebrado',
     status: 'pendente',

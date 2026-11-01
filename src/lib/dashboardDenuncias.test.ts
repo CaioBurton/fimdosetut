@@ -11,7 +11,6 @@ const agora = new Date('2026-10-31T15:00:00')
 
 function d(p: Partial<Denuncia> & { id: string }): Denuncia {
   return {
-    user_id: 'u1',
     linha_id: 'l1',
     tipo: 'quebrado',
     status: 'pendente',

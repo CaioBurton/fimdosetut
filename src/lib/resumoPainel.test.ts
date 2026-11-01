@@ -5,7 +5,6 @@ import { diasDoPeriodo, resumirDenuncias, resumoDaRpc, taxaResolucao } from './r
 function d(p: Partial<Denuncia> & { id: string }): Denuncia {
   const agora = new Date().toISOString()
   return {
-    user_id: 'u1',
     linha_id: 'l1',
     tipo: 'quebrado',
     status: 'pendente',

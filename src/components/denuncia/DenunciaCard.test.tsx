@@ -6,7 +6,6 @@ import { DenunciaCard } from './DenunciaCard'
 function criarDenuncia(sobrescrever: Partial<Denuncia> = {}): Denuncia {
   return {
     id: 'd1',
-    user_id: 'u1',
     linha_id: 'l1',
     tipo: 'quebrado',
     status: 'pendente',

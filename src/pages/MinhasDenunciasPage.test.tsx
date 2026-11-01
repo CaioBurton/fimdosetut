@@ -15,7 +15,6 @@ const linhasFalsas = [{ id: 'l1', codigo: '103', nome: 'MOCAMBINHO', zona: 'nort
 function denunciaDoUsuario(sobrescrever: Record<string, unknown> = {}) {
   return {
     id: 'd1',
-    user_id: 'u1',
     linha_id: 'l1',
     tipo: 'quebrado',
     status: 'pendente',
@@ -48,8 +47,8 @@ function mockarUsuarioLogado(userMetadata: Record<string, unknown> = {}) {
 
 type Resultado = Parameters<typeof createChainable>[0]
 
-// Responde por tabela (a ordem das chamadas não importa); a última chamada em
-// `denuncias` após a listagem é a ação (update/delete) da própria tela.
+// Responde por tabela (a ordem das chamadas não importa): a listagem vem da visão
+// `minhas_denuncias` e as ações (update/delete) da própria tela vão em `denuncias`.
 function mockarTabelas(tabelas: {
   linhas?: Resultado
   denuncias?: Resultado
@@ -57,14 +56,11 @@ function mockarTabelas(tabelas: {
   perfis_detalhes?: Resultado
   usuario_linhas?: Resultado
 }) {
-  let chamadasDenuncias = 0
   const vazio = { data: [], error: null }
   vi.mocked(supabase.from).mockImplementation(((tabela: string) => {
     if (tabela === 'linhas') return createChainable(tabelas.linhas ?? vazio)
-    if (tabela === 'denuncias') {
-      chamadasDenuncias += 1
-      return createChainable(chamadasDenuncias === 1 ? (tabelas.denuncias ?? vazio) : (tabelas.acao ?? vazio))
-    }
+    if (tabela === 'minhas_denuncias') return createChainable(tabelas.denuncias ?? vazio)
+    if (tabela === 'denuncias') return createChainable(tabelas.acao ?? vazio)
     if (tabela === 'perfis_detalhes') return createChainable(tabelas.perfis_detalhes ?? { data: null, error: null })
     return createChainable(tabelas.usuario_linhas ?? vazio)
   }) as never)
@@ -84,11 +80,11 @@ describe('MinhasDenunciasPage (integração: UI + hooks + Supabase)', () => {
     vi.mocked(supabase.from).mockReset()
   })
 
-  it('mostra apenas as denúncias do usuário logado', async () => {
+  it('mostra as denúncias do usuário logado (visão minhas_denuncias)', async () => {
     mockarTabelas({
       linhas: { data: linhasFalsas, error: null },
       denuncias: {
-        data: [denunciaDoUsuario(), denunciaDoUsuario({ id: 'd2', user_id: 'outro-usuario' })],
+        data: [denunciaDoUsuario()],
         error: null,
       },
     })
@@ -97,6 +93,8 @@ describe('MinhasDenunciasPage (integração: UI + hooks + Supabase)', () => {
 
     expect(await screen.findByText('103 - MOCAMBINHO')).toBeInTheDocument()
     expect(screen.getAllByText('103 - MOCAMBINHO')).toHaveLength(1)
+    // As denúncias do usuário vêm da visão do banco, sem filtrar por autor no navegador.
+    expect(supabase.from).toHaveBeenCalledWith('minhas_denuncias')
   })
 
   it('mostra estado vazio quando o usuário não tem denúncias', async () => {
@@ -122,7 +120,7 @@ describe('MinhasDenunciasPage (integração: UI + hooks + Supabase)', () => {
 
     const chainDaAcao = vi
       .mocked(supabase.from)
-      .mock.results.filter((_, i) => vi.mocked(supabase.from).mock.calls[i][0] === 'denuncias')[1].value
+      .mock.results.filter((_, i) => vi.mocked(supabase.from).mock.calls[i][0] === 'denuncias')[0].value
     expect(chainDaAcao.update).toHaveBeenCalledWith({ status: 'resolvido' })
     expect(chainDaAcao.eq).toHaveBeenCalledWith('id', 'd1')
   })
