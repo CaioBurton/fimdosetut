@@ -29,10 +29,15 @@ function denunciaDoUsuario(sobrescrever: Record<string, unknown> = {}) {
   }
 }
 
-function mockarUsuarioLogado() {
+function mockarUsuarioLogado(userMetadata: Record<string, unknown> = {}) {
   vi.mocked(useAuth).mockReturnValue({
     // @ts-expect-error -- apenas os campos usados pelo componente são necessários no teste
-    user: { id: 'u1', email: 'a@b.com', created_at: '2026-01-01T00:00:00.000Z' },
+    user: {
+      id: 'u1',
+      email: 'a@b.com',
+      created_at: '2026-01-01T00:00:00.000Z',
+      user_metadata: userMetadata,
+    },
     session: null,
     loading: false,
     signIn: vi.fn(),
@@ -243,5 +248,84 @@ describe('MinhasDenunciasPage (integração: UI + hooks + Supabase)', () => {
 
     await screen.findByText('Ônibus parado.')
     expect(screen.queryByRole('navigation', { name: 'Paginação' })).not.toBeInTheDocument()
+  })
+
+  it('mostra o nome da pessoa no lugar do e-mail no topo do perfil', async () => {
+    mockarTabelas({
+      linhas: { data: linhasFalsas, error: null },
+      perfis_detalhes: {
+        data: { nome: 'Maria Souza', bairro_moradia: '', local_trabalho: '', local_estudo: '' },
+        error: null,
+      },
+    })
+
+    renderPagina()
+
+    const resumo = await screen.findByRole('region', { name: 'Resumo do perfil' })
+    expect(await within(resumo).findByRole('heading', { name: 'Maria Souza' })).toBeInTheDocument()
+    expect(within(resumo).queryByText('a@b.com')).not.toBeInTheDocument()
+    // o e-mail continua visível, mas só nos dados da conta
+    expect(screen.getByText('a@b.com')).toBeInTheDocument()
+  })
+
+  it('usa o nome informado no cadastro até a pessoa editar', async () => {
+    mockarUsuarioLogado({ nome: 'João do Cadastro' })
+    mockarTabelas({ linhas: { data: linhasFalsas, error: null } })
+
+    renderPagina()
+
+    expect(await screen.findByRole('heading', { name: 'João do Cadastro' })).toBeInTheDocument()
+  })
+
+  it('convida a adicionar o nome quando ainda não há nenhum', async () => {
+    mockarTabelas({ linhas: { data: linhasFalsas, error: null } })
+
+    renderPagina()
+
+    expect(await screen.findByRole('heading', { name: 'Adicione seu nome' })).toBeInTheDocument()
+  })
+
+  it('edita o nome pelo botão ao lado e salva no perfil', async () => {
+    mockarTabelas({
+      linhas: { data: linhasFalsas, error: null },
+      perfis_detalhes: {
+        data: { nome: 'Maria', bairro_moradia: 'Dirceu', local_trabalho: '', local_estudo: '' },
+        error: null,
+      },
+    })
+    const user = userEvent.setup()
+    renderPagina()
+
+    await user.click(await screen.findByRole('button', { name: 'Editar nome' }))
+    const campo = screen.getByLabelText('Seu nome')
+    expect(campo).toHaveValue('Maria')
+    await user.clear(campo)
+    await user.type(campo, '  Maria Souza ')
+    await user.click(screen.getByRole('button', { name: 'Salvar nome' }))
+
+    expect(await screen.findByRole('heading', { name: 'Maria Souza' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Seu nome')).not.toBeInTheDocument()
+    const chain = vi
+      .mocked(supabase.from)
+      .mock.results.map((r) => r.value as { upsert: { mock: { calls: unknown[][] } } })
+      .find((c) => c.upsert?.mock.calls.length > 0)
+    expect(chain?.upsert.mock.calls[0][0]).toMatchObject({
+      user_id: 'u1',
+      nome: 'Maria Souza',
+      bairro_moradia: 'Dirceu',
+    })
+  })
+
+  it('não salva nome vazio e permite cancelar a edição', async () => {
+    mockarTabelas({ linhas: { data: linhasFalsas, error: null } })
+    const user = userEvent.setup()
+    renderPagina()
+
+    await user.click(await screen.findByRole('button', { name: 'Editar nome' }))
+    await user.click(screen.getByRole('button', { name: 'Salvar nome' }))
+    expect(screen.getByText('Digite o seu nome.')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+    expect(screen.queryByLabelText('Seu nome')).not.toBeInTheDocument()
   })
 })

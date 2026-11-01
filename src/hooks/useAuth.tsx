@@ -8,7 +8,7 @@ interface AuthContextValue {
   loading: boolean
   isAdmin: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
-  signUp: (email: string, password: string) => Promise<{ error: string | null }>
+  signUp: (email: string, password: string, nome?: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
 }
 
@@ -65,8 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null }
   }
 
-  async function signUp(email: string, password: string) {
-    const { error } = await supabase.auth.signUp({ email, password })
+  async function signUp(email: string, password: string, nome?: string) {
+    // O nome vai nos metadados do usuário; o perfil o usa até a pessoa editá-lo.
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      ...(nome ? { options: { data: { nome } } } : {}),
+    })
     return { error: error?.message ?? null }
   }
 

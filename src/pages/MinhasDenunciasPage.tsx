@@ -48,6 +48,7 @@ export function MinhasDenunciasPage() {
           <PerfilUsuario
             userId={user.id}
             email={user.email ?? ''}
+            nomeCadastro={typeof user.user_metadata?.nome === 'string' ? user.user_metadata.nome : ''}
             criadoEm={user.created_at}
             linhas={linhas}
             totalDenuncias={minhas.length}

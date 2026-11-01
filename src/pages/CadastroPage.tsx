@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth'
 export function CadastroPage() {
   const { signUp } = useAuth()
   const navigate = useNavigate()
+  const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState<string | null>(null)
@@ -21,7 +22,7 @@ export function CadastroPage() {
     }
     setEnviando(true)
     setErro(null)
-    const { error } = await signUp(email, senha)
+    const { error } = await signUp(email, senha, nome.trim())
     setEnviando(false)
     if (error) {
       setErro(
@@ -64,6 +65,16 @@ export function CadastroPage() {
         </p>
       ) : (
         <form onSubmit={handleSubmit} className="card-brand !border-brand-cream !shadow-[5px_5px_0_#052d00] space-y-3 bg-brand-cream p-5">
+          <input
+            required
+            type="text"
+            autoComplete="name"
+            maxLength={80}
+            placeholder="Nome"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            className="input-brand"
+          />
           <input
             required
             type="email"
