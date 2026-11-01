@@ -60,10 +60,12 @@ export function SidebarNav() {
           <svg {...ic}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>
           Lista
         </Item>
-        <Item para={user ? '/minhas' : '/login'}>
-          <svg {...ic}><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 4-6 8-6s8 2 8 6" /></svg>
-          {user ? 'Perfil' : 'Entrar'}
-        </Item>
+        {user && (
+          <Item para="/minhas">
+            <svg {...ic}><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 4-6 8-6s8 2 8 6" /></svg>
+            Perfil
+          </Item>
+        )}
         {isAdmin ? (
           <Item para="/admin">
             <svg {...ic}><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z" /><path d="M9 12l2 2 4-4" /></svg>
@@ -104,7 +106,7 @@ export function SidebarNav() {
         Reportar
       </NavLink>
 
-      {user && (
+      {user ? (
         <button
           type="button"
           onClick={() => signOut()}
@@ -112,6 +114,13 @@ export function SidebarNav() {
         >
           Sair
         </button>
+      ) : (
+        <Link
+          to="/login"
+          className="relative mt-auto flex min-h-11 items-center self-start rounded-[2px] border-2 border-brand-cream px-4 text-sm font-bold hover:bg-brand-cream hover:text-brand-green"
+        >
+          Entrar
+        </Link>
       )}
 
     </aside>

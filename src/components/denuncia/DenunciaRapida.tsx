@@ -5,6 +5,24 @@ import { usePerfilUsuario } from '../../hooks/usePerfilUsuario'
 import { supabase } from '../../lib/supabaseClient'
 import { TIPO_LABELS, type Linha, type TipoProblema } from '../../types'
 
+// Vive só em memória: mantém o card fechado ao navegar pelo app, mas ele volta ao atualizar a página.
+let ocultaNaSessao = false
+
+function BotaoFecharCard({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label="Fechar denúncia rápida"
+      onClick={onClick}
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[2px] border-2 border-brand-green text-brand-green"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18" />
+      </svg>
+    </button>
+  )
+}
+
 const TIPOS = Object.keys(TIPO_LABELS) as TipoProblema[]
 
 type Gps =
@@ -27,16 +45,25 @@ export function DenunciaRapida({ linhas }: { linhas: Linha[] }) {
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [enviada, setEnviada] = useState(false)
+  const [oculta, setOculta] = useState(ocultaNaSessao)
 
-  if (user && loading) return null
+  if ((user && loading) || oculta) return null
+
+  function ocultar() {
+    ocultaNaSessao = true
+    setOculta(true)
+  }
 
   if (!user) {
     return (
-      <div className="card-brand !bg-brand-cream p-3 text-sm">
-        <Link to="/nova" className="font-bold underline">
-          Deu o prego? Denuncie agora
-        </Link>{' '}
-        sem precisar de conta.
+      <div className="card-brand flex items-start justify-between gap-2 !bg-brand-cream p-3 text-sm">
+        <p>
+          <Link to="/nova" className="font-bold underline">
+            Deu o prego? Denuncie agora
+          </Link>{' '}
+          sem precisar de conta.
+        </p>
+        <BotaoFecharCard onClick={ocultar} />
       </div>
     )
   }
@@ -45,11 +72,14 @@ export function DenunciaRapida({ linhas }: { linhas: Linha[] }) {
 
   if (favoritas.length === 0) {
     return (
-      <div className="card-brand !bg-brand-cream p-3 text-sm">
-        <Link to="/minhas" className="font-bold underline">
-          Adicione as linhas que você pega no perfil
-        </Link>{' '}
-        para denunciar em 3 toques.
+      <div className="card-brand flex items-start justify-between gap-2 !bg-brand-cream p-3 text-sm">
+        <p>
+          <Link to="/minhas" className="font-bold underline">
+            Adicione as linhas que você pega no perfil
+          </Link>{' '}
+          para denunciar em 3 toques.
+        </p>
+        <BotaoFecharCard onClick={ocultar} />
       </div>
     )
   }
@@ -108,11 +138,14 @@ export function DenunciaRapida({ linhas }: { linhas: Linha[] }) {
     <section aria-label="Denúncia rápida" className="card-brand space-y-2.5 !bg-brand-cream p-3">
       <div className="flex items-center justify-between gap-2">
         <p className="ttl text-sm text-brand-green">Deu o prego? Toque na sua linha</p>
-        {linha && (
-          <button type="button" onClick={fechar} className="min-h-8 px-2 text-sm font-bold underline">
-            Cancelar
-          </button>
-        )}
+        <div className="flex shrink-0 items-center gap-1">
+          {linha && (
+            <button type="button" onClick={fechar} className="min-h-8 px-2 text-sm font-bold underline">
+              Cancelar
+            </button>
+          )}
+          <BotaoFecharCard onClick={ocultar} />
+        </div>
       </div>
 
       <div className="sem-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" aria-label="Suas linhas">

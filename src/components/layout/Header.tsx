@@ -14,13 +14,20 @@ export function Header({ title }: { title: string }) {
         />
       </Link>
       <h1 className="ttl min-w-0 flex-1 truncate py-1 pr-1.5 text-right text-xl">{title}</h1>
-      {user && (
+      {user ? (
         <button
           onClick={() => signOut()}
           className="ttl min-h-11 rounded-[2px] border-2 border-brand-cream px-3.5 text-[13px] !font-bold !not-italic active:bg-brand-cream active:text-brand-green"
         >
           Sair
         </button>
+      ) : (
+        <Link
+          to="/login"
+          className="ttl flex min-h-11 items-center rounded-[2px] border-2 border-brand-cream px-3.5 text-[13px] !font-bold !not-italic active:bg-brand-cream active:text-brand-green"
+        >
+          Entrar
+        </Link>
       )}
     </header>
   )
