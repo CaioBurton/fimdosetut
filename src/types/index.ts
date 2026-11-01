@@ -71,3 +71,20 @@ export interface PerfilDetalhes {
   local_trabalho: string
   local_estudo: string
 }
+
+export type TipoFeedback = 'sugestao' | 'problema' | 'elogio'
+
+export const TIPO_FEEDBACK_LABELS: Record<TipoFeedback, string> = {
+  sugestao: 'Sugestão',
+  problema: 'Problema no app',
+  elogio: 'Elogio',
+}
+
+export interface Feedback {
+  id: string
+  user_id: string | null
+  tipo: TipoFeedback
+  mensagem: string
+  created_at: string
+  perfil?: { email: string } | null
+}

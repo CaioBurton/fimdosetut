@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { AppLayout } from '../components/layout/AppLayout'
+import { FeedbacksAdmin } from '../components/admin/FeedbacksAdmin'
 import { LinhasAdmin } from '../components/admin/LinhasAdmin'
 import { PainelAdmin } from '../components/admin/PainelAdmin'
 import { DashboardDenuncias } from '../components/admin/DashboardDenuncias'
@@ -13,13 +14,14 @@ import { useUsuarios } from '../hooks/useUsuarios'
 import { supabase } from '../lib/supabaseClient'
 import type { Perfil } from '../types'
 
-type Aba = 'painel' | 'denuncias' | 'linhas' | 'usuarios'
+type Aba = 'painel' | 'denuncias' | 'linhas' | 'usuarios' | 'feedbacks'
 
 const ABAS: { id: Aba; rotulo: string }[] = [
   { id: 'painel', rotulo: 'Painel' },
   { id: 'denuncias', rotulo: 'Denúncias' },
   { id: 'linhas', rotulo: 'Linhas' },
   { id: 'usuarios', rotulo: 'Usuários' },
+  { id: 'feedbacks', rotulo: 'Feedbacks' },
 ]
 
 export function AdminPage() {
@@ -160,6 +162,8 @@ export function AdminPage() {
             </DashboardDenuncias>
           </>
         )}
+
+        {aba === 'feedbacks' && <FeedbacksAdmin />}
 
         {aba === 'usuarios' && (
           <UsuariosAdmin totalPorUsuario={totalPorUsuario} onErro={setAcaoErro} />

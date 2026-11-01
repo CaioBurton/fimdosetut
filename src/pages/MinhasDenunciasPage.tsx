@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AppLayout } from '../components/layout/AppLayout'
+import { EnviarFeedback } from '../components/perfil/EnviarFeedback'
 import { PerfilUsuario } from '../components/perfil/PerfilUsuario'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { Button } from '../components/ui/Button'
@@ -95,6 +96,12 @@ export function MinhasDenunciasPage() {
         ))}
 
         <Paginacao pagina={paginaAtual} totalPaginas={totalPaginas} onChange={setPagina} />
+
+        {user && (
+          <div className="pt-4">
+            <EnviarFeedback userId={user.id} />
+          </div>
+        )}
 
         <div className="flex flex-col items-center gap-2 pt-6 text-center">
           <p className="text-sm font-medium text-brand-green-dark/80">Acompanhe o Fórum nas redes</p>
