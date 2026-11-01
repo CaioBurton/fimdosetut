@@ -5,6 +5,7 @@ import { AdminRoute } from './routes/AdminRoute'
 import { AdminPage } from './pages/AdminPage'
 import { MapaPage } from './pages/MapaPage'
 import { ListaPage } from './pages/ListaPage'
+import { PainelPage } from './pages/PainelPage'
 import { NovaDenunciaPage } from './pages/NovaDenunciaPage'
 import { MinhasDenunciasPage } from './pages/MinhasDenunciasPage'
 import { LoginPage } from './pages/LoginPage'
@@ -21,6 +22,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<MapaPage />} />
           <Route path="/denuncias" element={<ListaPage />} />
+          <Route path="/painel" element={<PainelPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/cadastro" element={<CadastroPage />} />
           <Route
