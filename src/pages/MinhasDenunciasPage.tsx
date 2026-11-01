@@ -3,6 +3,7 @@ import { AppLayout } from '../components/layout/AppLayout'
 import { PerfilUsuario } from '../components/perfil/PerfilUsuario'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { Button } from '../components/ui/Button'
+import { Instagram } from '../components/ui/Instagram'
 import { TituloSecao } from '../components/ui/TituloSecao'
 import { useAuth } from '../hooks/useAuth'
 import { useDenuncias } from '../hooks/useDenuncias'
@@ -83,6 +84,11 @@ export function MinhasDenunciasPage() {
             }
           />
         ))}
+
+        <div className="flex flex-col items-center gap-2 pt-6 text-center">
+          <p className="text-sm font-medium text-brand-green-dark/80">Acompanhe o Fórum nas redes</p>
+          <Instagram />
+        </div>
       </div>
     </AppLayout>
   )

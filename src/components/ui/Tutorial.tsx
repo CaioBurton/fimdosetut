@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Instagram } from './Instagram'
 
 export const TUTORIAL_KEY = 'deu-o-prego:tutorial-visto'
 
@@ -90,6 +91,7 @@ export function Tutorial() {
             {atual.titulo}
           </h2>
           <p className="text-base leading-snug text-brand-green-dark">{atual.texto}</p>
+          {ultimo && <Instagram className="mt-2 self-start" />}
         </div>
 
         <div className="flex items-center justify-between gap-3 px-5 pb-5">
