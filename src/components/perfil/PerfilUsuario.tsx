@@ -3,6 +3,7 @@ import { usePerfilUsuario } from '../../hooks/usePerfilUsuario'
 import type { Linha, PerfilDetalhes } from '../../types'
 import { LinhaSelect } from '../denuncia/LinhaSelect'
 import { Button } from '../ui/Button'
+import { AtivarNotificacoes } from './AtivarNotificacoes'
 
 interface PerfilUsuarioProps {
   userId: string
@@ -138,6 +139,8 @@ export function PerfilUsuario({ userId, email, criadoEm, linhas }: PerfilUsuario
               Adicionar linha
             </Button>
           </div>
+
+          <AtivarNotificacoes />
         </>
       )}
     </section>

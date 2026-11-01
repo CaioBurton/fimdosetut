@@ -8,6 +8,7 @@ import { ListaPage } from './pages/ListaPage'
 import { NovaDenunciaPage } from './pages/NovaDenunciaPage'
 import { MinhasDenunciasPage } from './pages/MinhasDenunciasPage'
 import { LoginPage } from './pages/LoginPage'
+import { AlertasLinhas } from './components/ui/AlertasLinhas'
 import { Tutorial } from './components/ui/Tutorial'
 import { CadastroPage } from './pages/CadastroPage'
 
@@ -16,6 +17,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Tutorial />
+        <AlertasLinhas />
         <Routes>
           <Route path="/" element={<MapaPage />} />
           <Route path="/denuncias" element={<ListaPage />} />
