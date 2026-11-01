@@ -4,6 +4,7 @@ import { EnviarFeedback } from '../components/perfil/EnviarFeedback'
 import { PerfilUsuario } from '../components/perfil/PerfilUsuario'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { Button } from '../components/ui/Button'
+import { MeusDadosPrivacidade } from '../components/perfil/MeusDadosPrivacidade'
 import { LinksLegais } from '../components/legal/LinksLegais'
 import { Instagram } from '../components/ui/Instagram'
 import { Paginacao } from '../components/ui/Paginacao'
@@ -106,6 +107,12 @@ export function MinhasDenunciasPage() {
         {user && (
           <div className="pt-4">
             <EnviarFeedback userId={user.id} />
+          </div>
+        )}
+
+        {user && (
+          <div className="pt-4">
+            <MeusDadosPrivacidade />
           </div>
         )}
 

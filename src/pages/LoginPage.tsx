@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { LinksLegais } from '../components/legal/LinksLegais'
 import { Instagram } from '../components/ui/Instagram'
 import { useAuth } from '../hooks/useAuth'
+import { lerAvisoLogin, limparAvisoLogin } from '../lib/avisoLogin'
 
 export function LoginPage() {
   const { signIn } = useAuth()
@@ -14,7 +15,10 @@ export function LoginPage() {
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
 
-  const destino = (location.state as { from?: Location })?.from?.pathname ?? '/'
+  const destino = (location.state as { from?: Location } | null)?.from?.pathname ?? '/'
+  // Recado de outra tela (ex.: conta excluída): lido ao abrir e apagado em seguida.
+  const [aviso] = useState(lerAvisoLogin)
+  useEffect(() => limparAvisoLogin(), [])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -55,6 +59,11 @@ export function LoginPage() {
             Entre para registrar denúncias de ônibus quebrado.
           </p>
         </div>
+        {aviso && (
+          <p role="status" className="rounded-[2px] border-2 border-brand-cream px-3.5 py-3 text-sm font-bold">
+            {aviso}
+          </p>
+        )}
       <form onSubmit={handleSubmit} className="card-brand !border-brand-cream !shadow-[5px_5px_0_#052d00] space-y-3 bg-brand-cream p-5">
         <input
           required
