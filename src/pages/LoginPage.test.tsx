@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createSupabaseMock } from '../test/supabaseMock'
 import { AuthProvider } from '../hooks/useAuth'
+import { definirAvisoLogin, lerAvisoLogin, limparAvisoLogin } from '../lib/avisoLogin'
 import { supabase } from '../lib/supabaseClient'
 import { LoginPage } from './LoginPage'
 
@@ -67,5 +68,22 @@ describe('LoginPage (integração: UI + useAuth + Supabase)', () => {
     await user.click(screen.getByRole('button', { name: 'Entrar' }))
 
     expect(await screen.findByText('Mapa')).toBeInTheDocument()
+  })
+
+  it('mostra o recado deixado por outra tela (conta excluída) e o apaga depois de lido', () => {
+    definirAvisoLogin('Sua conta foi excluída e os seus dados foram apagados.')
+
+    renderLogin()
+
+    expect(screen.getByRole('status')).toHaveTextContent('Sua conta foi excluída')
+    expect(lerAvisoLogin()).toBeNull()
+  })
+
+  it('não mostra recado quando ninguém deixou um', () => {
+    limparAvisoLogin()
+
+    renderLogin()
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 })

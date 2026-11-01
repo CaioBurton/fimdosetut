@@ -164,9 +164,10 @@ const SECOES: SecaoLegal[] = [
           <li>a retirada do consentimento.</li>
         </ul>
         <p>
-          <strong>Como fazer:</strong> você mesmo corrige os dados do perfil e apaga as suas denúncias
-          na aba Perfil. Para pedir a exclusão da conta, uma cópia dos seus dados ou qualquer outro
-          direito, escreva para {CONTATO.email}. Respondemos no prazo legal.
+          <strong>Como fazer:</strong> na aba Perfil você corrige os dados do perfil, apaga as suas
+          denúncias, <strong>baixa uma cópia dos seus dados</strong> e{' '}
+          <strong>exclui a sua conta</strong> (em “Meus dados e privacidade”). Para qualquer outro
+          pedido, escreva para {CONTATO.email}. Respondemos no prazo legal.
         </p>
         <p>
           Se achar que seus dados foram tratados de forma irregular, você também pode reclamar à
