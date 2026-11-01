@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
+import { Instagram } from '../components/ui/Instagram'
 import { useAuth } from '../hooks/useAuth'
 
 export function LoginPage() {
@@ -84,6 +85,7 @@ export function LoginPage() {
         <Link to="/" className="block text-center text-sm font-bold underline">
           Voltar para o mapa sem entrar
         </Link>
+        <Instagram variante="claro" className="self-center" />
       </div>
     </div>
   )

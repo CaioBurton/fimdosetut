@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
+import { Instagram } from '../components/ui/Instagram'
 import { useAuth } from '../hooks/useAuth'
 
 export function CadastroPage() {
@@ -93,6 +94,7 @@ export function CadastroPage() {
             Entrar
           </Link>
         </p>
+        <Instagram variante="claro" className="self-center" />
       </div>
     </div>
   )
