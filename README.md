@@ -2,6 +2,8 @@
 
 App colaborativo para avisar sobre ônibus quebrados, atrasados ou lotados nas linhas de Teresina-PI. Feito para o **Fórum Piauiense de Luta pelo Transporte Público**.
 
+**Site: https://deu-o-prego.vercel.app/**
+
 Qualquer pessoa vê o mapa, a lista e o painel de denúncias. Para registrar uma denúncia é preciso criar uma conta.
 
 ## O que o app faz
@@ -139,6 +141,6 @@ Verde `#084400` e creme `#F3FCEE`, com estética de cartaz: bordas duras, sombra
 
 ## Deploy
 
-O app é estático e roda na Vercel (`vercel.json` já faz o redirecionamento das rotas para o `index.html`). Defina `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` nas variáveis de ambiente do projeto na Vercel.
+O app está no ar em https://deu-o-prego.vercel.app/. Ele é estático e roda na Vercel (`vercel.json` já faz o redirecionamento das rotas para o `index.html`). Defina `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` nas variáveis de ambiente do projeto na Vercel.
 
 O plano Hobby da Vercel é só para uso não comercial; confira os limites do plano gratuito do Supabase (usuários ativos, banco, tráfego e conexões realtime) conforme o uso crescer.
