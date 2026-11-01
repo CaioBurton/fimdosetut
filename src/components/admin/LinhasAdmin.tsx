@@ -160,9 +160,11 @@ export function LinhasAdmin({ linhas, denuncias, onCriar, onAtualizar, onExcluir
                         <path d="M13.5 6.5l4 4" />
                       </svg>
                     </button>
+                    <span className="group relative inline-flex" tabIndex={bloqueada ? 0 : undefined}>
                     <button
                       type="button"
                       aria-label={`Excluir linha ${linha.codigo}`}
+                      aria-describedby={bloqueada ? `dica-${linha.id}` : undefined}
                       disabled={bloqueada}
                       onClick={() => setConfirmando(linha.id)}
                       className="flex h-11 w-11 items-center justify-center rounded-[2px] border-2 border-[#c23838] text-[#c23838] disabled:cursor-not-allowed disabled:opacity-35"
@@ -171,16 +173,20 @@ export function LinhasAdmin({ linhas, denuncias, onCriar, onAtualizar, onExcluir
                         <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
                       </svg>
                     </button>
+                      {bloqueada && (
+                        <span
+                          id={`dica-${linha.id}`}
+                          role="tooltip"
+                          className="pointer-events-none absolute bottom-full right-0 z-10 mb-2 hidden w-60 rounded-[2px] bg-brand-green-dark px-3 py-2 text-left text-xs font-semibold leading-snug text-brand-cream shadow-lg group-hover:block group-focus:block"
+                        >
+                          Não pode ser excluída enquanto tiver denúncias. Edite o nome ou a zona, ou apague as
+                          denúncias antes.
+                        </span>
+                      )}
+                    </span>
                   </div>
                 )}
               </div>
-
-              {bloqueada && (
-                <p className="border-t border-[#cfe3c6] pt-2 text-xs font-semibold leading-snug text-brand-green-dark/70">
-                  Não pode ser excluída enquanto tiver denúncias. Edite o nome ou a zona, ou apague as
-                  denúncias antes.
-                </p>
-              )}
 
               {confirmando === linha.id && (
                 <div className="space-y-2 border-t border-[#cfe3c6] pt-2.5">

@@ -17,7 +17,9 @@ import {
   type TipoProblema,
   type Zona,
 } from '../../types'
+import { Paginacao } from '../ui/Paginacao'
 
+const POR_PAGINA = 10
 const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
 
 interface Props {
@@ -28,13 +30,20 @@ interface Props {
 
 export function DashboardDenuncias({ denuncias, linhas, children }: Props) {
   const [filtros, setFiltros] = useState<FiltrosDashboard>(FILTROS_INICIAIS)
+  const [pagina, setPagina] = useState(1)
 
   const filtradas = useMemo(() => filtrarDenuncias(denuncias, filtros), [denuncias, filtros])
+
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA))
+  // Se a lista encolher (ex.: excluir a última denúncia da página), volta para uma página válida.
+  const paginaAtual = Math.min(pagina, totalPaginas)
+  const daPagina = filtradas.slice((paginaAtual - 1) * POR_PAGINA, paginaAtual * POR_PAGINA)
 
   const filtrosAtivos = JSON.stringify(filtros) !== JSON.stringify(FILTROS_INICIAIS)
 
   function definir<K extends keyof FiltrosDashboard>(chave: K, valor: FiltrosDashboard[K]) {
     setFiltros((f) => ({ ...f, [chave]: valor }))
+    setPagina(1)
   }
 
   return (
@@ -130,7 +139,10 @@ export function DashboardDenuncias({ denuncias, linhas, children }: Props) {
           <button
             type="button"
             className="text-sm font-bold text-brand-green underline"
-            onClick={() => setFiltros(FILTROS_INICIAIS)}
+            onClick={() => {
+              setFiltros(FILTROS_INICIAIS)
+              setPagina(1)
+            }}
           >
             Limpar filtros
           </button>
@@ -140,7 +152,8 @@ export function DashboardDenuncias({ denuncias, linhas, children }: Props) {
       <h3 className="pt-1 text-sm font-bold text-brand-green-dark">
         {filtradas.length} {filtradas.length === 1 ? 'denúncia' : 'denúncias'}
       </h3>
-      {children(filtradas)}
+      {children(daPagina)}
+      <Paginacao pagina={paginaAtual} totalPaginas={totalPaginas} onChange={setPagina} />
     </div>
   )
 }
