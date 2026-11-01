@@ -12,6 +12,7 @@ import { NovaDenunciaPage } from './pages/NovaDenunciaPage'
 import { MinhasDenunciasPage } from './pages/MinhasDenunciasPage'
 import { LoginPage } from './pages/LoginPage'
 import { AlertasLinhas } from './components/ui/AlertasLinhas'
+import { AceiteDocumentos } from './components/legal/AceiteDocumentos'
 import { Tutorial } from './components/ui/Tutorial'
 import { CadastroPage } from './pages/CadastroPage'
 
@@ -20,6 +21,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Tutorial />
+        <AceiteDocumentos />
         <AlertasLinhas />
         <Routes>
           <Route path="/" element={<MapaPage />} />

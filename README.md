@@ -8,7 +8,7 @@ App colaborativo mobile-first para avisar sobre ônibus quebrados (e outros prob
 2. No SQL Editor do projeto, rode nesta ordem:
    - `supabase/migrations/0001_init.sql` (tabelas, RLS e realtime)
    - `supabase/seed.sql` (as 76 linhas da Setut, já divididas por zona)
-   - as migrations seguintes (`0002` a `0010`), em ordem — a `0005_linhas_admin.sql` libera o CRUD de linhas só para admins, a `0006_painel_resumo.sql` cria a função do painel público, a `0007_perfil_nome.sql` guarda o nome no perfil, a `0008_feedbacks.sql` cria a tabela de feedbacks e a `0009_autores_denuncias.sql` tira o autor das denúncias da leitura pública (rode junto com o deploy do app: o app antigo deixa de funcionar até recarregar) e a `0010_direitos_titular.sql` cria as funções de baixar os próprios dados e excluir a própria conta
+   - as migrations seguintes (`0002` a `0011`), em ordem — a `0005_linhas_admin.sql` libera o CRUD de linhas só para admins, a `0006_painel_resumo.sql` cria a função do painel público, a `0007_perfil_nome.sql` guarda o nome no perfil, a `0008_feedbacks.sql` cria a tabela de feedbacks e a `0009_autores_denuncias.sql` tira o autor das denúncias da leitura pública (rode junto com o deploy do app: o app antigo deixa de funcionar até recarregar) a `0010_direitos_titular.sql` cria as funções de baixar os próprios dados e excluir a própria conta e a `0011_aceites_documentos.sql` registra o aceite da política (contas antigas são perguntadas no app)
 3. Em **Project Settings → API**, copie a `Project URL` e a `anon public key`.
 4. Copie `.env.example` para `.env` e preencha:
    ```
