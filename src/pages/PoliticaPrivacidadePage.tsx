@@ -12,10 +12,12 @@ const SECOES: SecaoLegal[] = [
           Geral de Proteção de Dados – LGPD, Lei nº 13.709/2018) é o <strong>{CONTROLADOR.nome}</strong>.
         </p>
         <ul>
-          <li>Identificação: {CONTROLADOR.documento}</li>
-          <li>Endereço: {CONTROLADOR.endereco}</li>
+          <li>Natureza: {CONTROLADOR.natureza}</li>
+          {CONTROLADOR.endereco && <li>Endereço: {CONTROLADOR.endereco}</li>}
           <li>Contato para assuntos de privacidade: {CONTATO.email}</li>
-          <li>Responsável pelo contato com os titulares (encarregado): {CONTATO.encarregado}</li>
+          {CONTATO.encarregado && (
+            <li>Responsável pelo contato com os titulares (encarregado): {CONTATO.encarregado}</li>
+          )}
         </ul>
       </>
     ),
@@ -145,7 +147,10 @@ const SECOES: SecaoLegal[] = [
           perfil, as linhas cadastradas e as denúncias feitas por ela. Mensagens de feedback podem ser
           mantidas sem qualquer identificação de quem as enviou.
         </p>
-        <p>Prazo para contas sem uso: [PREENCHER: definir pela organização].</p>
+        <p>
+          Hoje não há exclusão automática: contas sem uso ficam guardadas até que a própria pessoa ou a
+          administração as exclua.
+        </p>
       </>
     ),
   },

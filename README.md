@@ -22,7 +22,7 @@ O template do e-mail de confirmação de cadastro, no estilo do app, está em `s
 
 ### Política de Privacidade e Termos de Uso
 
-Os textos ficam em `src/pages/PoliticaPrivacidadePage.tsx` (rota `/privacidade`) e `src/pages/TermosPage.tsx` (rota `/termos`). Os dados da organização (nome, CNPJ, endereço, e-mail de contato, encarregado) ficam em `src/lib/legal.ts`: **troque os campos `[PREENCHER]` antes de divulgar o app** e peça a revisão de quem responde juridicamente pelo Fórum. Ao mudar o texto de forma relevante, atualize `VERSAO_DOCUMENTOS` e `DATA_DOCUMENTOS`: a versão aceita é gravada na conta no cadastro.
+Os textos ficam em `src/pages/PoliticaPrivacidadePage.tsx` (rota `/privacidade`) e `src/pages/TermosPage.tsx` (rota `/termos`). Os dados da organização (nome, natureza, e-mail de contato e, se quiser, endereço e encarregado) ficam em `src/lib/legal.ts`; campos opcionais vazios não aparecem nos documentos. Peça a revisão de quem responde juridicamente pelo Fórum. Ao mudar o texto de forma relevante, atualize `VERSAO_DOCUMENTOS` e `DATA_DOCUMENTOS`: a versão aceita é gravada na conta no cadastro.
 
 ## Rodando localmente
 
