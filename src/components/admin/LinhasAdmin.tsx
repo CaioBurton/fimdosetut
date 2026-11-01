@@ -127,12 +127,12 @@ export function LinhasAdmin({ linhas, denuncias, onCriar, onAtualizar, onExcluir
         <p className="py-8 text-center text-brand-green-dark/70">Nenhuma linha encontrada.</p>
       )}
 
-      <ul className="space-y-3.5">
+      <ul className="space-y-3.5 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 xl:grid-cols-3">
         {filtradas.map((linha) => {
           const total = totalPorLinha.get(linha.id) ?? 0
           const bloqueada = total > 0
           return (
-            <li key={linha.id} className="card-brand flex flex-col gap-2.5 p-3">
+            <li key={linha.id} className="card-brand flex flex-col gap-2.5 self-start p-3">
               <div className="flex items-center gap-3">
                 <span className="ttl min-w-[34px] bg-brand-green px-2.5 py-2 text-center text-lg leading-none text-brand-cream">
                   {linha.codigo}
@@ -271,12 +271,12 @@ function FormularioLinha({ linha, existentes, totalDenuncias, onCancelar, onSalv
   }
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-end justify-center bg-brand-green-dark/75">
+    <div className="fixed inset-0 z-[2000] flex items-end justify-center bg-brand-green-dark/75 lg:items-center">
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="linha-titulo"
-        className="max-h-full w-full max-w-md overflow-y-auto border-t-[3px] border-brand-green bg-brand-cream px-5 pb-6 pt-3 shadow-[0_-4px_0_#052d00]"
+        className="max-h-full w-full max-w-md overflow-y-auto border-t-[3px] border-brand-green bg-brand-cream px-5 pb-6 pt-3 shadow-[0_-4px_0_#052d00] lg:border-[3px] lg:pt-5 lg:shadow-[6px_6px_0_#052d00]"
       >
         <div className="mx-auto mb-3 h-[5px] w-11 rounded-[2px] bg-brand-green" />
         <div className="mb-3.5 flex items-start justify-between gap-3">

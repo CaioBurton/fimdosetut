@@ -8,7 +8,7 @@ export function NovaDenunciaPage() {
   const navigate = useNavigate()
 
   return (
-    <AppLayout title="Nova denúncia">
+    <AppLayout title="Nova denúncia" largura="estreita">
       {loading ? (
         <p className="p-4 text-center text-brand-green-dark/60">Carregando linhas...</p>
       ) : (

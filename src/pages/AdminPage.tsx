@@ -104,7 +104,7 @@ export function AdminPage() {
             )}
             <DashboardDenuncias denuncias={denuncias} linhas={linhas}>
               {(filtradas) => (
-                <div className="space-y-3">
+                <div className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:space-y-0">
                   {filtradas.length === 0 && denuncias.length > 0 && (
                     <p className="py-6 text-center text-brand-green-dark/60">
                       Nenhuma denúncia com esses filtros.
@@ -186,6 +186,7 @@ function UsuariosAdmin({ onErro }: { onErro: (mensagem: string | null) => void }
     <>
       {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
       {loading && <p className="text-center text-brand-green-dark/60">Carregando...</p>}
+      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:space-y-0">
       {usuarios.map((u: Perfil) => {
         const euMesmo = u.id === user?.id
         const total = totalPorUsuario.get(u.id) ?? 0
@@ -258,6 +259,7 @@ function UsuariosAdmin({ onErro }: { onErro: (mensagem: string | null) => void }
           </div>
         )
       })}
+      </div>
     </>
   )
 }

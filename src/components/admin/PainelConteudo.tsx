@@ -78,8 +78,8 @@ export function PainelConteudo({
   const taxa = taxaResolucao(resumo)
 
   return (
-    <div className={`space-y-4 transition-opacity ${carregando ? 'opacity-60' : ''}`} aria-busy={carregando}>
-      <div className="space-y-2.5">
+    <div className={`space-y-4 transition-opacity lg:grid lg:grid-cols-2 lg:items-start lg:gap-5 lg:space-y-0 ${carregando ? 'opacity-60' : ''}`} aria-busy={carregando}>
+      <div className="space-y-2.5 lg:col-span-2">
         <div
           role="group"
           aria-label="Período"

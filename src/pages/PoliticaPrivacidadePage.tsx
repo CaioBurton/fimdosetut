@@ -223,7 +223,7 @@ const SECOES: SecaoLegal[] = [
 
 export function PoliticaPrivacidadePage() {
   return (
-    <AppLayout title="Privacidade">
+    <AppLayout title="Privacidade" largura="estreita">
       <DocumentoLegal
         titulo="Política de Privacidade"
         introducao={

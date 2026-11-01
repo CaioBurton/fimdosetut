@@ -46,7 +46,7 @@ export function MinhasDenunciasPage() {
   }
 
   return (
-    <AppLayout title="Perfil">
+    <AppLayout title="Perfil" largura="estreita">
       <div className="space-y-4 p-4">
         {user && (
           <PerfilUsuario
