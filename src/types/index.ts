@@ -32,6 +32,8 @@ export interface Denuncia {
   longitude: number
   created_at: string
   updated_at: string
+  /** Quantas pessoas confirmaram com "Também vi". */
+  confirmacoes?: number
   linha?: Linha
 }
 

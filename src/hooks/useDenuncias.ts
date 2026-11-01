@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import type { Denuncia, Linha } from '../types'
 
 // Só as colunas usadas pelo app (sem o join com `linhas`: as linhas já são carregadas à parte
 // e anexadas no cliente), para gastar menos tráfego de saída do Supabase.
 const COLUNAS =
-  'id, linha_id, tipo, status, descricao, numero_veiculo, latitude, longitude, created_at, updated_at'
+  'id, linha_id, tipo, status, descricao, numero_veiculo, latitude, longitude, created_at, updated_at, confirmacoes'
 
 // O Supabase devolve no máximo 1000 linhas por consulta; busca página a página
 // para não cortar as denúncias mais antigas sem avisar.
@@ -117,5 +117,10 @@ export function useDenuncias(
     }
   }, [apenasMinhas])
 
-  return { denuncias, loading, error }
+  /** Atualiza campos de uma denúncia já carregada (ex.: o total de confirmações, sem esperar o tempo real). */
+  const atualizarDenuncia = useCallback((id: string, campos: Partial<Denuncia>) => {
+    setBrutas((atual) => atual.map((d) => (d.id === id ? { ...d, ...campos } : d)))
+  }, [])
+
+  return { denuncias, loading, error, atualizarDenuncia }
 }

@@ -11,7 +11,7 @@ Qualquer pessoa vê o mapa, a lista e o painel de denúncias. Para registrar uma
 | Tela | Rota | Quem acessa |
 | --- | --- | --- |
 | Mapa com as denúncias do dia (tempo real) | `/` | todos |
-| Lista de denúncias, com filtros por zona, linha, dia, status e tipo | `/denuncias` | todos |
+| Lista de denúncias, com filtros por zona, linha, dia, status e tipo, e botão "Também vi" (confirmar com conta) | `/denuncias` | todos |
 | Painel público com totais, gráfico por dia, zonas e linhas mais citadas | `/painel` | todos |
 | Nova denúncia (linha, tipo, descrição e local no mapa) | `/nova` | quem tem conta |
 | Perfil: nome, linhas que a pessoa pega, minhas denúncias, feedback, baixar meus dados e excluir a conta | `/minhas` | quem tem conta |
@@ -67,7 +67,7 @@ No **SQL Editor** do projeto, rode nesta ordem:
 
 1. `supabase/migrations/0001_init.sql`: tabelas, RLS e realtime.
 2. `supabase/seed.sql`: as 76 linhas da Setut, já divididas por zona.
-3. As demais migrations, em ordem numérica (`0002` a `0011`):
+3. As demais migrations, em ordem numérica (`0002` a `0012`):
 
 | Migration | O que faz |
 | --- | --- |
@@ -81,6 +81,7 @@ No **SQL Editor** do projeto, rode nesta ordem:
 | `0009_autores_denuncias` | tira o autor das denúncias da leitura pública (LGPD) |
 | `0010_direitos_titular` | funções de baixar os próprios dados e excluir a própria conta |
 | `0011_aceites_documentos` | registra o aceite da política e dos termos |
+| `0012_confirmacoes_denuncias` | botão "Também vi": confirmações privadas e total público por denúncia |
 
 Atenção: a `0009` muda a forma como o app lê as denúncias. Rode junto com o deploy do app; a versão antiga deixa de funcionar até a página ser recarregada.
 
