@@ -48,6 +48,7 @@ export function createSupabaseMock() {
       signUp: vi.fn().mockResolvedValue({ error: null }),
       signOut: vi.fn().mockResolvedValue({ error: null }),
     },
+    rpc: vi.fn(() => createChainable({ data: null, error: null })),
     channel: vi.fn(() => createChannelMock()),
     removeChannel: vi.fn(),
   }

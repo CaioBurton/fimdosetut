@@ -41,13 +41,26 @@ export function BottomNav() {
         <UserIcon />
         {user ? 'Perfil' : 'Entrar'}
       </NavLink>
-      {isAdmin && (
+      {isAdmin ? (
         <NavLink to="/admin" className={({ isActive }) => `${linkBase} ${activeClass(isActive)}`}>
           <ShieldIcon />
           Admin
         </NavLink>
+      ) : (
+        <NavLink to="/painel" className={({ isActive }) => `${linkBase} ${activeClass(isActive)}`}>
+          <ChartIcon />
+          Painel
+        </NavLink>
       )}
     </nav>
+  )
+}
+
+function ChartIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 20V10M10 20V4M16 20v-8M22 20H2" />
+    </svg>
   )
 }
 
