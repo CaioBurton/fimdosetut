@@ -1,12 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabaseClient'
-import { TIPO_LABELS, type Linha, type TipoProblema } from '../../types'
+import type { Linha, TipoProblema } from '../../types'
 import { Button } from '../ui/Button'
 import { LocationPicker } from '../map/LocationPicker'
 import { LinhaSelect } from './LinhaSelect'
-
-const TIPOS: TipoProblema[] = ['quebrado', 'acidente', 'atraso', 'lotacao', 'outro']
+import { TipoSelect } from './TipoSelect'
 
 export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess: () => void }) {
   const { user } = useAuth()
@@ -64,18 +63,7 @@ export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess
         <label className="mb-1 block text-sm font-semibold text-brand-green-dark">
           Tipo de problema
         </label>
-        <select
-          value={tipo}
-          aria-label="Tipo de problema"
-          onChange={(e) => setTipo(e.target.value as TipoProblema)}
-          className="input-brand"
-        >
-          {TIPOS.map((t) => (
-            <option key={t} value={t}>
-              {TIPO_LABELS[t]}
-            </option>
-          ))}
-        </select>
+        <TipoSelect value={tipo} onChange={setTipo} />
       </div>
 
       <div>
