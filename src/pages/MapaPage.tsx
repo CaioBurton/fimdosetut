@@ -1,10 +1,13 @@
 import { useMemo } from 'react'
+import { DenunciaCard } from '../components/denuncia/DenunciaCard'
+import { useDesktop } from '../hooks/useDesktop'
 import { AppLayout } from '../components/layout/AppLayout'
 import { MapaDenuncias } from '../components/map/MapaDenuncias'
 import { useDenuncias } from '../hooks/useDenuncias'
 import { useLinhas } from '../hooks/useLinhas'
 
 export function MapaPage() {
+  const desktop = useDesktop()
   const { linhas } = useLinhas()
   const { denuncias: todas, loading, error } = useDenuncias(linhas)
 
@@ -26,7 +29,28 @@ export function MapaPage() {
           Carregando mapa...
         </div>
       ) : (
-        <MapaDenuncias denuncias={denuncias} />
+        <div className="flex h-full">
+          <div className="min-w-0 flex-1">
+            <MapaDenuncias denuncias={denuncias} />
+          </div>
+          {desktop && (
+            <aside
+              aria-label="Denúncias de hoje"
+              className="w-[360px] shrink-0 space-y-3 overflow-y-auto border-l-[3px] border-brand-green bg-brand-cream p-5"
+            >
+              <h2 className="ttl text-3xl">Hoje</h2>
+              <p className="text-sm font-medium text-brand-green-dark/70">
+                {denuncias.length} {denuncias.length === 1 ? 'denúncia' : 'denúncias'} desde a meia-noite
+              </p>
+              {denuncias.length === 0 && (
+                <p className="py-6 text-center text-brand-green-dark/70">Nenhuma denúncia hoje.</p>
+              )}
+              {denuncias.map((d) => (
+                <DenunciaCard key={d.id} denuncia={d} />
+              ))}
+            </aside>
+          )}
+        </div>
       )}
     </AppLayout>
   )

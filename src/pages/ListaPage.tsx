@@ -37,7 +37,7 @@ export function ListaPage() {
 
   return (
     <AppLayout title="Denúncias">
-      <section className="relative h-[170px] overflow-hidden border-b-[3px] border-brand-green bg-brand-green">
+      <section className="relative h-[170px] overflow-hidden border-b-[3px] border-brand-green bg-brand-green lg:border-[3px] lg:shadow-[4px_4px_0_#052d00]">
         <img
           src="/brand/onibus-bandeira.svg"
           alt=""
@@ -123,9 +123,11 @@ export function ListaPage() {
           </p>
         )}
 
-        {filtradas.map((denuncia) => (
-          <DenunciaCard key={denuncia.id} denuncia={denuncia} />
-        ))}
+        <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 xl:grid-cols-3">
+          {filtradas.map((denuncia) => (
+            <DenunciaCard key={denuncia.id} denuncia={denuncia} />
+          ))}
+        </div>
       </div>
     </AppLayout>
   )

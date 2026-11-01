@@ -129,7 +129,7 @@ const SECOES: SecaoLegal[] = [
 
 export function TermosPage() {
   return (
-    <AppLayout title="Termos de Uso">
+    <AppLayout title="Termos de Uso" largura="estreita">
       <DocumentoLegal
         titulo="Termos de Uso"
         introducao={

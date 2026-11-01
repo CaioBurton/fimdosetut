@@ -56,7 +56,7 @@ export function CadastroPage() {
         aria-hidden="true"
         className="tom-sobre-tom pointer-events-none absolute -bottom-5 -left-14 w-[520px] max-w-none"
       />
-      <div className="relative flex flex-col gap-6">
+      <div className="relative flex flex-col gap-6 lg:mx-auto lg:w-full lg:max-w-md">
         <Link to="/" className="self-start">
           <img
             src="/brand/logo-horizontal-claro.svg"
