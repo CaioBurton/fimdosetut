@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { CabecalhoPagina } from '../components/ui/CabecalhoPagina'
 import { RodapeTabela } from '../components/admin/TabelaAdmin'
 import { useDesktop } from '../hooks/useDesktop'
@@ -203,12 +204,17 @@ export function ListaPage() {
               key={denuncia.id}
               denuncia={denuncia}
               actions={
-                <BotaoTambemVi
-                  total={denuncia.confirmacoes ?? 0}
-                  confirmado={confirmadas.has(denuncia.id)}
-                  carregando={confirmando.has(denuncia.id)}
-                  onClick={() => alternar(denuncia.id)}
-                />
+                <>
+                  <BotaoTambemVi
+                    total={denuncia.confirmacoes ?? 0}
+                    confirmado={confirmadas.has(denuncia.id)}
+                    carregando={confirmando.has(denuncia.id)}
+                    onClick={() => alternar(denuncia.id)}
+                  />
+                  <Link to="/" state={{ denunciaId: denuncia.id }} className="chip-brand">
+                    Ver no mapa
+                  </Link>
+                </>
               }
             />
           ))}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { DenunciaRapida } from '../components/denuncia/DenunciaRapida'
 import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
 import { AppLayout } from '../components/layout/AppLayout'
@@ -18,6 +18,8 @@ function normalizar(texto: string) {
 
 export function MapaPage() {
   const desktop = useDesktop()
+  // Vindo do "Ver no mapa" da lista: a denúncia a destacar (mesmo que seja de outro dia).
+  const focoId = (useLocation().state as { denunciaId?: string } | null)?.denunciaId
   const { linhas } = useLinhas()
   const { denuncias: todas, loading, error, atualizarDenuncia } = useDenuncias(linhas)
   const {
@@ -32,8 +34,8 @@ export function MapaPage() {
   const denuncias = useMemo(() => {
     const inicioDoDia = new Date()
     inicioDoDia.setHours(0, 0, 0, 0)
-    return todas.filter((d) => new Date(d.created_at) >= inicioDoDia)
-  }, [todas])
+    return todas.filter((d) => new Date(d.created_at) >= inicioDoDia || d.id === focoId)
+  }, [todas, focoId])
 
   // No desktop, a busca por linha e o filtro de status ficam sobre o mapa.
   const visiveis = useMemo(() => {
@@ -41,10 +43,11 @@ export function MapaPage() {
     const termo = normalizar(busca.trim())
     return denuncias.filter(
       (d) =>
-        (status === 'todas' || d.status === status) &&
-        (!termo || normalizar(`${d.linha?.codigo ?? ''} ${d.linha?.nome ?? ''}`).includes(termo))
+        d.id === focoId ||
+        ((status === 'todas' || d.status === status) &&
+        (!termo || normalizar(`${d.linha?.codigo ?? ''} ${d.linha?.nome ?? ''}`).includes(termo)))
     )
-  }, [denuncias, desktop, busca, status])
+  }, [denuncias, desktop, busca, status, focoId])
 
   return (
     <AppLayout title="Deu o Prego!" noScroll>
@@ -68,6 +71,7 @@ export function MapaPage() {
             <MapaDenuncias
               denuncias={visiveis}
               semFiltroZona={desktop}
+              focoId={focoId}
               acoesSelecionada={(d) => (
                 <BotaoTambemVi
                   total={d.confirmacoes ?? 0}

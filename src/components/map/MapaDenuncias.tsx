@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import L from 'leaflet'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import {
@@ -88,12 +87,15 @@ export function MapaDenuncias({
   denuncias,
   semFiltroZona = false,
   acoesSelecionada,
+  focoId,
 }: {
   denuncias: Denuncia[]
   /** Ações extras no cartão da denúncia selecionada (ex.: o botão "Também vi"). */
   acoesSelecionada?: (denuncia: Denuncia) => ReactNode
   /** No desktop o filtro fica fora do mapa e a legenda das zonas aparece no lugar. */
   semFiltroZona?: boolean
+  /** Denúncia a destacar ao abrir (ex.: vinda do "Ver no mapa" da lista): seleciona e centraliza nela. */
+  focoId?: string
 }) {
   const [filtro, setFiltro] = useState<Zona | 'todas'>('todas')
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null)
@@ -106,7 +108,6 @@ export function MapaDenuncias({
   const grupos = useMemo(() => agruparDenuncias(visiveis), [visiveis])
   const grupoSelecionado = grupos.find((g) => g.principal.id === selecionadaId) ?? null
   const selecionada = grupoSelecionado?.principal ?? null
-  const relatos = grupoSelecionado?.denuncias.length ?? 0
   const veiculos = grupoSelecionado
     ? [
         ...new Set(
@@ -115,6 +116,17 @@ export function MapaDenuncias({
       ]
     : []
   const zonaSel = selecionada?.linha?.zona ?? 'outras'
+
+  // "Ver no mapa": seleciona o grupo que contém a denúncia pedida e leva o mapa até ela (uma vez).
+  const focoAplicado = useRef<string | null>(null)
+  useEffect(() => {
+    if (!focoId || !mapa || focoAplicado.current === focoId) return
+    const grupo = grupos.find((g) => g.denuncias.some((d) => d.id === focoId))
+    if (!grupo) return
+    focoAplicado.current = focoId
+    setSelecionadaId(grupo.principal.id)
+    mapa.setView([grupo.principal.latitude, grupo.principal.longitude], Math.max(mapa.getZoom(), 16))
+  }, [focoId, mapa, grupos])
 
   return (
     <div className="relative isolate h-full w-full">
@@ -212,16 +224,10 @@ export function MapaDenuncias({
                 className="block h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: ZONA_COLORS[zonaSel] }}
               />
-              Zona {ZONA_LABELS[zonaSel]} · {relatos} {relatos === 1 ? 'relato' : 'relatos'}
+              Zona {ZONA_LABELS[zonaSel]}
             </span>
-            <Link
-              to="/denuncias"
-              className="flex min-h-11 items-center text-sm font-bold underline"
-            >
-              Ver detalhes →
-            </Link>
+            {acoesSelecionada && <div className="flex gap-2">{acoesSelecionada(selecionada)}</div>}
           </div>
-          {acoesSelecionada && <div className="flex gap-2">{acoesSelecionada(selecionada)}</div>}
         </div>
       )}
       </div>
