@@ -4,19 +4,27 @@ import { PerfilUsuario } from '../components/perfil/PerfilUsuario'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { Button } from '../components/ui/Button'
 import { Instagram } from '../components/ui/Instagram'
+import { Paginacao } from '../components/ui/Paginacao'
 import { TituloSecao } from '../components/ui/TituloSecao'
 import { useAuth } from '../hooks/useAuth'
 import { useDenuncias } from '../hooks/useDenuncias'
 import { useLinhas } from '../hooks/useLinhas'
 import { supabase } from '../lib/supabaseClient'
 
+const POR_PAGINA = 5
+
 export function MinhasDenunciasPage() {
   const { user } = useAuth()
   const { linhas } = useLinhas()
   const { denuncias, loading, error } = useDenuncias(linhas, null)
   const [acaoErro, setAcaoErro] = useState<string | null>(null)
+  const [pagina, setPagina] = useState(1)
 
   const minhas = denuncias.filter((d) => d.user_id === user?.id)
+  const totalPaginas = Math.max(1, Math.ceil(minhas.length / POR_PAGINA))
+  // Se a lista encolher (ex.: excluir a última denúncia da página), volta para uma página válida.
+  const paginaAtual = Math.min(pagina, totalPaginas)
+  const daPagina = minhas.slice((paginaAtual - 1) * POR_PAGINA, paginaAtual * POR_PAGINA)
 
   async function alternarStatus(id: string, statusAtual: string) {
     setAcaoErro(null)
@@ -60,7 +68,7 @@ export function MinhasDenunciasPage() {
           </p>
         )}
 
-        {minhas.map((denuncia) => (
+        {daPagina.map((denuncia) => (
           <DenunciaCard
             key={denuncia.id}
             denuncia={denuncia}
@@ -84,6 +92,8 @@ export function MinhasDenunciasPage() {
             }
           />
         ))}
+
+        <Paginacao pagina={paginaAtual} totalPaginas={totalPaginas} onChange={setPagina} />
 
         <div className="flex flex-col items-center gap-2 pt-6 text-center">
           <p className="text-sm font-medium text-brand-green-dark/80">Acompanhe o Fórum nas redes</p>
