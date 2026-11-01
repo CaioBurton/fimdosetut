@@ -1,5 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { useDesktop } from '../../hooks/useDesktop'
 import type { DadosLinha } from '../../hooks/useLinhas'
+import { CabecalhoPagina } from '../ui/CabecalhoPagina'
+import { botaoPerigoTabela, botaoTabela, celula, RodapeTabela, TabelaAdmin } from './TabelaAdmin'
 import { ZONA_COLORS, ZONA_LABELS, type Denuncia, type Linha, type Zona } from '../../types'
 
 const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
@@ -16,6 +19,8 @@ interface Props {
   onExcluir: (id: string) => Promise<string | null>
 }
 
+const POR_PAGINA = 10
+
 type Edicao = { modo: 'nova' } | { modo: 'editar'; linha: Linha }
 
 export function LinhasAdmin({ linhas, denuncias, onCriar, onAtualizar, onExcluir }: Props) {
@@ -24,6 +29,8 @@ export function LinhasAdmin({ linhas, denuncias, onCriar, onAtualizar, onExcluir
   const [edicao, setEdicao] = useState<Edicao | null>(null)
   const [confirmando, setConfirmando] = useState<string | null>(null)
   const [erro, setErro] = useState<string | null>(null)
+  const [pagina, setPagina] = useState(1)
+  const desktop = useDesktop()
 
   const totalPorLinha = useMemo(() => {
     const mapa = new Map<string, number>()
@@ -51,6 +58,193 @@ export function LinhasAdmin({ linhas, denuncias, onCriar, onAtualizar, onExcluir
     const resultado = await onExcluir(id)
     setConfirmando(null)
     if (resultado) setErro(resultado)
+  }
+
+  if (desktop) {
+    const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA))
+    const atual = Math.min(pagina, totalPaginas)
+    const inicio = (atual - 1) * POR_PAGINA
+    const daPagina = filtradas.slice(inicio, inicio + POR_PAGINA)
+    const zonasUsadas = new Set(linhas.map((l) => l.zona)).size
+
+    return (
+      <div className="flex flex-wrap items-start gap-6">
+        <div className="min-w-0 flex-[999_1_520px] space-y-5">
+          <CabecalhoPagina
+            titulo="Linhas"
+            subtitulo={`${linhas.length} ${linhas.length === 1 ? 'linha' : 'linhas'} em ${zonasUsadas} ${zonasUsadas === 1 ? 'zona' : 'zonas'}`}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setErro(null)
+                setEdicao({ modo: 'nova' })
+              }}
+              className="ttl flex min-h-[52px] items-center gap-2.5 rounded-[2px] border-2 border-brand-green bg-brand-green px-[22px] text-base text-brand-cream shadow-[4px_4px_0_#052d00]"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Nova linha
+            </button>
+          </CabecalhoPagina>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              type="search"
+              className="input-brand min-w-[260px] flex-1"
+              placeholder="Número ou nome da linha"
+              aria-label="Buscar linha"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+            <div className="flex flex-wrap gap-2" aria-label="Filtrar por zona">
+              <button
+                type="button"
+                aria-pressed={zona === 'todas'}
+                onClick={() => setZona('todas')}
+                className={`chip-brand ${zona === 'todas' ? 'chip-brand-ativo' : ''}`}
+              >
+                Todas · {linhas.length}
+              </button>
+              {ZONAS.map((z) => (
+                <button
+                  key={z}
+                  type="button"
+                  aria-pressed={zona === z}
+                  onClick={() => setZona(z)}
+                  className={`chip-brand ${zona === z ? 'chip-brand-ativo' : ''}`}
+                >
+                  <i className="block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: ZONA_COLORS[z] }} />
+                  {ZONA_LABELS[z]} · {contagemZona.get(z) ?? 0}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {erro && (
+            <p role="alert" className="text-sm font-semibold text-zona-leste">
+              {erro}
+            </p>
+          )}
+
+          {filtradas.length === 0 ? (
+            <p className="py-8 text-center text-brand-green-dark/70">Nenhuma linha encontrada.</p>
+          ) : (
+            <TabelaAdmin
+              legenda="Lista de linhas de ônibus"
+              minLargura={520}
+              colunas={[
+                { rotulo: 'Código' },
+                { rotulo: 'Nome' },
+                { rotulo: 'Zona' },
+                { rotulo: 'Denúncias' },
+                { rotulo: 'Ações', direita: true },
+              ]}
+            >
+              {daPagina.map((linha) => {
+                const total = totalPorLinha.get(linha.id) ?? 0
+                const selecionada = edicao?.modo === 'editar' && edicao.linha.id === linha.id
+                return (
+                  <tr key={linha.id} className={selecionada ? 'bg-[#e3f2da]' : ''}>
+                    <td className={celula}>
+                      <span className="ttl inline-block bg-brand-green px-2 py-1.5 text-[15px] leading-none text-brand-cream">
+                        {linha.codigo}
+                      </span>
+                    </td>
+                    <td className={`${celula} font-bold`}>{linha.nome}</td>
+                    <td className={celula}>
+                      <span className="inline-flex items-center gap-1.5">
+                        <i className="block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: ZONA_COLORS[linha.zona] }} />
+                        {ZONA_LABELS[linha.zona]}
+                      </span>
+                    </td>
+                    <td className={celula}>{total}</td>
+                    <td className={`${celula} whitespace-nowrap text-right`}>
+                      {confirmando === linha.id ? (
+                        <span className="inline-flex items-center gap-2">
+                          <button type="button" className={botaoPerigoTabela} onClick={() => excluir(linha.id)}>
+                            Confirmar exclusão
+                          </button>
+                          <button type="button" className={botaoTabela} onClick={() => setConfirmando(null)}>
+                            Cancelar
+                          </button>
+                        </span>
+                      ) : (
+                        <span className="inline-flex gap-2">
+                          <button
+                            type="button"
+                            aria-label={`Editar linha ${linha.codigo}`}
+                            className={botaoTabela}
+                            onClick={() => {
+                              setErro(null)
+                              setEdicao({ modo: 'editar', linha })
+                            }}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <path d="M4 20h4L19 9l-4-4L4 16v4z" />
+                              <path d="M13.5 6.5l4 4" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Excluir linha ${linha.codigo}`}
+                            title={total > 0 ? 'Tem denúncias: não pode ser excluída' : 'Excluir linha'}
+                            disabled={total > 0}
+                            className={botaoPerigoTabela}
+                            onClick={() => setConfirmando(linha.id)}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+                            </svg>
+                          </button>
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </TabelaAdmin>
+          )}
+
+          <RodapeTabela
+            inicio={inicio + 1}
+            fim={inicio + daPagina.length}
+            total={filtradas.length}
+            pagina={atual}
+            totalPaginas={totalPaginas}
+            onChange={setPagina}
+          />
+        </div>
+
+        <div className="w-full max-w-[380px] flex-[1_1_320px] self-start">
+          {edicao ? (
+            <FormularioLinha
+              key={edicao.modo === 'editar' ? edicao.linha.id : 'nova'}
+              embutido
+              linha={edicao.modo === 'editar' ? edicao.linha : null}
+              existentes={linhas}
+              totalDenuncias={edicao.modo === 'editar' ? (totalPorLinha.get(edicao.linha.id) ?? 0) : 0}
+              onCancelar={() => setEdicao(null)}
+              onSalvar={async (dados) => {
+                const resultado =
+                  edicao.modo === 'editar' ? await onAtualizar(edicao.linha.id, dados) : await onCriar(dados)
+                if (!resultado) setEdicao(null)
+                return resultado
+              }}
+            />
+          ) : (
+            <aside
+              aria-label="Editar linha"
+              className="card-brand p-5 text-sm font-medium text-brand-green-dark/80"
+            >
+              <h2 className="ttl mb-2 text-[26px]">Editar linha</h2>
+              Escolha uma linha na tabela para editar, ou crie uma nova.
+            </aside>
+          )}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -238,6 +432,8 @@ export function LinhasAdmin({ linhas, denuncias, onCriar, onAtualizar, onExcluir
 }
 
 interface FormularioProps {
+  /** No desktop o formulário fica num painel ao lado da tabela, em vez de numa janela. */
+  embutido?: boolean
   linha: Linha | null
   existentes: Linha[]
   totalDenuncias: number
@@ -245,7 +441,7 @@ interface FormularioProps {
   onSalvar: (dados: DadosLinha) => Promise<string | null>
 }
 
-function FormularioLinha({ linha, existentes, totalDenuncias, onCancelar, onSalvar }: FormularioProps) {
+function FormularioLinha({ embutido = false, linha, existentes, totalDenuncias, onCancelar, onSalvar }: FormularioProps) {
   const [codigo, setCodigo] = useState(linha?.codigo ?? '')
   const [nome, setNome] = useState(linha?.nome ?? '')
   const [zona, setZona] = useState<Zona>(linha?.zona ?? 'norte')
@@ -270,15 +466,9 @@ function FormularioLinha({ linha, existentes, totalDenuncias, onCancelar, onSalv
     if (resultado) setErro(resultado)
   }
 
-  return (
-    <div className="fixed inset-0 z-[2000] flex items-end justify-center bg-brand-green-dark/75 lg:items-center">
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="linha-titulo"
-        className="max-h-full w-full max-w-md overflow-y-auto border-t-[3px] border-brand-green bg-brand-cream px-5 pb-6 pt-3 shadow-[0_-4px_0_#052d00] lg:border-[3px] lg:pt-5 lg:shadow-[6px_6px_0_#052d00]"
-      >
-        <div className="mx-auto mb-3 h-[5px] w-11 rounded-[2px] bg-brand-green" />
+  const corpo = (
+    <>
+        {!embutido && <div className="mx-auto mb-3 h-[5px] w-11 rounded-[2px] bg-brand-green" />}
         <div className="mb-3.5 flex items-start justify-between gap-3">
           <div>
             <h2 id="linha-titulo" className="ttl text-3xl">
@@ -400,6 +590,26 @@ function FormularioLinha({ linha, existentes, totalDenuncias, onCancelar, onSalv
             </p>
           )}
         </form>
+    </>
+  )
+
+  if (embutido) {
+    return (
+      <aside aria-labelledby="linha-titulo" className="card-brand p-5">
+        {corpo}
+      </aside>
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 z-[2000] flex items-end justify-center bg-brand-green-dark/75 lg:items-center">
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="linha-titulo"
+        className="max-h-full w-full max-w-md overflow-y-auto border-t-[3px] border-brand-green bg-brand-cream px-5 pb-6 pt-3 shadow-[0_-4px_0_#052d00] lg:border-[3px] lg:pt-5 lg:shadow-[6px_6px_0_#052d00]"
+      >
+        {corpo}
       </section>
     </div>
   )

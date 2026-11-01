@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { AppLayout } from '../components/layout/AppLayout'
-import { DocumentoLegal, type SecaoLegal } from '../components/legal/DocumentoLegal'
+import { PaginaLegal } from '../components/legal/PaginaLegal'
+import type { SecaoLegal } from '../components/legal/DocumentoLegal'
 import { CONTATO, CONTROLADOR, FORO, ROTAS_LEGAIS } from '../lib/legal'
 
 const SECOES: SecaoLegal[] = [
@@ -129,8 +129,8 @@ const SECOES: SecaoLegal[] = [
 
 export function TermosPage() {
   return (
-    <AppLayout title="Termos de Uso" largura="estreita">
-      <DocumentoLegal
+    <PaginaLegal
+        tituloLayout="Termos de Uso"
         titulo="Termos de Uso"
         introducao={
           <p>
@@ -141,6 +141,5 @@ export function TermosPage() {
         secoes={SECOES}
         outro={{ rotulo: 'Ler também a Política de Privacidade', para: ROTAS_LEGAIS.privacidade }}
       />
-    </AppLayout>
   )
 }

@@ -8,7 +8,7 @@ export interface SecaoLegal {
   conteudo: ReactNode
 }
 
-interface DocumentoLegalProps {
+export interface DocumentoLegalProps {
   titulo: string
   introducao: ReactNode
   secoes: SecaoLegal[]
@@ -18,15 +18,15 @@ interface DocumentoLegalProps {
 
 export function DocumentoLegal({ titulo, introducao, secoes, outro }: DocumentoLegalProps) {
   return (
-    <article className="space-y-6 p-4">
+    <article className="space-y-6 p-4 lg:p-0">
       <header className="space-y-2">
-        <h2 className="ttl text-3xl">{titulo}</h2>
+        <h2 className="ttl text-3xl lg:text-[56px] lg:leading-[0.9]">{titulo}</h2>
         <p className="text-xs font-bold text-brand-green-dark/70">Última atualização: {DATA_DOCUMENTOS}</p>
         <div className="text-sm leading-relaxed text-brand-green-dark/90">{introducao}</div>
       </header>
 
       {secoes.map((secao, i) => (
-        <section key={secao.titulo} aria-labelledby={`secao-legal-${i}`}>
+        <section key={secao.titulo} aria-labelledby={`secao-legal-${i}`} className="lg:scroll-mt-6">
           <TituloSecao id={`secao-legal-${i}`}>
             {i + 1}. {secao.titulo}
           </TituloSecao>

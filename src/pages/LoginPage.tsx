@@ -1,13 +1,16 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
+import { TelaDividida } from '../components/layout/TelaDividida'
 import { LinksLegais } from '../components/legal/LinksLegais'
 import { Instagram } from '../components/ui/Instagram'
 import { useAuth } from '../hooks/useAuth'
+import { useDesktop } from '../hooks/useDesktop'
 import { lerAvisoLogin, limparAvisoLogin } from '../lib/avisoLogin'
 
 export function LoginPage() {
   const { signIn } = useAuth()
+  const desktop = useDesktop()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
@@ -37,6 +40,57 @@ export function LoginPage() {
     navigate(destino, { replace: true })
   }
 
+  const formulario = (
+      <form onSubmit={handleSubmit} className={`card-brand space-y-3 p-5 ${desktop ? "bg-white !shadow-[5px_5px_0_#084400]" : "!border-brand-cream bg-brand-cream !shadow-[5px_5px_0_#052d00]"}`}>
+        <input
+          required
+          type="email"
+          placeholder="E-mail"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="input-brand"
+        />
+        <input
+          required
+          type="password"
+          placeholder="Senha"
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+          className="input-brand"
+        />
+        {erro && <p className="text-sm text-zona-leste">{erro}</p>}
+        <Button type="submit" disabled={enviando}>
+          {enviando ? 'Entrando...' : 'Entrar'}
+        </Button>
+      </form>
+  )
+
+  if (desktop) {
+    return (
+      <TelaDividida texto="Ônibus quebrado, atrasado ou lotado? Registre, veja no mapa e cobre o transporte público de Teresina.">
+        <div>
+          <h1 className="ttl text-[44px] leading-[0.9]">Entrar</h1>
+          <p className="mt-2 text-[15px] font-medium text-[#2f5a28]">
+            Entre para registrar denúncias e acompanhar suas linhas.
+          </p>
+        </div>
+        {aviso && (
+          <p role="status" className="rounded-[2px] border-2 border-brand-green px-3.5 py-3 text-sm font-bold">
+            {aviso}
+          </p>
+        )}
+        {formulario}
+        <p className="text-center text-sm font-semibold">
+          Ainda não tem conta?{' '}
+          <Link to="/cadastro" className="font-bold underline">
+            Cadastre-se
+          </Link>
+        </p>
+        <LinksLegais />
+      </TelaDividida>
+    )
+  }
+
   return (
     <div className="relative flex h-full flex-col justify-center gap-6 overflow-hidden bg-brand-green px-6 text-brand-cream">
       <img
@@ -64,28 +118,7 @@ export function LoginPage() {
             {aviso}
           </p>
         )}
-      <form onSubmit={handleSubmit} className="card-brand !border-brand-cream !shadow-[5px_5px_0_#052d00] space-y-3 bg-brand-cream p-5">
-        <input
-          required
-          type="email"
-          placeholder="E-mail"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="input-brand"
-        />
-        <input
-          required
-          type="password"
-          placeholder="Senha"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          className="input-brand"
-        />
-        {erro && <p className="text-sm text-zona-leste">{erro}</p>}
-        <Button type="submit" disabled={enviando}>
-          {enviando ? 'Entrando...' : 'Entrar'}
-        </Button>
-      </form>
+      {formulario}
         <p className="text-center text-sm font-medium">
           Não tem conta?{' '}
           <Link to="/cadastro" className="font-bold underline">

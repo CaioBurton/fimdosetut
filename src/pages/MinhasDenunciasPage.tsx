@@ -9,6 +9,8 @@ import { LinksLegais } from '../components/legal/LinksLegais'
 import { Instagram } from '../components/ui/Instagram'
 import { Paginacao } from '../components/ui/Paginacao'
 import { TituloSecao } from '../components/ui/TituloSecao'
+import { CabecalhoPagina } from '../components/ui/CabecalhoPagina'
+import { useDesktop } from '../hooks/useDesktop'
 import { useAuth } from '../hooks/useAuth'
 import { useDenuncias } from '../hooks/useDenuncias'
 import { useLinhas } from '../hooks/useLinhas'
@@ -18,6 +20,7 @@ const POR_PAGINA = 5
 
 export function MinhasDenunciasPage() {
   const { user } = useAuth()
+  const desktop = useDesktop()
   const { linhas } = useLinhas()
   const { denuncias, loading, error } = useDenuncias(linhas, null, true)
   const [acaoErro, setAcaoErro] = useState<string | null>(null)
@@ -46,8 +49,9 @@ export function MinhasDenunciasPage() {
   }
 
   return (
-    <AppLayout title="Perfil" largura="estreita">
-      <div className="space-y-4 p-4">
+    <AppLayout title="Perfil">
+      <div className="space-y-4 p-4 lg:p-0">
+        {desktop && <CabecalhoPagina titulo="Perfil" />}
         {user && (
           <PerfilUsuario
             userId={user.id}
@@ -57,6 +61,8 @@ export function MinhasDenunciasPage() {
             linhas={linhas}
             totalDenuncias={minhas.length}
             totalResolvidas={minhas.filter((d) => d.status === 'resolvido').length}
+            colunaEsquerda={desktop ? <EnviarFeedback userId={user.id} /> : undefined}
+            colunaDireita={desktop ? <MeusDadosPrivacidade /> : undefined}
             entreLinhasEDados={
               <div className="space-y-4">
                 <div className="pt-4">
@@ -104,13 +110,13 @@ export function MinhasDenunciasPage() {
           />
         )}
 
-        {user && (
+        {user && !desktop && (
           <div className="pt-4">
             <EnviarFeedback userId={user.id} />
           </div>
         )}
 
-        {user && (
+        {user && !desktop && (
           <div className="pt-4">
             <MeusDadosPrivacidade />
           </div>

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
 const base =
@@ -20,8 +20,19 @@ function Item({ para, fim = false, children }: { para: string; fim?: boolean; ch
 const ic = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true } as const
 
 /** Menu lateral do layout de desktop: faz o papel do cabeçalho e da barra de baixo do celular. */
+const SECOES_ADMIN = [
+  { id: 'painel', rotulo: 'Painel' },
+  { id: 'denuncias', rotulo: 'Denúncias' },
+  { id: 'linhas', rotulo: 'Linhas' },
+  { id: 'usuarios', rotulo: 'Usuários' },
+  { id: 'feedbacks', rotulo: 'Feedbacks' },
+]
+
 export function SidebarNav() {
   const { user, isAdmin, signOut } = useAuth()
+  const local = useLocation()
+  const naAdmin = isAdmin && local.pathname.startsWith('/admin')
+  const secaoAtual = new URLSearchParams(local.search).get('aba') ?? 'painel'
 
   return (
     <aside className="relative flex w-60 shrink-0 flex-col gap-6 overflow-hidden bg-brand-green px-4 py-6 text-brand-cream">
@@ -58,6 +69,24 @@ export function SidebarNav() {
           </Item>
         )}
       </nav>
+
+      {naAdmin && (
+        <div className="relative">
+          <p className="mb-1.5 px-1 text-xs font-bold uppercase tracking-[0.08em] opacity-80">Administração</p>
+          <nav aria-label="Seções do admin" className="flex flex-col gap-1">
+            {SECOES_ADMIN.map((s) => (
+              <Link
+                key={s.id}
+                to={`/admin?aba=${s.id}`}
+                aria-current={secaoAtual === s.id ? 'page' : undefined}
+                className={classe(secaoAtual === s.id)}
+              >
+                {s.rotulo}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
 
       <NavLink
         to="/nova"

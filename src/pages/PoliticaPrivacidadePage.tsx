@@ -1,5 +1,5 @@
-import { AppLayout } from '../components/layout/AppLayout'
-import { DocumentoLegal, type SecaoLegal } from '../components/legal/DocumentoLegal'
+import { PaginaLegal } from '../components/legal/PaginaLegal'
+import type { SecaoLegal } from '../components/legal/DocumentoLegal'
 import { CONTATO, CONTROLADOR, ROTAS_LEGAIS } from '../lib/legal'
 
 const SECOES: SecaoLegal[] = [
@@ -223,8 +223,8 @@ const SECOES: SecaoLegal[] = [
 
 export function PoliticaPrivacidadePage() {
   return (
-    <AppLayout title="Privacidade" largura="estreita">
-      <DocumentoLegal
+    <PaginaLegal
+        tituloLayout="Privacidade"
         titulo="Política de Privacidade"
         introducao={
           <p>
@@ -235,6 +235,5 @@ export function PoliticaPrivacidadePage() {
         secoes={SECOES}
         outro={{ rotulo: 'Ler também os Termos de Uso', para: ROTAS_LEGAIS.termos }}
       />
-    </AppLayout>
   )
 }

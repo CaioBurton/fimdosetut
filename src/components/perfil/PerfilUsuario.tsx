@@ -1,4 +1,5 @@
 import { useState, type ReactNode, type SyntheticEvent } from 'react'
+import { useDesktop } from '../../hooks/useDesktop'
 import { usePerfilUsuario } from '../../hooks/usePerfilUsuario'
 import { ZONA_COLORS, ZONA_LABELS, type Linha, type PerfilDetalhes } from '../../types'
 import { LinhaSelect } from '../denuncia/LinhaSelect'
@@ -17,6 +18,9 @@ interface PerfilUsuarioProps {
   totalResolvidas?: number
   /** Conteúdo exibido entre "Linhas que eu pego" e "Meus dados". */
   entreLinhasEDados?: ReactNode
+  /** Desktop: blocos extras no fim da coluna da esquerda / da direita. */
+  colunaEsquerda?: ReactNode
+  colunaDireita?: ReactNode
 }
 
 type Mensagem = { tipo: 'ok' | 'erro'; texto: string }
@@ -55,7 +59,10 @@ export function PerfilUsuario({
   totalDenuncias = 0,
   totalResolvidas = 0,
   entreLinhasEDados,
+  colunaEsquerda,
+  colunaDireita,
 }: PerfilUsuarioProps) {
+  const desktop = useDesktop()
   const { detalhes, linhaIds, loading, error, salvarDetalhes, adicionarLinha, removerLinha } =
     usePerfilUsuario(userId)
   const [rascunho, setRascunho] = useState<PerfilDetalhes | null>(null)
@@ -135,9 +142,99 @@ export function PerfilUsuario({
     if (erro) setMsgLinhas({ tipo: 'erro', texto: erro })
   }
 
-  return (
-    <div className="space-y-7">
-      <section aria-label="Resumo do perfil" className="-mx-4 -mt-4">
+  const secLinhas = loading ? null : (
+      <section aria-labelledby="perfil-linhas">
+        <TituloSecao id="perfil-linhas">Linhas que eu pego</TituloSecao>
+        <div className="card-brand space-y-3 p-4">
+          {minhasLinhas.length === 0 ? (
+            <p className="text-sm text-brand-green-dark/70">Nenhuma linha cadastrada.</p>
+          ) : (
+            <ul className="space-y-2.5">
+              {minhasLinhas.map((linha) => (
+                <li
+                  key={linha.id}
+                  className="flex items-center gap-3 rounded-[2px] border-2 border-brand-green bg-brand-cream py-2.5 pl-3 pr-2.5"
+                >
+                  <span className="ttl bg-brand-green px-2.5 py-2 text-[17px] leading-none text-brand-cream">
+                    {linha.codigo}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-bold leading-tight">{linha.nome}</p>
+                    <p className="mt-0.5 flex items-center gap-1.5 text-xs font-bold text-brand-green-dark/70">
+                      <i
+                        className="block h-[9px] w-[9px] rounded-full"
+                        style={{ backgroundColor: ZONA_COLORS[linha.zona] }}
+                      />
+                      Zona {ZONA_LABELS[linha.zona]}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={`Remover linha ${linha.codigo}`}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border-2 border-[#c23838] bg-brand-cream text-[#c23838]"
+                    onClick={() => remover(linha.id)}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true">
+                      <path d="M6 6l12 12M18 6L6 18" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="space-y-2.5 border-t-2 border-brand-green pt-3.5">
+            <p className="text-xs font-bold uppercase tracking-wide">Adicionar uma linha</p>
+            <LinhaSelect linhas={linhasDisponiveis} value={novaLinha} onChange={setNovaLinha} />
+            <Button type="button" variant="secondary" disabled={!novaLinha} onClick={adicionar}>
+              Adicionar linha
+            </Button>
+            <Aviso mensagem={msgLinhas} />
+          </div>
+        </div>
+      </section>
+  )
+
+  const secDados = loading ? null : (
+      <section aria-labelledby="perfil-dados">
+        <TituloSecao id="perfil-dados">Meus dados</TituloSecao>
+        <form onSubmit={salvar} className="card-brand space-y-3.5 p-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide">E-mail da conta</p>
+            <p className="mt-1 break-all text-sm font-medium text-brand-green-dark/80">{email}</p>
+          </div>
+          <label className="block text-xs font-bold uppercase tracking-wide">
+            Bairro onde mora
+            <input
+              className="input-brand mt-1.5 text-base font-normal normal-case tracking-normal"
+              value={form.bairro_moradia}
+              onChange={(e) => alterar('bairro_moradia', e.target.value)}
+            />
+          </label>
+          <label className="block text-xs font-bold uppercase tracking-wide">
+            Local de trabalho
+            <input
+              className="input-brand mt-1.5 text-base font-normal normal-case tracking-normal"
+              value={form.local_trabalho}
+              onChange={(e) => alterar('local_trabalho', e.target.value)}
+            />
+          </label>
+          <label className="block text-xs font-bold uppercase tracking-wide">
+            Local de estudo
+            <input
+              className="input-brand mt-1.5 text-base font-normal normal-case tracking-normal"
+              value={form.local_estudo}
+              onChange={(e) => alterar('local_estudo', e.target.value)}
+            />
+          </label>
+          <Button type="submit">Salvar dados</Button>
+          <Aviso mensagem={msgDados} />
+        </form>
+      </section>
+  )
+
+  const resumo = (
+      <section aria-label="Resumo do perfil" className={desktop ? 'card-brand overflow-hidden pb-5' : '-mx-4 -mt-4'}>
         <div className="relative h-[104px] overflow-hidden border-b-[3px] border-brand-green bg-brand-green">
           <img
             src="/brand/onibus-bandeira.svg"
@@ -229,6 +326,29 @@ export function PerfilUsuario({
           </div>
         </div>
       </section>
+  )
+
+  if (desktop) {
+    return (
+      <div className="grid grid-cols-[380px_minmax(0,1fr)] items-start gap-7">
+        <div className="space-y-6">
+          {resumo}
+          {error && <p className="text-sm text-zona-leste">{error}</p>}
+          {loading ? <p className="text-sm text-brand-green-dark/60">Carregando perfil...</p> : secLinhas}
+          {colunaEsquerda}
+        </div>
+        <div className="space-y-6">
+          {entreLinhasEDados}
+          {secDados}
+          {colunaDireita}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-7">
+      {resumo}
 
       {error && <p className="text-sm text-zona-leste">{error}</p>}
 
@@ -236,94 +356,11 @@ export function PerfilUsuario({
         <p className="text-sm text-brand-green-dark/60">Carregando perfil...</p>
       ) : (
         <>
-          <section aria-labelledby="perfil-linhas">
-            <TituloSecao id="perfil-linhas">Linhas que eu pego</TituloSecao>
-            <div className="card-brand space-y-3 p-4">
-              {minhasLinhas.length === 0 ? (
-                <p className="text-sm text-brand-green-dark/70">Nenhuma linha cadastrada.</p>
-              ) : (
-                <ul className="space-y-2.5">
-                  {minhasLinhas.map((linha) => (
-                    <li
-                      key={linha.id}
-                      className="flex items-center gap-3 rounded-[2px] border-2 border-brand-green bg-brand-cream py-2.5 pl-3 pr-2.5"
-                    >
-                      <span className="ttl bg-brand-green px-2.5 py-2 text-[17px] leading-none text-brand-cream">
-                        {linha.codigo}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[15px] font-bold leading-tight">{linha.nome}</p>
-                        <p className="mt-0.5 flex items-center gap-1.5 text-xs font-bold text-brand-green-dark/70">
-                          <i
-                            className="block h-[9px] w-[9px] rounded-full"
-                            style={{ backgroundColor: ZONA_COLORS[linha.zona] }}
-                          />
-                          Zona {ZONA_LABELS[linha.zona]}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        aria-label={`Remover linha ${linha.codigo}`}
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border-2 border-[#c23838] bg-brand-cream text-[#c23838]"
-                        onClick={() => remover(linha.id)}
-                      >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true">
-                          <path d="M6 6l12 12M18 6L6 18" />
-                        </svg>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <div className="space-y-2.5 border-t-2 border-brand-green pt-3.5">
-                <p className="text-xs font-bold uppercase tracking-wide">Adicionar uma linha</p>
-                <LinhaSelect linhas={linhasDisponiveis} value={novaLinha} onChange={setNovaLinha} />
-                <Button type="button" variant="secondary" disabled={!novaLinha} onClick={adicionar}>
-                  Adicionar linha
-                </Button>
-                <Aviso mensagem={msgLinhas} />
-              </div>
-            </div>
-          </section>
+          {secLinhas}
 
           {entreLinhasEDados}
 
-          <section aria-labelledby="perfil-dados">
-            <TituloSecao id="perfil-dados">Meus dados</TituloSecao>
-            <form onSubmit={salvar} className="card-brand space-y-3.5 p-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide">E-mail da conta</p>
-                <p className="mt-1 break-all text-sm font-medium text-brand-green-dark/80">{email}</p>
-              </div>
-              <label className="block text-xs font-bold uppercase tracking-wide">
-                Bairro onde mora
-                <input
-                  className="input-brand mt-1.5 text-base font-normal normal-case tracking-normal"
-                  value={form.bairro_moradia}
-                  onChange={(e) => alterar('bairro_moradia', e.target.value)}
-                />
-              </label>
-              <label className="block text-xs font-bold uppercase tracking-wide">
-                Local de trabalho
-                <input
-                  className="input-brand mt-1.5 text-base font-normal normal-case tracking-normal"
-                  value={form.local_trabalho}
-                  onChange={(e) => alterar('local_trabalho', e.target.value)}
-                />
-              </label>
-              <label className="block text-xs font-bold uppercase tracking-wide">
-                Local de estudo
-                <input
-                  className="input-brand mt-1.5 text-base font-normal normal-case tracking-normal"
-                  value={form.local_estudo}
-                  onChange={(e) => alterar('local_estudo', e.target.value)}
-                />
-              </label>
-              <Button type="submit">Salvar dados</Button>
-              <Aviso mensagem={msgDados} />
-            </form>
-          </section>
+          {secDados}
         </>
       )}
     </div>

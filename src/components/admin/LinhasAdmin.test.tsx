@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { restaurarLargura, simularDesktop } from '../../test/desktop'
 import type { Denuncia, Linha } from '../../types'
 import { LinhasAdmin } from './LinhasAdmin'
 
@@ -111,5 +112,28 @@ describe('LinhasAdmin', () => {
 
     expect(await screen.findByText('Não foi possível criar a linha. Tente novamente.')).toBeInTheDocument()
     expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+})
+
+describe('LinhasAdmin no desktop', () => {
+  afterEach(restaurarLargura)
+
+  it('mostra a tabela e abre o painel de edição ao lado, sem janela', async () => {
+    simularDesktop()
+    const user = userEvent.setup()
+    render(
+      <LinhasAdmin
+        linhas={[{ id: 'l1', codigo: '063', nome: 'DIRCEU / CENTRO', zona: 'leste' }]}
+        denuncias={[]}
+        onCriar={vi.fn()}
+        onAtualizar={vi.fn()}
+        onExcluir={vi.fn()}
+      />
+    )
+
+    expect(screen.getByRole('table')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Editar linha 063' }))
+    expect(screen.getByRole('complementary', { name: 'Editar linha' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })
