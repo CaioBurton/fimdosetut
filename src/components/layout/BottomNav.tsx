@@ -39,7 +39,7 @@ export function BottomNav() {
         className={({ isActive }) => `${linkBase} ${activeClass(isActive)}`}
       >
         <UserIcon />
-        {user ? 'Minhas' : 'Entrar'}
+        {user ? 'Perfil' : 'Entrar'}
       </NavLink>
       {isAdmin && (
         <NavLink to="/admin" className={({ isActive }) => `${linkBase} ${activeClass(isActive)}`}>

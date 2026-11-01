@@ -31,7 +31,7 @@ export function CadastroPage() {
       return
     }
     setSucesso(true)
-    setTimeout(() => navigate('/login'), 2000)
+    setTimeout(() => navigate('/login'), 8000)
   }
 
   return (

@@ -38,7 +38,7 @@ Os testes (Vitest + React Testing Library) não dependem de um projeto Supabase 
 
 ## Estrutura
 
-- `src/pages` — telas (Mapa, Lista, Nova Denúncia, Minhas Denúncias, Login, Cadastro)
+- `src/pages` — telas (Mapa, Lista, Nova Denúncia, Perfil (dados do usuário, linhas que pega e minhas denúncias), Login, Cadastro)
 - `src/components/map` — mapa Leaflet/OpenStreetMap e seletor de localização
 - `src/hooks` — autenticação (`useAuth`), linhas (`useLinhas`) e denúncias com realtime (`useDenuncias`)
 - `supabase/` — migration e seed do banco

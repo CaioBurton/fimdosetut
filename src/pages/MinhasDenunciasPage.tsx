@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AppLayout } from '../components/layout/AppLayout'
+import { PerfilUsuario } from '../components/perfil/PerfilUsuario'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../hooks/useAuth'
@@ -31,8 +32,17 @@ export function MinhasDenunciasPage() {
   }
 
   return (
-    <AppLayout title="Minhas denúncias">
+    <AppLayout title="Perfil">
       <div className="space-y-3 p-4">
+        {user && (
+          <PerfilUsuario
+            userId={user.id}
+            email={user.email ?? ''}
+            criadoEm={user.created_at}
+            linhas={linhas}
+          />
+        )}
+        <h2 className="ttl pt-2 text-xl">Minhas denúncias</h2>
         {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
         {acaoErro && <p className="text-center text-sm text-zona-leste">{acaoErro}</p>}
 

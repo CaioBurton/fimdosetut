@@ -64,3 +64,9 @@ export const STATUS_LABELS: Record<StatusDenuncia, string> = {
   pendente: 'Pendente',
   resolvido: 'Resolvido',
 }
+
+export interface PerfilDetalhes {
+  bairro_moradia: string
+  local_trabalho: string
+  local_estudo: string
+}

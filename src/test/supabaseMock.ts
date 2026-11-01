@@ -18,6 +18,7 @@ export function createChainable(result: QueryResult) {
     eq: vi.fn(() => chain),
     maybeSingle: vi.fn(() => chain),
     insert: vi.fn(() => chain),
+    upsert: vi.fn(() => chain),
     update: vi.fn(() => chain),
     delete: vi.fn(() => chain),
     then: (resolve: (value: QueryResult) => void) => Promise.resolve(resolved).then(resolve),
