@@ -130,6 +130,11 @@ export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess
         />
       </SecaoNumerada>
 
+      <p className="text-xs font-semibold leading-snug text-brand-green-dark/80">
+        Sua denúncia (local, descrição e número do veículo) aparece para todos no mapa, sem o seu
+        nome. Não escreva dados pessoais de outras pessoas.
+      </p>
+
       {erro && (
         <div
           role="alert"

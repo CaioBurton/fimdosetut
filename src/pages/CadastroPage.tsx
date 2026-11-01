@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
+import { LinksLegais } from '../components/legal/LinksLegais'
 import { Instagram } from '../components/ui/Instagram'
+import { VERSAO_DOCUMENTOS } from '../lib/legal'
 import { useAuth } from '../hooks/useAuth'
 
 export function CadastroPage() {
@@ -10,6 +12,7 @@ export function CadastroPage() {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [aceitou, setAceitou] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [sucesso, setSucesso] = useState(false)
   const [enviando, setEnviando] = useState(false)
@@ -20,9 +23,18 @@ export function CadastroPage() {
       setErro('A senha precisa ter pelo menos 6 caracteres.')
       return
     }
+    if (!aceitou) {
+      setErro('Aceite a Política de Privacidade e os Termos de Uso para criar a conta.')
+      return
+    }
     setEnviando(true)
     setErro(null)
-    const { error } = await signUp(email, senha, nome.trim())
+    // O aceite fica registrado na conta, com a versão dos documentos e o momento do aceite.
+    const { error } = await signUp(email, senha, {
+      nome: nome.trim(),
+      aceite_documentos: VERSAO_DOCUMENTOS,
+      aceite_em: new Date().toISOString(),
+    })
     setEnviando(false)
     if (error) {
       setErro(
@@ -92,6 +104,22 @@ export function CadastroPage() {
             onChange={(e) => setSenha(e.target.value)}
             className="input-brand"
           />
+          <label className="flex cursor-pointer items-start gap-3 text-sm font-medium leading-snug text-brand-green-dark">
+            <input
+              type="checkbox"
+              checked={aceitou}
+              onChange={(e) => {
+                setAceitou(e.target.checked)
+                setErro(null)
+              }}
+              className="mt-0.5 h-5 w-5 shrink-0 accent-[#084400]"
+            />
+            <span>
+              Li e concordo com a Política de Privacidade e os Termos de Uso, e autorizo o uso dos meus
+              dados como descrito nela.
+            </span>
+          </label>
+          <LinksLegais novaAba className="!justify-start" />
           {erro && <p className="text-sm text-zona-leste">{erro}</p>}
           <Button type="submit" disabled={enviando}>
             {enviando ? 'Criando conta...' : 'Criar conta'}

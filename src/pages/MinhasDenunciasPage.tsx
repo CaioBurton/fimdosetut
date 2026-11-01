@@ -4,6 +4,7 @@ import { EnviarFeedback } from '../components/perfil/EnviarFeedback'
 import { PerfilUsuario } from '../components/perfil/PerfilUsuario'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { Button } from '../components/ui/Button'
+import { LinksLegais } from '../components/legal/LinksLegais'
 import { Instagram } from '../components/ui/Instagram'
 import { Paginacao } from '../components/ui/Paginacao'
 import { TituloSecao } from '../components/ui/TituloSecao'
@@ -111,6 +112,7 @@ export function MinhasDenunciasPage() {
         <div className="flex flex-col items-center gap-2 pt-6 text-center">
           <p className="text-sm font-medium text-brand-green-dark/80">Acompanhe o Fórum nas redes</p>
           <Instagram />
+          <LinksLegais className="pt-2" />
         </div>
       </div>
     </AppLayout>

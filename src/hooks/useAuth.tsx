@@ -8,7 +8,11 @@ interface AuthContextValue {
   loading: boolean
   isAdmin: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
-  signUp: (email: string, password: string, nome?: string) => Promise<{ error: string | null }>
+  signUp: (
+    email: string,
+    password: string,
+    metadados?: Record<string, string>
+  ) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
 }
 
@@ -65,12 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null }
   }
 
-  async function signUp(email: string, password: string, nome?: string) {
-    // O nome vai nos metadados do usuário; o perfil o usa até a pessoa editá-lo.
+  async function signUp(email: string, password: string, metadados: Record<string, string> = {}) {
+    // Os metadados (nome e aceite da política) ficam guardados na conta; o perfil usa o nome até
+    // a pessoa editá-lo. Valores vazios não são enviados.
+    const data = Object.fromEntries(Object.entries(metadados).filter(([, v]) => v))
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      ...(nome ? { options: { data: { nome } } } : {}),
+      ...(Object.keys(data).length > 0 ? { options: { data } } : {}),
     })
     return { error: error?.message ?? null }
   }
