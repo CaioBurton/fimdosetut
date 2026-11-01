@@ -111,3 +111,33 @@ export function calcularEstatisticas(denuncias: Denuncia[]): EstatisticasDashboa
       .slice(0, 5),
   }
 }
+
+export interface ContagemDia {
+  data: Date
+  total: number
+}
+
+/** Conta denúncias por dia nos últimos `dias` dias (o último item é hoje). */
+export function contarPorDia(
+  denuncias: Denuncia[],
+  dias: number,
+  agora: Date = new Date()
+): ContagemDia[] {
+  const inicioHoje = new Date(agora)
+  inicioHoje.setHours(0, 0, 0, 0)
+
+  const resultado: ContagemDia[] = []
+  for (let i = dias - 1; i >= 0; i--) {
+    const data = new Date(inicioHoje)
+    data.setDate(data.getDate() - i)
+    resultado.push({ data, total: 0 })
+  }
+
+  for (const d of denuncias) {
+    const criada = new Date(d.created_at)
+    criada.setHours(0, 0, 0, 0)
+    const indice = resultado.findIndex((r) => r.data.getTime() === criada.getTime())
+    if (indice >= 0) resultado[indice].total++
+  }
+  return resultado
+}

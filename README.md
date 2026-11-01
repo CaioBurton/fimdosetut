@@ -8,6 +8,7 @@ App colaborativo mobile-first para avisar sobre ônibus quebrados (e outros prob
 2. No SQL Editor do projeto, rode nesta ordem:
    - `supabase/migrations/0001_init.sql` (tabelas, RLS e realtime)
    - `supabase/seed.sql` (as 76 linhas da Setut, já divididas por zona)
+   - as migrations seguintes (`0002` a `0005`), em ordem — a `0005_linhas_admin.sql` libera o CRUD de linhas só para admins
 3. Em **Project Settings → API**, copie a `Project URL` e a `anon public key`.
 4. Copie `.env.example` para `.env` e preencha:
    ```

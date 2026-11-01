@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { AppLayout } from '../components/layout/AppLayout'
+import { LinhasAdmin } from '../components/admin/LinhasAdmin'
+import { PainelAdmin } from '../components/admin/PainelAdmin'
 import { DashboardDenuncias } from '../components/admin/DashboardDenuncias'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { Badge } from '../components/ui/Badge'
@@ -11,11 +13,18 @@ import { useUsuarios } from '../hooks/useUsuarios'
 import { supabase } from '../lib/supabaseClient'
 import type { Perfil } from '../types'
 
-type Aba = 'denuncias' | 'usuarios'
+type Aba = 'painel' | 'denuncias' | 'linhas' | 'usuarios'
+
+const ABAS: { id: Aba; rotulo: string }[] = [
+  { id: 'painel', rotulo: 'Painel' },
+  { id: 'denuncias', rotulo: 'Denúncias' },
+  { id: 'linhas', rotulo: 'Linhas' },
+  { id: 'usuarios', rotulo: 'Usuários' },
+]
 
 export function AdminPage() {
-  const [aba, setAba] = useState<Aba>('denuncias')
-  const { linhas } = useLinhas()
+  const [aba, setAba] = useState<Aba>('painel')
+  const { linhas, criar, atualizar, excluir: excluirLinha } = useLinhas()
   const { denuncias, loading, error } = useDenuncias(linhas)
   const [acaoErro, setAcaoErro] = useState<string | null>(null)
   const [confirmando, setConfirmando] = useState<string | null>(null)
@@ -44,24 +53,49 @@ export function AdminPage() {
   return (
     <AppLayout title="Administração">
       <div className="space-y-3 p-4">
-        <div className="flex gap-2" role="tablist" aria-label="Seções da administração">
-          {(['denuncias', 'usuarios'] as const).map((a) => (
+        <div
+          className="sem-scrollbar flex gap-2 overflow-x-auto pb-1"
+          role="tablist"
+          aria-label="Seções da administração"
+        >
+          {ABAS.map((a) => (
             <button
-              key={a}
+              key={a.id}
               type="button"
               role="tab"
-              aria-selected={aba === a}
-              onClick={() => setAba(a)}
-              className={`chip-brand ${aba === a ? 'chip-brand-ativo' : ''}`}
+              aria-selected={aba === a.id}
+              onClick={() => setAba(a.id)}
+              className={`chip-brand ${aba === a.id ? 'chip-brand-ativo' : ''}`}
             >
-              {a === 'denuncias' ? `Denúncias (${denuncias.length})` : 'Usuários'}
+              {a.id === 'denuncias' ? `Denúncias (${denuncias.length})` : a.rotulo}
             </button>
           ))}
         </div>
 
         {acaoErro && <p className="text-center text-sm text-zona-leste">{acaoErro}</p>}
 
-        {aba === 'denuncias' ? (
+        {aba === 'painel' && (
+          <>
+            {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
+            {loading ? (
+              <p className="text-center text-brand-green-dark/60">Carregando...</p>
+            ) : (
+              <PainelAdmin denuncias={denuncias} onGerenciarLinhas={() => setAba('linhas')} />
+            )}
+          </>
+        )}
+
+        {aba === 'linhas' && (
+          <LinhasAdmin
+            linhas={linhas}
+            denuncias={denuncias}
+            onCriar={criar}
+            onAtualizar={atualizar}
+            onExcluir={excluirLinha}
+          />
+        )}
+
+        {aba === 'denuncias' && (
           <>
             {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
             {loading && <p className="text-center text-brand-green-dark/60">Carregando...</p>}
@@ -125,7 +159,9 @@ export function AdminPage() {
               )}
             </DashboardDenuncias>
           </>
-        ) : (
+        )}
+
+        {aba === 'usuarios' && (
           <UsuariosAdmin totalPorUsuario={totalPorUsuario} onErro={setAcaoErro} />
         )}
       </div>

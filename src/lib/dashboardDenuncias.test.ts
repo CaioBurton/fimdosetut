@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { Denuncia } from '../types'
-import { calcularEstatisticas, filtrarDenuncias, FILTROS_INICIAIS } from './dashboardDenuncias'
+import {
+  calcularEstatisticas,
+  contarPorDia,
+  filtrarDenuncias,
+  FILTROS_INICIAIS,
+} from './dashboardDenuncias'
 
 const agora = new Date('2026-10-31T15:00:00')
 
@@ -65,5 +70,18 @@ describe('calcularEstatisticas', () => {
   })
   it('lida com lista vazia', () => {
     expect(calcularEstatisticas([]).taxaResolucao).toBe(0)
+  })
+})
+
+describe('contarPorDia', () => {
+  it('devolve um item por dia, do mais antigo até hoje, contando as denúncias de cada dia', () => {
+    const resultado = contarPorDia(dados, 7, agora)
+
+    expect(resultado).toHaveLength(7)
+    expect(resultado[6].data.getDate()).toBe(31)
+    expect(resultado[6].total).toBe(1) // denúncia 1, de hoje
+    expect(resultado[3].data.getDate()).toBe(28)
+    expect(resultado[3].total).toBe(1) // denúncia 2
+    expect(resultado.reduce((soma, r) => soma + r.total, 0)).toBe(2) // a de setembro fica de fora
   })
 })
