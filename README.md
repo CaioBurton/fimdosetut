@@ -15,6 +15,10 @@ App colaborativo mobile-first para avisar sobre ônibus quebrados (e outros prob
    VITE_SUPABASE_ANON_KEY=...
    ```
 
+### E-mail de confirmação
+
+O template do e-mail de confirmação de cadastro, no estilo do app, está em `supabase/templates/confirmacao-email.html`. Para usar: no painel do Supabase, vá em **Authentication → Emails → Confirm signup** e cole o conteúdo do arquivo (assunto sugerido: `Confirme seu e-mail — Deu o Prego!`). A variável `{{ .ConfirmationURL }}` é preenchida pelo Supabase.
+
 ## Rodando localmente
 
 ```bash

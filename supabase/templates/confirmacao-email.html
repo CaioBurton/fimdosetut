@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Confirme seu e-mail — Deu o Prego!</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f3fcee;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3fcee;">
+      <tr>
+        <td align="center" style="padding:24px 12px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;border:2px solid #084400;background:#ffffff;">
+            <!-- Cabeçalho -->
+            <tr>
+              <td style="background:#084400;padding:22px 24px;">
+                <div style="font-family:'Proxima Nova','Montserrat','Helvetica Neue',Arial,sans-serif;font-weight:900;font-style:italic;font-size:22px;line-height:0.95;letter-spacing:-0.5px;text-transform:uppercase;color:#f3fcee;">
+                  Fórum<br />Piauiense
+                </div>
+                <div style="font-family:'Caros Soft','Quicksand','Helvetica Neue',Arial,sans-serif;font-weight:300;font-size:13px;line-height:1.2;color:#f3fcee;margin-top:4px;">
+                  De luta pelo transporte público
+                </div>
+              </td>
+            </tr>
+
+            <!-- Conteúdo -->
+            <tr>
+              <td style="padding:32px 24px 8px 24px;">
+                <h1 style="margin:0;font-family:'Proxima Nova','Montserrat','Helvetica Neue',Arial,sans-serif;font-weight:900;font-style:italic;font-size:34px;line-height:0.95;letter-spacing:-1px;text-transform:uppercase;color:#084400;">
+                  Confirme seu e-mail
+                </h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 24px 24px 24px;font-family:'Caros Soft','Quicksand','Helvetica Neue',Arial,sans-serif;font-size:16px;line-height:1.5;color:#084400;">
+                Falta pouco para entrar no <strong>Deu o Prego!</strong>. Clique no botão abaixo para confirmar este endereço de e-mail e concluir seu cadastro.
+              </td>
+            </tr>
+
+            <!-- Botão -->
+            <tr>
+              <td style="padding:0 24px 24px 24px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td align="center" bgcolor="#084400" style="background:#084400;border:2px solid #084400;box-shadow:4px 4px 0 #052d00;">
+                      <a href="{{ .ConfirmationURL }}" style="display:block;padding:16px 20px;font-family:'Proxima Nova','Montserrat','Helvetica Neue',Arial,sans-serif;font-weight:900;font-style:italic;font-size:18px;letter-spacing:-0.3px;text-transform:uppercase;color:#f3fcee;text-decoration:none;">
+                        Confirmar e-mail &rarr;
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Link alternativo -->
+            <tr>
+              <td style="padding:0 24px 28px 24px;font-family:'Caros Soft','Quicksand','Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.5;color:#084400;">
+                Se o botão não funcionar, copie e cole este endereço no navegador:<br />
+                <a href="{{ .ConfirmationURL }}" style="color:#084400;text-decoration:underline;word-break:break-all;">{{ .ConfirmationURL }}</a>
+              </td>
+            </tr>
+
+            <!-- Rodapé -->
+            <tr>
+              <td style="background:#f3fcee;border-top:2px solid #084400;padding:16px 24px;font-family:'Caros Soft','Quicksand','Helvetica Neue',Arial,sans-serif;font-size:12px;line-height:1.5;color:#084400;">
+                Se você não criou uma conta, é só ignorar este e-mail.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
