@@ -31,7 +31,7 @@ const PASSOS = [
   {
     titulo: 'Seus dados estão protegidos',
     texto:
-      'Seus dados pessoais são protegidos pela Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018). Usamos suas informações só para o funcionamento do app.',
+      'Seus dados pessoais são protegidos pela Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018). Usamos suas informações só para o funcionamento do app. Leia a Política de Privacidade no fim da aba Perfil.',
     imagem: '/brand/onibus-bandeira.svg',
   },
 ]

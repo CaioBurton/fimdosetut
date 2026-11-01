@@ -20,6 +20,10 @@ App colaborativo mobile-first para avisar sobre ônibus quebrados (e outros prob
 
 O template do e-mail de confirmação de cadastro, no estilo do app, está em `supabase/templates/confirmacao-email.html`. Para usar: no painel do Supabase, vá em **Authentication → Emails → Confirm signup** e cole o conteúdo do arquivo (assunto sugerido: `Confirme seu e-mail — Deu o Prego!`). A variável `{{ .ConfirmationURL }}` é preenchida pelo Supabase.
 
+### Política de Privacidade e Termos de Uso
+
+Os textos ficam em `src/pages/PoliticaPrivacidadePage.tsx` (rota `/privacidade`) e `src/pages/TermosPage.tsx` (rota `/termos`). Os dados da organização (nome, CNPJ, endereço, e-mail de contato, encarregado) ficam em `src/lib/legal.ts`: **troque os campos `[PREENCHER]` antes de divulgar o app** e peça a revisão de quem responde juridicamente pelo Fórum. Ao mudar o texto de forma relevante, atualize `VERSAO_DOCUMENTOS` e `DATA_DOCUMENTOS`: a versão aceita é gravada na conta no cadastro.
+
 ## Rodando localmente
 
 ```bash
