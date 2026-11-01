@@ -1,9 +1,9 @@
 /**
  * Dados que aparecem na Política de Privacidade e nos Termos de Uso.
  *
- * ATENÇÃO: os valores marcados com [PREENCHER] precisam ser trocados pelos dados reais da
- * organização responsável antes de divulgar o app. O texto dos documentos é um modelo e deve
- * ser revisado por quem responde juridicamente pelo Fórum.
+ * O Fórum é um movimento social sem CNPJ; o canal de contato é o e-mail abaixo. Campos opcionais
+ * deixados vazios (`''`) simplesmente não aparecem nos documentos. O texto dos documentos é um
+ * modelo e deve ser revisado por quem responde juridicamente pelo Fórum.
  */
 
 /** Versão dos documentos. Mude quando o texto mudar de forma relevante. */
@@ -12,16 +12,17 @@ export const DATA_DOCUMENTOS = '01/11/2026'
 
 export const CONTROLADOR = {
   nome: 'Fórum Piauiense de Luta pelo Transporte Público',
-  /** CNPJ, se houver. */
-  documento: '[PREENCHER: CNPJ ou outro identificador da organização]',
-  endereco: '[PREENCHER: endereço da organização, Teresina - PI]',
+  /** Natureza da organização (o Fórum não tem CNPJ). */
+  natureza: 'movimento social, sem CNPJ',
+  /** Opcional: endereço para correspondência. Vazio = não aparece. */
+  endereco: '',
 }
 
 export const CONTATO = {
   /** Canal para pedidos sobre dados pessoais (acesso, correção, exclusão etc.). */
-  email: '[PREENCHER: e-mail de contato para assuntos de privacidade]',
-  /** Pessoa ou setor responsável por responder aos titulares (encarregado). */
-  encarregado: '[PREENCHER: nome do encarregado de dados, ou do responsável pelo contato]',
+  email: 'forumpelotransporte@gmail.com',
+  /** Opcional: pessoa responsável por responder aos titulares (encarregado). Vazio = não aparece. */
+  encarregado: '',
   instagram: '@fimdosetut',
 }
 

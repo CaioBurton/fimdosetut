@@ -77,4 +77,21 @@ describe('Termos de Uso', () => {
       '/privacidade'
     )
   })
+
+describe('Dados da organização', () => {
+  it('não deixa marcadores [PREENCHER] nem lacunas nos documentos', () => {
+    const { container: politica } = renderizar(<PoliticaPrivacidadePage />)
+    expect(politica.textContent).not.toMatch(/PREENCHER/)
+
+    const { container: termos } = renderizar(<TermosPage />)
+    expect(termos.textContent).not.toMatch(/PREENCHER/)
+  })
+
+  it('mostra o e-mail do Fórum como canal de contato e que o Fórum não tem CNPJ', () => {
+    renderizar(<PoliticaPrivacidadePage />)
+
+    expect(screen.getAllByText(/forumpelotransporte@gmail\.com/).length).toBeGreaterThan(0)
+    expect(screen.getByText(/movimento social, sem CNPJ/)).toBeInTheDocument()
+  })
+})
 })
