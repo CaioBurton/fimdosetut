@@ -9,11 +9,20 @@ import { LocationPicker } from '../map/LocationPicker'
 import { LinhaSelect } from './LinhaSelect'
 import { TipoSelect } from './TipoSelect'
 
-export function DenunciaForm({ linhas, onSuccess }: { linhas: Linha[]; onSuccess: () => void }) {
+export function DenunciaForm({
+  linhas,
+  onSuccess,
+  inicial,
+}: {
+  linhas: Linha[]
+  onSuccess: () => void
+  /** Linha e tipo já escolhidos (ex.: vindos da denúncia rápida quando o GPS falhou). */
+  inicial?: { linhaId?: string; tipo?: TipoProblema }
+}) {
   const { user } = useAuth()
   const desktop = useDesktop()
-  const [linhaId, setLinhaId] = useState('')
-  const [tipo, setTipo] = useState<TipoProblema>('quebrado')
+  const [linhaId, setLinhaId] = useState(inicial?.linhaId ?? '')
+  const [tipo, setTipo] = useState<TipoProblema>(inicial?.tipo ?? 'quebrado')
   const [descricao, setDescricao] = useState('')
   const [numeroVeiculo, setNumeroVeiculo] = useState('')
   const [local, setLocal] = useState<{ lat: number; lng: number } | null>(null)
