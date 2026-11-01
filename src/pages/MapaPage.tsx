@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { DenunciaRapida } from '../components/denuncia/DenunciaRapida'
 import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
 import { AppLayout } from '../components/layout/AppLayout'
 import { MapaDenuncias, tempoRelativo } from '../components/map/MapaDenuncias'
@@ -82,6 +83,11 @@ export function MapaPage() {
                 />
               )}
             />
+            {!desktop && (
+              <div className="absolute inset-x-3 top-[60px] z-[600]">
+                <DenunciaRapida linhas={linhas} />
+              </div>
+            )}
             {desktop && (
               <>
                 <div className="absolute left-6 right-6 top-6 z-[500] flex flex-wrap items-center gap-3">
@@ -133,6 +139,7 @@ export function MapaPage() {
               aria-label="Denúncias recentes"
               className="flex w-[380px] shrink-0 flex-col gap-4 overflow-y-auto border-l-[3px] border-brand-green bg-brand-cream p-6"
             >
+              <DenunciaRapida linhas={linhas} />
               <div>
                 <h2 className="ttl text-[32px] leading-[0.95]">Denúncias recentes</h2>
                 <p className="mt-1.5 text-sm font-medium text-[#2f5a28]">Atualiza em tempo real</p>
