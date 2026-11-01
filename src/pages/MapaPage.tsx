@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { DenunciaRapida } from '../components/denuncia/DenunciaRapida'
 import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
 import { AppLayout } from '../components/layout/AppLayout'
@@ -20,13 +20,11 @@ export function MapaPage() {
   const desktop = useDesktop()
   const { linhas } = useLinhas()
   const { denuncias: todas, loading, error, atualizarDenuncia } = useDenuncias(linhas)
-  const navigate = useNavigate()
   const {
     confirmadas,
     pendentes: confirmando,
     erro: erroConfirmacao,
     alternar,
-    logado,
   } = useConfirmacoes((id, total) => atualizarDenuncia(id, { confirmacoes: total }))
   const [busca, setBusca] = useState('')
   const [status, setStatus] = useState<Denuncia['status'] | 'todas'>('todas')
@@ -75,11 +73,7 @@ export function MapaPage() {
                   total={d.confirmacoes ?? 0}
                   confirmado={confirmadas.has(d.id)}
                   carregando={confirmando.has(d.id)}
-                  onClick={() =>
-                    logado
-                      ? alternar(d.id)
-                      : navigate('/login', { state: { from: { pathname: '/' } } })
-                  }
+                  onClick={() => alternar(d.id)}
                 />
               )}
             />

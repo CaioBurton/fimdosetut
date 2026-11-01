@@ -8,12 +8,12 @@ interface RespostaAlternar {
 }
 
 /**
- * "Também vi": guarda quais denúncias a pessoa logada já confirmou e alterna a confirmação.
+ * "Também vi": guarda quais denúncias a pessoa já confirmou (mesmo sem conta, via sessão anônima) e alterna a confirmação.
  * `aoAlterar` recebe o novo total da denúncia, para a lista atualizar o número na hora.
  * Quem confirmou é privado (RLS): a pessoa só lê as próprias confirmações.
  */
 export function useConfirmacoes(aoAlterar?: (denunciaId: string, total: number) => void) {
-  const { user, isAnonymous } = useAuth()
+  const { user, signInAnonimo } = useAuth()
   const userId = user?.id ?? null
   const [confirmadas, setConfirmadas] = useState<Set<string>>(new Set())
   const [pendentes, setPendentes] = useState<Set<string>>(new Set())
@@ -39,6 +39,21 @@ export function useConfirmacoes(aoAlterar?: (denunciaId: string, total: number) 
     async (denunciaId: string) => {
       setErro(null)
       setPendentes((atual) => new Set(atual).add(denunciaId))
+
+      // Sem conta: abre uma sessão anônima só para registrar a confirmação (dá para criar a conta depois).
+      if (!userId) {
+        const { error: erroAnonimo } = await signInAnonimo()
+        if (erroAnonimo) {
+          setPendentes((atual) => {
+            const proximo = new Set(atual)
+            proximo.delete(denunciaId)
+            return proximo
+          })
+          setErro('Não foi possível registrar agora. Verifique sua conexão ou entre com uma conta.')
+          return
+        }
+      }
+
       const { data, error } = await supabase.rpc('alternar_confirmacao', {
         p_denuncia_id: denunciaId,
       })
@@ -51,8 +66,8 @@ export function useConfirmacoes(aoAlterar?: (denunciaId: string, total: number) 
       const resposta = (Array.isArray(data) ? data[0] : data) as RespostaAlternar | null
       if (error || !resposta) {
         setErro(
-          error?.message.includes('crie uma conta')
-            ? 'Crie uma conta para confirmar denúncias.'
+          error?.message.includes('limite de confirmações')
+            ? 'Você confirmou muitas denúncias em pouco tempo. Crie uma conta ou tente mais tarde.'
             : error?.message.includes('própria denúncia')
             ? 'Você não pode confirmar a sua própria denúncia.'
             : error?.message.includes('já resolvida')
@@ -70,9 +85,9 @@ export function useConfirmacoes(aoAlterar?: (denunciaId: string, total: number) 
       })
       aoAlterar?.(denunciaId, resposta.total)
     },
-    [aoAlterar]
+    [aoAlterar, userId, signInAnonimo]
   )
 
   // Sem login não há confirmações (evita zerar o estado dentro do efeito ao sair da conta).
-  return { confirmadas: userId ? confirmadas : new Set<string>(), pendentes, erro, alternar, logado: !!userId && !isAnonymous }
+  return { confirmadas: userId ? confirmadas : new Set<string>(), pendentes, erro, alternar }
 }

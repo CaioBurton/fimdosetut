@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { CabecalhoPagina } from '../components/ui/CabecalhoPagina'
 import { RodapeTabela } from '../components/admin/TabelaAdmin'
 import { useDesktop } from '../hooks/useDesktop'
@@ -32,13 +31,11 @@ const diaMinimo = () => diaLocal(new Date(Date.now() - DIAS_PADRAO * 24 * 60 * 6
 export function ListaPage() {
   const { linhas } = useLinhas()
   const { denuncias, loading, error, atualizarDenuncia } = useDenuncias(linhas)
-  const navigate = useNavigate()
   const {
     confirmadas,
     pendentes: confirmando,
     erro: erroConfirmacao,
     alternar,
-    logado,
   } = useConfirmacoes((id, total) => atualizarDenuncia(id, { confirmacoes: total }))
   const desktop = useDesktop()
   const [filtroStatus, setFiltroStatus] = useState<Denuncia['status'] | 'todos'>('todos')
@@ -210,11 +207,7 @@ export function ListaPage() {
                   total={denuncia.confirmacoes ?? 0}
                   confirmado={confirmadas.has(denuncia.id)}
                   carregando={confirmando.has(denuncia.id)}
-                  onClick={() =>
-                    logado
-                      ? alternar(denuncia.id)
-                      : navigate('/login', { state: { from: { pathname: '/denuncias' } } })
-                  }
+                  onClick={() => alternar(denuncia.id)}
                 />
               }
             />
