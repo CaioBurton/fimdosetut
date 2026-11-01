@@ -4,6 +4,8 @@ import { useDesktop } from '../../hooks/useDesktop'
 import { CabecalhoPagina } from '../ui/CabecalhoPagina'
 import { supabase } from '../../lib/supabaseClient'
 import type { Linha, TipoProblema } from '../../types'
+import { LinksLegais } from '../legal/LinksLegais'
+import { VERSAO_DOCUMENTOS } from '../../lib/legal'
 import { SecaoNumerada } from '../ui/SecaoNumerada'
 import { LocationPicker } from '../map/LocationPicker'
 import { LinhaSelect } from './LinhaSelect'
@@ -15,23 +17,24 @@ export function DenunciaForm({
   inicial,
 }: {
   linhas: Linha[]
-  onSuccess: () => void
+  /** `semConta` é verdadeiro quando a denúncia saiu de uma sessão sem cadastro (convite para criar a conta). */
+  onSuccess: (info?: { semConta: boolean }) => void
   /** Linha e tipo já escolhidos (ex.: vindos da denúncia rápida quando o GPS falhou). */
   inicial?: { linhaId?: string; tipo?: TipoProblema }
 }) {
-  const { user } = useAuth()
+  const { user, isAnonymous, signInAnonimo } = useAuth()
   const desktop = useDesktop()
   const [linhaId, setLinhaId] = useState(inicial?.linhaId ?? '')
   const [tipo, setTipo] = useState<TipoProblema>(inicial?.tipo ?? 'quebrado')
   const [descricao, setDescricao] = useState('')
   const [numeroVeiculo, setNumeroVeiculo] = useState('')
   const [local, setLocal] = useState<{ lat: number; lng: number } | null>(null)
+  const [aceitou, setAceitou] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!user) return
     if (!linhaId) {
       setErro('Selecione a linha.')
       return
@@ -41,8 +44,27 @@ export function DenunciaForm({
       return
     }
 
+    if (!user && !aceitou) {
+      setErro('Aceite a Política de Privacidade e os Termos de Uso para enviar.')
+      return
+    }
+
     setEnviando(true)
     setErro(null)
+
+    // Sem conta: abre uma sessão anônima só para esta denúncia. O aceite da política vai junto e
+    // fica registrado no servidor; a pessoa pode criar a conta depois, mantendo a denúncia.
+    if (!user) {
+      const { error: erroAnonimo } = await signInAnonimo({
+        aceite_documentos: VERSAO_DOCUMENTOS,
+        aceite_em: new Date().toISOString(),
+      })
+      if (erroAnonimo) {
+        setEnviando(false)
+        setErro('Não foi possível enviar agora. Verifique sua conexão ou entre com uma conta.')
+        return
+      }
+    }
 
     // A função do banco grava a denúncia e a autoria (privada) juntas, em nome de quem está logado.
     const { error } = await supabase.rpc('criar_denuncia', {
@@ -57,11 +79,15 @@ export function DenunciaForm({
     setEnviando(false)
 
     if (error) {
-      setErro('Não foi possível enviar a denúncia. Verifique sua conexão e tente novamente.')
+      setErro(
+        error.message.includes('limite de denúncias')
+          ? 'Você enviou muitas denúncias em pouco tempo. Crie uma conta ou tente mais tarde.'
+          : 'Não foi possível enviar a denúncia. Verifique sua conexão e tente novamente.'
+      )
       return
     }
 
-    onSuccess()
+    onSuccess({ semConta: !user || isAnonymous })
   }
 
   const rotulo = 'mb-1.5 block text-xs font-bold uppercase tracking-wide'
@@ -160,6 +186,31 @@ export function DenunciaForm({
         Sua denúncia (local, descrição e número do veículo) aparece para todos no mapa, sem o seu
         nome. Não escreva dados pessoais de outras pessoas.
       </p>
+
+      {!user && (
+        <div className="space-y-1">
+          <label className="flex cursor-pointer items-start gap-3 text-sm font-medium leading-snug text-brand-green-dark">
+            <input
+              type="checkbox"
+              checked={aceitou}
+              onChange={(e) => {
+                setAceitou(e.target.checked)
+                setErro(null)
+              }}
+              className="mt-0.5 h-5 w-5 shrink-0 accent-[#084400]"
+            />
+            <span>
+              Li e concordo com a Política de Privacidade e os Termos de Uso, e autorizo o uso dos meus
+              dados como descrito nela.
+            </span>
+          </label>
+          <LinksLegais novaAba className="!justify-start" />
+          <p className="text-xs font-semibold text-brand-green-dark/70">
+            Você não precisa de conta para enviar. Depois da denúncia, pode criar uma para
+            acompanhá-la.
+          </p>
+        </div>
+      )}
 
       {erro && (
         <div
