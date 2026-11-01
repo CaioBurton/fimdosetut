@@ -37,8 +37,10 @@ type Gps =
  * Sem descrição e sem marcar o mapa; quem prefere detalhar segue para o formulário completo.
  */
 export function DenunciaRapida({ linhas }: { linhas: Linha[] }) {
-  const { user } = useAuth()
-  const { linhaIds, loading } = usePerfilUsuario(user?.id)
+  const { user, isAnonymous } = useAuth()
+  // Sessão anônima (denúncia sem cadastro) não tem perfil: trata como quem não tem conta.
+  const logado = !!user && !isAnonymous
+  const { linhaIds, loading } = usePerfilUsuario(logado ? user.id : undefined)
   const [linhaId, setLinhaId] = useState<string | null>(null)
   const [tipo, setTipo] = useState<TipoProblema | null>(null)
   const [gps, setGps] = useState<Gps>({ estado: 'parado' })
@@ -47,14 +49,14 @@ export function DenunciaRapida({ linhas }: { linhas: Linha[] }) {
   const [enviada, setEnviada] = useState(false)
   const [oculta, setOculta] = useState(ocultaNaSessao)
 
-  if ((user && loading) || oculta) return null
+  if ((logado && loading) || oculta) return null
 
   function ocultar() {
     ocultaNaSessao = true
     setOculta(true)
   }
 
-  if (!user) {
+  if (!logado) {
     return (
       <div className="card-brand flex items-start justify-between gap-2 !bg-brand-cream p-3 text-sm">
         <p>

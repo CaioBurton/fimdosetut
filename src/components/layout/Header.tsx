@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
 export function Header({ title }: { title: string }) {
-  const { user, signOut } = useAuth()
+  const { user, isAnonymous, signOut } = useAuth()
 
   return (
     <header className="sticky top-0 z-30 flex h-[72px] shrink-0 items-center gap-3 bg-brand-green px-4 text-brand-cream">
@@ -14,7 +14,7 @@ export function Header({ title }: { title: string }) {
         />
       </Link>
       <h1 className="ttl min-w-0 flex-1 truncate py-1 pr-1.5 text-right text-xl">{title}</h1>
-      {user ? (
+      {user && !isAnonymous ? (
         <button
           onClick={() => signOut()}
           className="ttl min-h-11 rounded-[2px] border-2 border-brand-cream px-3.5 text-[13px] !font-bold !not-italic active:bg-brand-cream active:text-brand-green"

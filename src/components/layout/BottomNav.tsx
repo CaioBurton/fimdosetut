@@ -9,7 +9,9 @@ function activeClass(isActive: boolean) {
 }
 
 export function BottomNav() {
-  const { user, isAdmin } = useAuth()
+  const { user, isAnonymous, isAdmin } = useAuth()
+  // Sessão anônima (denúncia sem cadastro) conta como deslogada na navegação.
+  const logado = !!user && !isAnonymous
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t-[3px] border-brand-green bg-brand-cream pb-[env(safe-area-inset-bottom)]">
@@ -35,11 +37,11 @@ export function BottomNav() {
         <span className="mt-1 text-brand-green">Reportar</span>
       </NavLink>
       <NavLink
-        to={user ? '/minhas' : '/login'}
+        to={logado ? '/minhas' : '/login'}
         className={({ isActive }) => `${linkBase} ${activeClass(isActive)}`}
       >
         <UserIcon />
-        {user ? 'Perfil' : 'Entrar'}
+        {logado ? 'Perfil' : 'Entrar'}
       </NavLink>
       {isAdmin ? (
         <NavLink to="/admin" className={({ isActive }) => `${linkBase} ${activeClass(isActive)}`}>
