@@ -9,6 +9,8 @@ import { AtivarNotificacoes } from './AtivarNotificacoes'
 interface PerfilUsuarioProps {
   userId: string
   email: string
+  /** Nome informado no cadastro; vale até a pessoa editar o nome no perfil. */
+  nomeCadastro?: string
   criadoEm?: string
   linhas: Linha[]
   totalDenuncias?: number
@@ -45,6 +47,7 @@ function Aviso({ mensagem }: { mensagem: Mensagem | null }) {
 export function PerfilUsuario({
   userId,
   email,
+  nomeCadastro = '',
   criadoEm,
   linhas,
   totalDenuncias = 0,
@@ -56,13 +59,42 @@ export function PerfilUsuario({
   const [novaLinha, setNovaLinha] = useState('')
   const [msgDados, setMsgDados] = useState<Mensagem | null>(null)
   const [msgLinhas, setMsgLinhas] = useState<Mensagem | null>(null)
+  const [editandoNome, setEditandoNome] = useState(false)
+  const [nomeRascunho, setNomeRascunho] = useState('')
+  const [salvandoNome, setSalvandoNome] = useState(false)
+  const [erroNome, setErroNome] = useState<string | null>(null)
 
   const form = rascunho ?? detalhes
+  const nome = detalhes.nome || nomeCadastro.trim()
   const minhasLinhas = linhaIds
     .map((id) => linhas.find((l) => l.id === id))
     .filter((l): l is Linha => !!l)
   const linhasDisponiveis = linhas.filter((l) => !linhaIds.includes(l.id))
-  const inicial = (email.trim()[0] ?? '?').toUpperCase()
+  const inicial = ((nome || email).trim()[0] ?? '?').toUpperCase()
+
+  function comecarEdicaoNome() {
+    setNomeRascunho(nome)
+    setErroNome(null)
+    setEditandoNome(true)
+  }
+
+  async function salvarNome(e: SyntheticEvent) {
+    e.preventDefault()
+    const novo = nomeRascunho.trim()
+    if (!novo) {
+      setErroNome('Digite o seu nome.')
+      return
+    }
+    setSalvandoNome(true)
+    setErroNome(null)
+    const erro = await salvarDetalhes({ ...detalhes, nome: novo })
+    setSalvandoNome(false)
+    if (erro) {
+      setErroNome(erro)
+      return
+    }
+    setEditandoNome(false)
+  }
 
   function alterar(campo: keyof PerfilDetalhes, valor: string) {
     setMsgDados(null)
@@ -72,6 +104,8 @@ export function PerfilUsuario({
   async function salvar(e: SyntheticEvent) {
     e.preventDefault()
     const erro = await salvarDetalhes({
+      // O nome tem edição própria (botão ao lado dele); aqui mantém o que está salvo.
+      nome: detalhes.nome,
       bairro_moradia: form.bairro_moradia.trim(),
       local_trabalho: form.local_trabalho.trim(),
       local_estudo: form.local_estudo.trim(),
@@ -121,7 +155,64 @@ export function PerfilUsuario({
               {inicial}
             </span>
           </div>
-          <h2 className="mt-3 break-all text-xl font-bold leading-tight">{email}</h2>
+          {editandoNome ? (
+            <form onSubmit={salvarNome} className="mt-3 space-y-2">
+              <label htmlFor="perfil-nome" className="block text-xs font-bold uppercase tracking-wide">
+                Seu nome
+              </label>
+              <input
+                id="perfil-nome"
+                autoFocus
+                maxLength={80}
+                autoComplete="name"
+                className="input-brand"
+                value={nomeRascunho}
+                onChange={(e) => setNomeRascunho(e.target.value)}
+              />
+              {erroNome && (
+                <p role="alert" className="text-sm font-semibold text-zona-leste">
+                  {erroNome}
+                </p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={salvandoNome}
+                  className="ttl min-h-11 flex-1 rounded-[2px] border-2 border-brand-green bg-brand-green text-sm text-brand-cream disabled:opacity-50"
+                >
+                  {salvandoNome ? 'Salvando...' : 'Salvar nome'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditandoNome(false)}
+                  className="ttl min-h-11 flex-1 rounded-[2px] border-2 border-brand-green text-sm text-brand-green"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="mt-3 flex items-center gap-2">
+              <h2
+                className={`min-w-0 flex-1 break-words text-xl font-bold leading-tight ${
+                  nome ? '' : 'text-brand-green-dark/60'
+                }`}
+              >
+                {nome || 'Adicione seu nome'}
+              </h2>
+              <button
+                type="button"
+                aria-label="Editar nome"
+                onClick={comecarEdicaoNome}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[2px] border-2 border-brand-green bg-brand-cream text-brand-green"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M4 20h4L19 9l-4-4L4 16v4z" />
+                  <path d="M13.5 6.5l4 4" />
+                </svg>
+              </button>
+            </div>
+          )}
           {criadoEm && (
             <p className="mt-0.5 text-sm font-medium text-brand-green-dark/70">
               Membro desde {new Date(criadoEm).toLocaleDateString('pt-BR')}
@@ -144,6 +235,10 @@ export function PerfilUsuario({
           <section aria-labelledby="perfil-dados">
             <TituloSecao id="perfil-dados">Meus dados</TituloSecao>
             <form onSubmit={salvar} className="card-brand space-y-3.5 p-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide">E-mail da conta</p>
+                <p className="mt-1 break-all text-sm font-medium text-brand-green-dark/80">{email}</p>
+              </div>
               <label className="block text-xs font-bold uppercase tracking-wide">
                 Bairro onde mora
                 <input

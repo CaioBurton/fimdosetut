@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import type { PerfilDetalhes } from '../types'
 
 const DETALHES_VAZIOS: PerfilDetalhes = {
+  nome: '',
   bairro_moradia: '',
   local_trabalho: '',
   local_estudo: '',
@@ -31,6 +32,7 @@ export function usePerfilUsuario(userId: string | undefined) {
         } else {
           const d = det.data as Partial<PerfilDetalhes> | null
           setDetalhes({
+            nome: d?.nome ?? '',
             bairro_moradia: d?.bairro_moradia ?? '',
             local_trabalho: d?.local_trabalho ?? '',
             local_estudo: d?.local_estudo ?? '',

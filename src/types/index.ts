@@ -66,6 +66,7 @@ export const STATUS_LABELS: Record<StatusDenuncia, string> = {
 }
 
 export interface PerfilDetalhes {
+  nome: string
   bairro_moradia: string
   local_trabalho: string
   local_estudo: string

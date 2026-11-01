@@ -31,6 +31,7 @@ describe('CadastroPage (integração: UI + useAuth + Supabase)', () => {
     const user = userEvent.setup()
     renderCadastro()
 
+    await user.type(screen.getByPlaceholderText('Nome'), '  Maria Souza ')
     await user.type(screen.getByPlaceholderText('E-mail'), 'teste@exemplo.com')
     await user.type(screen.getByPlaceholderText('Senha (mínimo 6 caracteres)'), '123')
     await user.click(screen.getByRole('button', { name: 'Criar conta' }))
@@ -46,6 +47,7 @@ describe('CadastroPage (integração: UI + useAuth + Supabase)', () => {
     const user = userEvent.setup()
     renderCadastro()
 
+    await user.type(screen.getByPlaceholderText('Nome'), '  Maria Souza ')
     await user.type(screen.getByPlaceholderText('E-mail'), 'teste@exemplo.com')
     await user.type(screen.getByPlaceholderText('Senha (mínimo 6 caracteres)'), 'senha123')
     await user.click(screen.getByRole('button', { name: 'Criar conta' }))
@@ -64,6 +66,7 @@ describe('CadastroPage (integração: UI + useAuth + Supabase)', () => {
     const user = userEvent.setup()
     renderCadastro()
 
+    await user.type(screen.getByPlaceholderText('Nome'), '  Maria Souza ')
     await user.type(screen.getByPlaceholderText('E-mail'), 'teste@exemplo.com')
     await user.type(screen.getByPlaceholderText('Senha (mínimo 6 caracteres)'), 'senha123')
     await user.click(screen.getByRole('button', { name: 'Criar conta' }))
@@ -76,6 +79,7 @@ describe('CadastroPage (integração: UI + useAuth + Supabase)', () => {
     const user = userEvent.setup()
     renderCadastro()
 
+    await user.type(screen.getByPlaceholderText('Nome'), '  Maria Souza ')
     await user.type(screen.getByPlaceholderText('E-mail'), 'teste@exemplo.com')
     await user.type(screen.getByPlaceholderText('Senha (mínimo 6 caracteres)'), 'senha123')
     await user.click(screen.getByRole('button', { name: 'Criar conta' }))
@@ -84,6 +88,7 @@ describe('CadastroPage (integração: UI + useAuth + Supabase)', () => {
     expect(supabase.auth.signUp).toHaveBeenCalledWith({
       email: 'teste@exemplo.com',
       password: 'senha123',
+      options: { data: { nome: 'Maria Souza' } },
     })
   })
 })
