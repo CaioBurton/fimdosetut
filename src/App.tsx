@@ -31,14 +31,7 @@ export default function App() {
           <Route path="/termos" element={<TermosPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/cadastro" element={<CadastroPage />} />
-          <Route
-            path="/nova"
-            element={
-              <ProtectedRoute>
-                <NovaDenunciaPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/nova" element={<NovaDenunciaPage />} />
           <Route
             path="/minhas"
             element={

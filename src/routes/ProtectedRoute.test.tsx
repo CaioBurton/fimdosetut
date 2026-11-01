@@ -31,8 +31,11 @@ describe('ProtectedRoute', () => {
       session: null,
       loading: true,
       isAdmin: false,
+      isAnonymous: false,
       signIn: vi.fn(),
       signUp: vi.fn(),
+      signInAnonimo: vi.fn(),
+      vincularConta: vi.fn(),
       signOut: vi.fn(),
     })
 
@@ -47,8 +50,11 @@ describe('ProtectedRoute', () => {
       session: null,
       loading: false,
       isAdmin: false,
+      isAnonymous: false,
       signIn: vi.fn(),
       signUp: vi.fn(),
+      signInAnonimo: vi.fn(),
+      vincularConta: vi.fn(),
       signOut: vi.fn(),
     })
 
@@ -65,8 +71,11 @@ describe('ProtectedRoute', () => {
       session: null,
       loading: false,
       isAdmin: false,
+      isAnonymous: false,
       signIn: vi.fn(),
       signUp: vi.fn(),
+      signInAnonimo: vi.fn(),
+      vincularConta: vi.fn(),
       signOut: vi.fn(),
     })
 

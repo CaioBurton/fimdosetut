@@ -13,7 +13,7 @@ interface RespostaAlternar {
  * Quem confirmou é privado (RLS): a pessoa só lê as próprias confirmações.
  */
 export function useConfirmacoes(aoAlterar?: (denunciaId: string, total: number) => void) {
-  const { user } = useAuth()
+  const { user, isAnonymous } = useAuth()
   const userId = user?.id ?? null
   const [confirmadas, setConfirmadas] = useState<Set<string>>(new Set())
   const [pendentes, setPendentes] = useState<Set<string>>(new Set())
@@ -51,7 +51,9 @@ export function useConfirmacoes(aoAlterar?: (denunciaId: string, total: number) 
       const resposta = (Array.isArray(data) ? data[0] : data) as RespostaAlternar | null
       if (error || !resposta) {
         setErro(
-          error?.message.includes('própria denúncia')
+          error?.message.includes('crie uma conta')
+            ? 'Crie uma conta para confirmar denúncias.'
+            : error?.message.includes('própria denúncia')
             ? 'Você não pode confirmar a sua própria denúncia.'
             : error?.message.includes('já resolvida')
               ? 'Esta denúncia já foi resolvida.'
@@ -72,5 +74,5 @@ export function useConfirmacoes(aoAlterar?: (denunciaId: string, total: number) 
   )
 
   // Sem login não há confirmações (evita zerar o estado dentro do efeito ao sair da conta).
-  return { confirmadas: userId ? confirmadas : new Set<string>(), pendentes, erro, alternar, logado: !!userId }
+  return { confirmadas: userId ? confirmadas : new Set<string>(), pendentes, erro, alternar, logado: !!userId && !isAnonymous }
 }

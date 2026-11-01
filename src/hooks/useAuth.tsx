@@ -7,12 +7,18 @@ interface AuthContextValue {
   user: User | null
   loading: boolean
   isAdmin: boolean
+  /** Sessão sem cadastro (enviou denúncia sem criar conta). Pode virar conta com `vincularConta`. */
+  isAnonymous: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signUp: (
     email: string,
     password: string,
     metadados?: Record<string, string>
   ) => Promise<{ error: string | null }>
+  /** Cria uma sessão sem e-mail e senha, para a primeira denúncia sem cadastro. */
+  signInAnonimo: (metadados?: Record<string, string>) => Promise<{ error: string | null }>
+  /** Transforma a sessão sem cadastro em conta de verdade, mantendo as denúncias já enviadas. */
+  vincularConta: (email: string, password: string, nome?: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
 }
 
@@ -81,6 +87,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null }
   }
 
+  async function signInAnonimo(metadados: Record<string, string> = {}) {
+    const { error } = await supabase.auth.signInAnonymously({ options: { data: metadados } })
+    return { error: error?.message ?? null }
+  }
+
+  async function vincularConta(email: string, password: string, nome = '') {
+    const { error } = await supabase.auth.updateUser({
+      email,
+      password,
+      ...(nome ? { data: { nome } } : {}),
+    })
+    return { error: error?.message ?? null }
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
   }
@@ -92,8 +112,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: session?.user ?? null,
         loading: loading || !perfilPronto,
         isAdmin,
+        isAnonymous: !!session?.user.is_anonymous,
         signIn,
         signUp,
+        signInAnonimo,
+        vincularConta,
         signOut,
       }}
     >

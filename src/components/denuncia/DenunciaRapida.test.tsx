@@ -67,11 +67,11 @@ describe('DenunciaRapida', () => {
     vi.mocked(supabase.rpc).mockReturnValue(createChainable({ data: 'novo', error: null }) as never)
   })
 
-  it('não aparece sem login', () => {
+  it('convida a denunciar sem conta quando não há login', () => {
     mockarUsuario(false)
-    const { container } = renderizar()
+    renderizar()
 
-    expect(container).toBeEmptyDOMElement()
+    expect(screen.getByRole('link', { name: /denuncie agora/i })).toHaveAttribute('href', '/nova')
   })
 
   it('mostra só as linhas favoritas', async () => {

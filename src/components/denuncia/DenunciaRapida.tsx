@@ -28,7 +28,18 @@ export function DenunciaRapida({ linhas }: { linhas: Linha[] }) {
   const [erro, setErro] = useState<string | null>(null)
   const [enviada, setEnviada] = useState(false)
 
-  if (!user || loading) return null
+  if (user && loading) return null
+
+  if (!user) {
+    return (
+      <div className="card-brand !bg-brand-cream p-3 text-sm">
+        <Link to="/nova" className="font-bold underline">
+          Deu o prego? Denuncie agora
+        </Link>{' '}
+        sem precisar de conta.
+      </div>
+    )
+  }
 
   const favoritas = linhas.filter((l) => linhaIds.includes(l.id))
 

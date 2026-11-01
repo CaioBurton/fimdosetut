@@ -13,7 +13,7 @@ Qualquer pessoa vê o mapa, a lista e o painel de denúncias. Para registrar uma
 | Mapa com as denúncias do dia (tempo real), botão "Também vi" e denúncia rápida em 3 toques (linha favorita, problema, enviar; GPS automático) | `/` | todos |
 | Lista de denúncias, com filtros por zona, linha, dia, status e tipo, e botão "Também vi" (confirmar com conta) | `/denuncias` | todos |
 | Painel público com totais, gráfico por dia, zonas e linhas mais citadas | `/painel` | todos |
-| Nova denúncia (linha, tipo, descrição e local no mapa) | `/nova` | quem tem conta |
+| Nova denúncia (linha, tipo, descrição e local no mapa). Dá para enviar a primeira sem cadastro e criar a conta depois | `/nova` | todos |
 | Perfil: nome, linhas que a pessoa pega, minhas denúncias, feedback, baixar meus dados e excluir a conta | `/minhas` | quem tem conta |
 | Entrar e Criar conta | `/login`, `/cadastro` | todos |
 | Política de Privacidade e Termos de Uso | `/privacidade`, `/termos` | todos |
@@ -67,7 +67,7 @@ No **SQL Editor** do projeto, rode nesta ordem:
 
 1. `supabase/migrations/0001_init.sql`: tabelas, RLS e realtime.
 2. `supabase/seed.sql`: as 76 linhas da Setut, já divididas por zona.
-3. As demais migrations, em ordem numérica (`0002` a `0012`):
+3. As demais migrations, em ordem numérica (`0002` a `0013`):
 
 | Migration | O que faz |
 | --- | --- |
@@ -82,6 +82,9 @@ No **SQL Editor** do projeto, rode nesta ordem:
 | `0010_direitos_titular` | funções de baixar os próprios dados e excluir a própria conta |
 | `0011_aceites_documentos` | registra o aceite da política e dos termos |
 | `0012_confirmacoes_denuncias` | botão "Também vi": confirmações privadas e total público por denúncia |
+| `0013_denuncia_sem_cadastro` | denúncia sem cadastro: limite por hora para anônimos, e-mail do perfil acompanha a conta, "Também vi" só com conta |
+
+**Denúncia sem cadastro (`0013`)**: ligue **Authentication → Sign In / Providers → Allow anonymous sign-ins** no Supabase. Sem isso, o envio sem conta falha e a pessoa vê o aviso para entrar. A pessoa aceita a Política e os Termos antes de enviar (o aceite é gravado), e depois cria a conta com e-mail e senha: o id continua o mesmo, então as denúncias ficam com ela. Se a confirmação de e-mail estiver ligada, a conta só vira "de verdade" depois da confirmação. Anônimos podem enviar até 5 denúncias por hora e não confirmam denúncias de outras pessoas. O Supabase já limita os logins anônimos por IP; um CAPTCHA ainda não está integrado (se ligar o CAPTCHA no painel, o app precisa enviar o token em `signInAnonymously`).
 
 Atenção: a `0009` muda a forma como o app lê as denúncias. Rode junto com o deploy do app; a versão antiga deixa de funcionar até a página ser recarregada.
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { VincularConta } from '../components/auth/VincularConta'
 import { AppLayout } from '../components/layout/AppLayout'
 import { EnviarFeedback } from '../components/perfil/EnviarFeedback'
 import { PerfilUsuario } from '../components/perfil/PerfilUsuario'
@@ -19,7 +20,7 @@ import { supabase } from '../lib/supabaseClient'
 const POR_PAGINA = 5
 
 export function MinhasDenunciasPage() {
-  const { user } = useAuth()
+  const { user, isAnonymous } = useAuth()
   const desktop = useDesktop()
   const { linhas } = useLinhas()
   const { denuncias, loading, error } = useDenuncias(linhas, null, true)
@@ -52,6 +53,7 @@ export function MinhasDenunciasPage() {
     <AppLayout title="Perfil">
       <div className="space-y-4 p-4 lg:p-0">
         {desktop && <CabecalhoPagina titulo="Perfil" />}
+        {isAnonymous && <VincularConta />}
         {user && (
           <PerfilUsuario
             userId={user.id}
