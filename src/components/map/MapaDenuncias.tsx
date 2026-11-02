@@ -24,13 +24,31 @@ export function tempoRelativo(iso: string) {
   return `há ${Math.round(h / 24)} d`
 }
 
+/** "Você está aqui" no estilo da marca: bolinha creme com borda verde e sombra chapada. */
+const iconeMinhaPosicao = L.divIcon({
+  className: 'minha-posicao',
+  html: `<div style="position:relative;width:26px;height:26px;">
+      <div style="width:26px;height:26px;box-sizing:border-box;border-radius:50%;background:#f3fcee;border:3px solid #084400;box-shadow:1.5px 1.5px 0 #084400;display:flex;align-items:center;justify-content:center;">
+        <div style="width:10px;height:10px;border-radius:50%;background:#084400;"></div>
+      </div>
+    </div>`,
+  iconSize: [26, 26],
+  iconAnchor: [13, 13],
+})
+
 function FecharAoClicarNoMapa({ onClick }: { onClick: () => void }) {
   useMapEvents({ click: onClick })
   return null
 }
 
 /** Mira dentro do mapa: centraliza onde a pessoa está (o navegador pede a permissão de localização). */
-function CentralizarNaMinhaLocalizacao({ map }: { map: L.Map | null }) {
+function CentralizarNaMinhaLocalizacao({
+  map,
+  onLocalizado,
+}: {
+  map: L.Map | null
+  onLocalizado: (pos: [number, number]) => void
+}) {
   const [buscando, setBuscando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
@@ -44,7 +62,9 @@ function CentralizarNaMinhaLocalizacao({ map }: { map: L.Map | null }) {
     setErro(null)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        map.setView([pos.coords.latitude, pos.coords.longitude], Math.max(map.getZoom(), 15))
+        const ponto: [number, number] = [pos.coords.latitude, pos.coords.longitude]
+        onLocalizado(ponto)
+        map.setView(ponto, Math.max(map.getZoom(), 15))
         setBuscando(false)
       },
       () => {
@@ -100,6 +120,7 @@ export function MapaDenuncias({
   const [filtro, setFiltro] = useState<Zona | 'todas'>('todas')
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null)
   const [mapa, setMapa] = useState<L.Map | null>(null)
+  const [minhaPosicao, setMinhaPosicao] = useState<[number, number] | null>(null)
 
   const visiveis = useMemo(
     () => denuncias.filter((d) => filtro === 'todas' || (d.linha?.zona ?? 'outras') === filtro),
@@ -193,6 +214,9 @@ export function MapaDenuncias({
             />
           )
         })}
+        {minhaPosicao && (
+          <Marker position={minhaPosicao} icon={iconeMinhaPosicao} interactive={false} zIndexOffset={-500} />
+        )}
       </MapContainer>
 
       {!semFiltroZona && (
@@ -229,7 +253,7 @@ export function MapaDenuncias({
           semFiltroZona ? 'bottom-[5.5rem]' : 'bottom-3.5'
         }`}
       >
-      <CentralizarNaMinhaLocalizacao map={mapa} />
+      <CentralizarNaMinhaLocalizacao map={mapa} onLocalizado={setMinhaPosicao} />
       {selecionada && (
         <div className="card-brand anim-cartao pointer-events-auto flex w-full flex-col gap-2.5 !bg-brand-cream p-3.5">
           <div className="flex items-center gap-3">
