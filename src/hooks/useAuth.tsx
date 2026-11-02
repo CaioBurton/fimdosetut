@@ -79,6 +79,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Os metadados (nome e aceite da política) ficam guardados na conta; o perfil usa o nome até
     // a pessoa editá-lo. Valores vazios não são enviados.
     const data = Object.fromEntries(Object.entries(metadados).filter(([, v]) => v))
+    // Quem já denunciou sem cadastro tem uma sessão anônima: converter essa mesma sessão em conta
+    // (em vez de criar outro usuário) mantém o id, e as denúncias feitas antes passam a ser da conta.
+    if (session?.user.is_anonymous) {
+      const { error } = await supabase.auth.updateUser({
+        email,
+        password,
+        ...(Object.keys(data).length > 0 ? { data } : {}),
+      })
+      return { error: error?.message ?? null }
+    }
     const { error } = await supabase.auth.signUp({
       email,
       password,
