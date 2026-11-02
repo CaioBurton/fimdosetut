@@ -79,6 +79,23 @@ describe('AceiteDocumentos', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  it('não consulta nem exige o aceite de sessões anônimas (ex.: "Também vi" sem conta)', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 'anon' },
+      isAnonymous: true,
+      signOut,
+    } as unknown as ReturnType<typeof useAuth>)
+    vi.mocked(useAceiteDocumentos).mockReturnValue({ precisaAceitar: false, aceitar, salvando: false, erro: null })
+    render(
+      <MemoryRouter>
+        <AceiteDocumentos />
+      </MemoryRouter>
+    )
+
+    expect(useAceiteDocumentos).toHaveBeenCalledWith(undefined)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
   it('não cobre as páginas dos próprios documentos, para dar para lê-los', () => {
     montar({ precisaAceitar: true, rota: '/privacidade' })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

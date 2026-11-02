@@ -13,9 +13,10 @@ const ROTAS_LIVRES: string[] = [ROTAS_LEGAIS.privacidade, ROTAS_LEGAIS.termos]
  * documentos, para a pessoa conseguir lê-los antes de decidir.
  */
 export function AceiteDocumentos() {
-  const { user, signOut } = useAuth()
+  const { user, isAnonymous, signOut } = useAuth()
   const { pathname } = useLocation()
-  const { precisaAceitar, aceitar, salvando, erro } = useAceiteDocumentos(user?.id)
+  // Sessões anônimas (ex.: "Também vi" sem cadastro) não passam pelo aceite: só quem tem conta.
+  const { precisaAceitar, aceitar, salvando, erro } = useAceiteDocumentos(isAnonymous ? undefined : user?.id)
 
   if (!precisaAceitar || ROTAS_LIVRES.includes(pathname)) return null
 
