@@ -163,24 +163,28 @@ export function DenunciaRapida({ linhas }: { linhas: Linha[] }) {
       </div>
 
       {enviada && (
-        <p role="status" className="text-sm font-bold text-brand-green">
+        <p role="status" className="anim-abre flex items-center gap-2 text-sm font-bold text-brand-green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="check-desenha shrink-0">
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          </svg>
           Denúncia enviada! Obrigado por avisar.
         </p>
       )}
 
       {linha && (
-        <>
+        <div className="anim-abre space-y-2.5">
           <p className="text-xs font-semibold text-brand-green-dark/80">
             {linha.codigo} - {linha.nome}
           </p>
           <div className="flex flex-wrap gap-2" aria-label="Tipo de problema">
-            {TIPOS.map((t) => (
+            {TIPOS.map((t, i) => (
               <button
                 key={t}
                 type="button"
                 aria-pressed={t === tipo}
                 onClick={() => setTipo(t)}
-                className={`chip-brand ${t === tipo ? 'chip-brand-ativo' : ''}`}
+                className={`chip-brand anim-entra ${t === tipo ? 'chip-brand-ativo' : ''}`}
+                style={{ animationDelay: `${80 + i * 40}ms` }}
               >
                 {TIPO_LABELS[t]}
               </button>
@@ -188,6 +192,8 @@ export function DenunciaRapida({ linhas }: { linhas: Linha[] }) {
           </div>
 
           <p role="status" className="text-xs font-semibold text-brand-green-dark/80">
+            {gps.estado === 'buscando' && <span aria-hidden="true" className="gps-ponto gps-ponto-buscando" />}
+            {gps.estado === 'ok' && <span aria-hidden="true" className="gps-ponto gps-ponto-ok" />}
             {gps.estado === 'buscando' && 'Buscando sua localização...'}
             {gps.estado === 'ok' && 'Localização encontrada.'}
             {gps.estado === 'erro' && (
@@ -221,9 +227,10 @@ export function DenunciaRapida({ linhas }: { linhas: Linha[] }) {
             disabled={!tipo || gps.estado !== 'ok' || enviando}
             className="ttl flex min-h-12 w-full items-center justify-center rounded-[2px] border-2 border-brand-green bg-brand-green text-base text-brand-cream disabled:opacity-50"
           >
+            {enviando && <span aria-hidden="true" className="spinner" />}
             {enviando ? 'Enviando...' : 'Enviar denúncia'}
           </button>
-        </>
+        </div>
       )}
     </section>
   )

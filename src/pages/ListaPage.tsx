@@ -201,9 +201,10 @@ export function ListaPage() {
         )}
 
         <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 xl:grid-cols-3">
-          {visiveis.map((denuncia) => (
+          {visiveis.map((denuncia, i) => (
+            // Entrada em cascata: cada cartão 40 ms depois do anterior (no máximo 8 passos).
+            <div key={denuncia.id} className="anim-entra" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
             <DenunciaCard
-              key={denuncia.id}
               denuncia={denuncia}
               actions={
                 <BotaoTambemVi
@@ -218,6 +219,7 @@ export function ListaPage() {
                 />
               }
             />
+            </div>
           ))}
         </div>
         {desktop && (

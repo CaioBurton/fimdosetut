@@ -15,9 +15,16 @@ export function BotaoTambemVi({ total, confirmado, carregando = false, onClick }
       onClick={onClick}
       className={`chip-brand ${confirmado ? 'chip-brand-ativo' : ''} disabled:opacity-50`}
     >
-      {confirmado ? '✓ Também vi' : 'Também vi'}
+      {confirmado && (
+        <span aria-hidden="true" className="anim-pop">
+          ✓
+        </span>
+      )}
+      <span>Também vi</span>
       {total > 0 && (
-        <span aria-label={`${total} ${total === 1 ? 'confirmação' : 'confirmações'}`}> · {total}</span>
+        <span aria-label={`${total} ${total === 1 ? 'confirmação' : 'confirmações'}`}>
+          · <span key={total} className="anim-contador">{total}</span>
+        </span>
       )}
     </button>
   )

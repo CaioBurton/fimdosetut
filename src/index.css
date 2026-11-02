@@ -13,6 +13,10 @@
   --color-zona-sudeste: #2563eb;
   --color-zona-outras: #6b5b95;
 
+  /* Movimento: curvas e tempos do app (ver bloco "Movimento" mais abaixo) */
+  --ease-suave: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-mola: cubic-bezier(0.34, 1.56, 0.64, 1);
+
   --font-sans: 'Proxima Nova', system-ui, -apple-system, sans-serif;
   --font-display: 'Caros Soft', 'Proxima Nova', system-ui, sans-serif;
 }
@@ -105,6 +109,10 @@ select.input-brand {
 }
 
 .chip-brand {
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 120ms var(--ease-suave);
   display: flex;
   flex-shrink: 0;
   align-items: center;
@@ -119,9 +127,202 @@ select.input-brand {
   color: var(--color-brand-green);
 }
 
+.chip-brand:active {
+  transform: scale(0.94);
+}
+
 .chip-brand-ativo {
   background: var(--color-brand-green);
   color: var(--color-brand-cream);
+}
+
+/* ---- Movimento ----
+   Curtas e suaves: 120 ms de feedback, 240 ms de entrada, 320 ms para painéis e 40 ms entre itens
+   de uma lista. Saída suave (--ease-suave) para entradas, mola leve (--ease-mola) para confirmações
+   e linear só para o que fica carregando. Quem pede "reduzir movimento" no sistema vê tudo direto. */
+@keyframes entra {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes abre {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sobe-cartao {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes contador {
+  from {
+    opacity: 0;
+    transform: translateY(60%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulsa {
+  from {
+    opacity: 0.9;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+
+@keyframes gira {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes desenha {
+  from {
+    stroke-dashoffset: 34;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes marcador-pop {
+  0% {
+    transform: scale(0.7);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.anim-entra {
+  animation: entra 280ms var(--ease-suave) both;
+}
+
+.anim-abre {
+  animation: abre 280ms var(--ease-suave) both;
+}
+
+.anim-cartao {
+  animation: sobe-cartao 320ms var(--ease-suave) both;
+}
+
+.anim-pop {
+  display: inline-block;
+  animation: pop 320ms var(--ease-mola) both;
+}
+
+.anim-contador {
+  display: inline-block;
+  animation: contador 280ms var(--ease-mola) both;
+}
+
+/* ponto do GPS: amarelo pulsando enquanto busca, verde com um pop quando acha */
+.gps-ponto {
+  position: relative;
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: #d9a404;
+  vertical-align: baseline;
+}
+
+.gps-ponto-buscando::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #d9a404;
+  animation: pulsa 1.2s linear infinite;
+}
+
+.gps-ponto-ok {
+  background: var(--color-zona-norte);
+  animation: pop 320ms var(--ease-mola) both;
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  border: 3px solid rgb(243 252 238 / 0.35);
+  border-top-color: var(--color-brand-cream);
+  border-radius: 50%;
+  vertical-align: middle;
+  animation: gira 700ms linear infinite;
+}
+
+.check-desenha path {
+  stroke-dasharray: 34;
+  stroke-dashoffset: 34;
+  animation: desenha 420ms 120ms var(--ease-suave) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-entra,
+  .anim-abre,
+  .anim-cartao,
+  .anim-pop,
+  .anim-contador,
+  .gps-ponto-ok,
+  .gps-ponto-buscando::after,
+  .spinner,
+  .denuncia-marker div {
+    animation: none !important;
+  }
+
+  .check-desenha path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .chip-brand {
+    transition: none;
+  }
 }
 
 /* esconde todas as barras de rolagem do app, mantendo a rolagem (toque, roda e teclado) */
