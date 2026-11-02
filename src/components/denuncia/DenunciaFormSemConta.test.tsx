@@ -18,6 +18,7 @@ vi.mock('react-leaflet', () => ({
   TileLayer: () => null,
   Marker: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
   useMapEvents: () => null,
+  useMap: () => ({ setView: () => undefined, getZoom: () => 15 }),
 }))
 
 const linhas: Linha[] = [{ id: 'l1', codigo: '103', nome: 'MOCAMBINHO', zona: 'norte' }]

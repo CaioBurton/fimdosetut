@@ -17,6 +17,7 @@ vi.mock('react-leaflet', () => ({
   Marker: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
   Popup: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
   useMapEvents: () => null,
+  useMap: () => ({ setView: () => undefined, getZoom: () => 15 }),
 }))
 
 const linhas: Linha[] = [{ id: 'l1', codigo: '103', nome: 'MOCAMBINHO', zona: 'norte' }]
@@ -79,6 +80,13 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
   })
 
   it('impede o envio sem marcar a localização, mesmo com os campos obrigatórios preenchidos', async () => {
+    // Permissão negada: a localização automática falha e o local continua sem marcação.
+    Object.defineProperty(globalThis.navigator, 'geolocation', {
+      configurable: true,
+      value: {
+        getCurrentPosition: vi.fn((_ok: unknown, erro: (e: unknown) => void) => erro({ code: 1 })),
+      },
+    })
     const user = userEvent.setup()
     const onSuccess = vi.fn()
     render(<DenunciaForm linhas={linhas} onSuccess={onSuccess} />)
