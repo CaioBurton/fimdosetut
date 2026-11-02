@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { registrarLimpezaDeCache } from '../lib/cacheRegistro'
 import { supabase } from '../lib/supabaseClient'
 import type { Denuncia, Linha } from '../types'
 
@@ -30,8 +31,23 @@ async function buscarTodasDenuncias(desde: string | null, apenasMinhas: boolean)
   return { data: todas, error: null }
 }
 
-/** Janela padrão de denúncias carregadas, para o app não ficar pesado com o tempo. */
-export const DIAS_PADRAO = 30
+/**
+ * Janela padrão de denúncias carregadas. Quanto menor, menos dados saem do Supabase (egress) a
+ * cada abertura do app; o histórico completo continua disponível no painel admin.
+ */
+export const DIAS_PADRAO = 14
+
+// Cache em memória (vale enquanto a aba estiver aberta): trocar de página (Mapa ↔ Lista) reaproveita
+// as denúncias já baixadas em vez de buscar tudo de novo. O tempo real mantém o cache atualizado
+// enquanto uma página que usa o hook estiver aberta.
+const VALIDADE_CACHE_MS = 2 * 60 * 1000
+const cache = new Map<string, { dados: Denuncia[]; em: number }>()
+
+/** Esvazia o cache de denúncias (usado nos testes). */
+export function limparCacheDenuncias() {
+  cache.clear()
+}
+registrarLimpezaDeCache(limparCacheDenuncias)
 
 /**
  * Carrega as denúncias dos últimos `dias` dias (padrão 30). Passe `null` para carregar
@@ -45,9 +61,25 @@ export function useDenuncias(
 ) {
   // Denúncias sem a linha anexada: a linha é ligada abaixo, pelo `linha_id`, assim a lista
   // se completa sozinha quando as linhas terminam de carregar.
-  const [brutas, setBrutas] = useState<Denuncia[]>([])
-  const [loading, setLoading] = useState(true)
+  const chave = `${dias ?? 'tudo'}|${apenasMinhas}`
+  const emCache = cache.get(chave)
+  const cacheValido = !!emCache && Date.now() - emCache.em < VALIDADE_CACHE_MS
+  const [brutas, setBrutas] = useState<Denuncia[]>(cacheValido ? emCache.dados : [])
+  const [loading, setLoading] = useState(!cacheValido)
   const [error, setError] = useState<string | null>(null)
+
+  // Aplica uma mudança à lista e ao cache, para o próximo uso do hook já vir atualizado.
+  const aplicar = useCallback(
+    (mudar: (atual: Denuncia[]) => Denuncia[]) => {
+      setBrutas((atual) => {
+        const novo = mudar(atual)
+        const guardado = cache.get(chave)
+        if (guardado) guardado.dados = novo
+        return novo
+      })
+    },
+    [chave]
+  )
 
   const denuncias = useMemo(() => {
     const porId = new Map<string, Linha>()
@@ -58,6 +90,13 @@ export function useDenuncias(
   useEffect(() => {
     let active = true
 
+    const guardado = cache.get(chave)
+    if (guardado && Date.now() - guardado.em < VALIDADE_CACHE_MS) {
+      setBrutas(guardado.dados)
+      setLoading(false)
+      return
+    }
+
     const desde =
       dias === null ? null : new Date(Date.now() - dias * 24 * 60 * 60 * 1000).toISOString()
 
@@ -66,6 +105,7 @@ export function useDenuncias(
       if (error || !data) {
         setError('Não foi possível carregar as denúncias. Verifique sua conexão.')
       } else {
+        cache.set(chave, { dados: data, em: Date.now() })
         setBrutas(data)
       }
       setLoading(false)
@@ -74,7 +114,7 @@ export function useDenuncias(
     return () => {
       active = false
     }
-  }, [dias, apenasMinhas])
+  }, [dias, apenasMinhas, chave])
 
   useEffect(() => {
     const canal = supabase
@@ -85,7 +125,7 @@ export function useDenuncias(
         (payload) => {
           const atualizada = payload.new as Denuncia
           // Só troca as que já estão na lista (na visão "minhas", as dos outros são ignoradas).
-          setBrutas((atual) => atual.map((d) => (d.id === atualizada.id ? atualizada : d)))
+          aplicar((atual) => atual.map((d) => (d.id === atualizada.id ? atualizada : d)))
         }
       )
       .on(
@@ -93,7 +133,7 @@ export function useDenuncias(
         { event: 'DELETE', schema: 'public', table: 'denuncias' },
         (payload) => {
           const removidaId = (payload.old as Denuncia).id
-          setBrutas((atual) => atual.filter((d) => d.id !== removidaId))
+          aplicar((atual) => atual.filter((d) => d.id !== removidaId))
         }
       )
 
@@ -105,7 +145,7 @@ export function useDenuncias(
         { event: 'INSERT', schema: 'public', table: 'denuncias' },
         (payload) => {
           const nova = payload.new as Denuncia
-          setBrutas((atual) => [nova, ...atual])
+          aplicar((atual) => (atual.some((d) => d.id === nova.id) ? atual : [nova, ...atual]))
         }
       )
     }
@@ -115,12 +155,12 @@ export function useDenuncias(
     return () => {
       supabase.removeChannel(canal)
     }
-  }, [apenasMinhas])
+  }, [apenasMinhas, aplicar])
 
   /** Atualiza campos de uma denúncia já carregada (ex.: o total de confirmações, sem esperar o tempo real). */
   const atualizarDenuncia = useCallback((id: string, campos: Partial<Denuncia>) => {
-    setBrutas((atual) => atual.map((d) => (d.id === id ? { ...d, ...campos } : d)))
-  }, [])
+    aplicar((atual) => atual.map((d) => (d.id === id ? { ...d, ...campos } : d)))
+  }, [aplicar])
 
   return { denuncias, loading, error, atualizarDenuncia }
 }
