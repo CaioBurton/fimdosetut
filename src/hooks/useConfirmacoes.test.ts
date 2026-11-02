@@ -7,7 +7,8 @@ import { useConfirmacoes } from './useConfirmacoes'
 vi.mock('../lib/supabaseClient', () => ({ supabase: createSupabaseMock() }))
 
 const usuario = vi.hoisted(() => ({ atual: { id: 'u1' } as { id: string } | null }))
-vi.mock('./useAuth', () => ({ useAuth: () => ({ user: usuario.atual }) }))
+const signInAnonimo = vi.hoisted(() => vi.fn())
+vi.mock('./useAuth', () => ({ useAuth: () => ({ user: usuario.atual, signInAnonimo }) }))
 
 describe('useConfirmacoes', () => {
   beforeEach(() => {
@@ -23,15 +24,44 @@ describe('useConfirmacoes', () => {
     const { result } = renderHook(() => useConfirmacoes())
 
     await waitFor(() => expect(result.current.confirmadas.has('d1')).toBe(true))
-    expect(result.current.logado).toBe(true)
   })
 
   it('não consulta nada sem login', () => {
     usuario.atual = null
-    const { result } = renderHook(() => useConfirmacoes())
+    renderHook(() => useConfirmacoes())
 
     expect(supabase.from).not.toHaveBeenCalled()
-    expect(result.current.logado).toBe(false)
+  })
+
+  it('sem conta, abre uma sessão anônima antes de confirmar', async () => {
+    usuario.atual = null
+    signInAnonimo.mockResolvedValue({ error: null })
+    vi.mocked(supabase.rpc).mockResolvedValue({
+      data: [{ confirmado: true, total: 1 }],
+      error: null,
+    } as never)
+    const { result } = renderHook(() => useConfirmacoes())
+
+    await act(async () => {
+      await result.current.alternar('d9')
+    })
+
+    expect(signInAnonimo).toHaveBeenCalledOnce()
+    expect(supabase.rpc).toHaveBeenCalledWith('alternar_confirmacao', { p_denuncia_id: 'd9' })
+    expect(result.current.erro).toBeNull()
+  })
+
+  it('sem conta, não confirma se a sessão anônima falhar', async () => {
+    usuario.atual = null
+    signInAnonimo.mockResolvedValue({ error: 'falhou' })
+    const { result } = renderHook(() => useConfirmacoes())
+
+    await act(async () => {
+      await result.current.alternar('d9')
+    })
+
+    expect(supabase.rpc).not.toHaveBeenCalled()
+    expect(result.current.erro).toMatch(/Não foi possível registrar/)
   })
 
   it('confirma uma denúncia, marca como confirmada e informa o novo total', async () => {

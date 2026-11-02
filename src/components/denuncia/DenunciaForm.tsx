@@ -3,7 +3,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useDesktop } from '../../hooks/useDesktop'
 import { CabecalhoPagina } from '../ui/CabecalhoPagina'
 import { supabase } from '../../lib/supabaseClient'
-import type { Linha, TipoProblema } from '../../types'
+import { TIPO_LABELS, type Linha, type TipoProblema } from '../../types'
 import { LinksLegais } from '../legal/LinksLegais'
 import { VERSAO_DOCUMENTOS } from '../../lib/legal'
 import { SecaoNumerada } from '../ui/SecaoNumerada'
@@ -70,7 +70,7 @@ export function DenunciaForm({
     const { error } = await supabase.rpc('criar_denuncia', {
       p_linha_id: linhaId,
       p_tipo: tipo,
-      p_descricao: descricao,
+      p_descricao: descricao.trim() || `Denúncia: ${TIPO_LABELS[tipo].toLowerCase()}.`,
       p_numero_veiculo: numeroVeiculo.trim() || null,
       p_latitude: local.lat,
       p_longitude: local.lng,
@@ -158,11 +158,13 @@ export function DenunciaForm({
         </div>
         <div>
           <label htmlFor="descricao-denuncia" className={rotulo}>
-            Descrição
+            Descrição{' '}
+            <span className="font-semibold normal-case tracking-normal text-brand-green-dark/70">
+              (opcional)
+            </span>
           </label>
           <textarea
             id="descricao-denuncia"
-            required
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
             rows={4}

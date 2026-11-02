@@ -29,7 +29,8 @@ const SECOES_ADMIN = [
 ]
 
 export function SidebarNav() {
-  const { user, isAdmin, signOut } = useAuth()
+  const { user, isAnonymous, isAdmin, signOut } = useAuth()
+  const logado = !!user && !isAnonymous
   const local = useLocation()
   const naAdmin = isAdmin && local.pathname.startsWith('/admin')
   const secaoAtual = new URLSearchParams(local.search).get('aba') ?? 'painel'
@@ -60,7 +61,7 @@ export function SidebarNav() {
           <svg {...ic}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>
           Lista
         </Item>
-        {user && (
+        {logado && (
           <Item para="/minhas">
             <svg {...ic}><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 4-6 8-6s8 2 8 6" /></svg>
             Perfil
@@ -106,7 +107,7 @@ export function SidebarNav() {
         Reportar
       </NavLink>
 
-      {user ? (
+      {logado ? (
         <button
           type="button"
           onClick={() => signOut()}
