@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createChainable, createSupabaseMock } from '../test/supabaseMock'
 import { supabase } from '../lib/supabaseClient'
 import type { Linha } from '../types'
-import { useDenuncias } from './useDenuncias'
+import { DIAS_PADRAO, limparCacheDenuncias, useDenuncias } from './useDenuncias'
 
 vi.mock('../lib/supabaseClient', () => ({ supabase: createSupabaseMock() }))
 
@@ -24,6 +24,7 @@ function mockChannelComHandlers() {
 
 describe('useDenuncias (integração com Supabase + realtime)', () => {
   beforeEach(() => {
+    limparCacheDenuncias()
     vi.mocked(supabase.from).mockReset()
     vi.mocked(supabase.channel).mockReset()
   })
@@ -82,7 +83,7 @@ describe('useDenuncias (integração com Supabase + realtime)', () => {
     expect(segunda.range).toHaveBeenCalledWith(1000, 1999)
   })
 
-  it('carrega só os últimos 30 dias por padrão e o histórico inteiro com null', async () => {
+  it('carrega só os últimos últimos dias padrão por padrão e o histórico inteiro com null', async () => {
     const recente = createChainable({ data: [], error: null })
     const historico = createChainable({ data: [], error: null })
     vi.mocked(supabase.from)
@@ -95,8 +96,8 @@ describe('useDenuncias (integração com Supabase + realtime)', () => {
     await waitFor(() => expect(padrao.result.current.loading).toBe(false))
     const [, desde] = vi.mocked(recente.gte as ReturnType<typeof vi.fn>).mock.calls[0]
     const diasAtras = (antes - new Date(desde).getTime()) / (24 * 60 * 60 * 1000)
-    expect(diasAtras).toBeGreaterThan(29.99)
-    expect(diasAtras).toBeLessThan(30.01)
+    expect(diasAtras).toBeGreaterThan(DIAS_PADRAO - 0.01)
+    expect(diasAtras).toBeLessThan(DIAS_PADRAO + 0.01)
 
     const tudo = renderHook(() => useDenuncias(linhas, null))
     await waitFor(() => expect(tudo.result.current.loading).toBe(false))
@@ -289,5 +290,24 @@ describe('useDenuncias (integração com Supabase + realtime)', () => {
 
     const colunas = vi.mocked(cadeia.select as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
     expect(colunas).not.toContain('user_id')
+  })
+})
+
+describe('useDenuncias (cache entre páginas)', () => {
+  it('reaproveita as denúncias já baixadas ao remontar o hook, sem nova consulta', async () => {
+    limparCacheDenuncias()
+    vi.mocked(supabase.from).mockReset()
+    vi.mocked(supabase.channel).mockReset()
+    mockChannelComHandlers()
+    vi.mocked(supabase.from).mockReturnValue(createChainable({ data: [], error: null }) as never)
+
+    const primeiro = renderHook(() => useDenuncias(linhas))
+    await waitFor(() => expect(primeiro.result.current.loading).toBe(false))
+    primeiro.unmount()
+    const consultas = vi.mocked(supabase.from).mock.calls.length
+
+    const segundo = renderHook(() => useDenuncias(linhas))
+    expect(segundo.result.current.loading).toBe(false)
+    expect(vi.mocked(supabase.from).mock.calls.length).toBe(consultas)
   })
 })

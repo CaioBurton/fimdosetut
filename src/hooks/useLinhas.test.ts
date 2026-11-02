@@ -2,12 +2,13 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createChainable, createSupabaseMock } from '../test/supabaseMock'
 import { supabase } from '../lib/supabaseClient'
-import { useLinhas } from './useLinhas'
+import { limparCacheLinhas, useLinhas } from './useLinhas'
 
 vi.mock('../lib/supabaseClient', () => ({ supabase: createSupabaseMock() }))
 
 describe('useLinhas (integração com o Supabase)', () => {
   beforeEach(() => {
+    limparCacheLinhas()
     vi.mocked(supabase.from).mockReset()
   })
 

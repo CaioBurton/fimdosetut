@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { registrarLimpezaDeCache } from '../lib/cacheRegistro'
 import { supabase } from '../lib/supabaseClient'
 import type { Linha, Zona } from '../types'
 
@@ -14,13 +15,24 @@ function ordenar(linhas: Linha[]) {
   )
 }
 
+// As linhas quase nunca mudam: ficam em memória enquanto a aba estiver aberta, para cada página
+// (e o aviso de alertas, presente em todas) não buscá-las de novo. Qualquer edição de admin invalida.
+let cacheLinhas: Linha[] | null = null
+
+/** Esvazia o cache de linhas (usado nos testes). */
+export function limparCacheLinhas() {
+  cacheLinhas = null
+}
+registrarLimpezaDeCache(limparCacheLinhas)
+
 export function useLinhas() {
-  const [linhas, setLinhas] = useState<Linha[]>([])
-  const [loading, setLoading] = useState(true)
+  const [linhas, setLinhas] = useState<Linha[]>(cacheLinhas ?? [])
+  const [loading, setLoading] = useState(cacheLinhas === null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
+    if (cacheLinhas) return
 
     supabase
       .from('linhas')
@@ -32,7 +44,8 @@ export function useLinhas() {
         if (error) {
           setError('Não foi possível carregar as linhas. Verifique sua conexão.')
         } else {
-          setLinhas(data as Linha[])
+          cacheLinhas = data as Linha[]
+          setLinhas(cacheLinhas)
         }
         setLoading(false)
       })
@@ -46,6 +59,7 @@ export function useLinhas() {
   const criar = useCallback(async (dados: DadosLinha) => {
     const { data, error } = await supabase.from('linhas').insert(dados).select().single()
     if (error || !data) return 'Não foi possível criar a linha. Tente novamente.'
+    cacheLinhas = null
     setLinhas((atual) => ordenar([...atual, data as Linha]))
     return null
   }, [])
@@ -53,6 +67,7 @@ export function useLinhas() {
   const atualizar = useCallback(async (id: string, dados: DadosLinha) => {
     const { error } = await supabase.from('linhas').update(dados).eq('id', id)
     if (error) return 'Não foi possível salvar a linha. Tente novamente.'
+    cacheLinhas = null
     setLinhas((atual) => ordenar(atual.map((l) => (l.id === id ? { ...l, ...dados } : l))))
     return null
   }, [])
@@ -62,6 +77,7 @@ export function useLinhas() {
     if (error) {
       return 'Não foi possível excluir a linha. Se ela tiver denúncias, não pode ser removida.'
     }
+    cacheLinhas = null
     setLinhas((atual) => atual.filter((l) => l.id !== id))
     return null
   }, [])
