@@ -49,15 +49,21 @@ export function MapaPage() {
     )
   }, [denuncias, desktop, busca, status, focoId])
 
+  // Avisos de erro: no celular, faixa na largura toda sob o cabeçalho; no desktop, um aviso sobre o mapa
+  // que deixa livre o painel lateral (onde ficam as linhas favoritas), em vez de cobri-lo.
+  const classeAviso = desktop
+    ? 'absolute left-6 right-[404px] top-[84px] mx-auto w-fit max-w-[calc(100%-440px)] border-2 border-brand-green bg-zona-leste px-4 py-2.5 text-center text-sm font-bold text-white shadow-[3px_3px_0_#084400]'
+    : 'absolute top-16 w-full bg-zona-leste px-4 py-2 text-center text-sm text-white'
+
   return (
     <AppLayout title="Deu o Prego!" noScroll>
       {error && (
-        <div className="absolute top-16 z-20 w-full bg-zona-leste px-4 py-2 text-center text-sm text-white">
+        <div className={`${classeAviso} z-20`}>
           {error}
         </div>
       )}
       {erroConfirmacao && (
-        <div role="alert" className="absolute top-16 z-[600] w-full bg-zona-leste px-4 py-2 text-center text-sm text-white">
+        <div role="alert" className={`${classeAviso} anim-abre z-[600]`}>
           {erroConfirmacao}
         </div>
       )}

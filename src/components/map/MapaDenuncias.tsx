@@ -223,7 +223,12 @@ export function MapaDenuncias({
       </div>
       )}
 
-      <div className="pointer-events-none absolute inset-x-3 bottom-3.5 z-[500] flex flex-col items-end gap-2.5">
+      {/* No desktop a legenda das zonas fica no canto inferior esquerdo (fora deste componente): o cartão sobe para ficar acima dela. */}
+      <div
+        className={`pointer-events-none absolute inset-x-3 z-[500] flex flex-col items-end gap-2.5 ${
+          semFiltroZona ? 'bottom-[5.5rem]' : 'bottom-3.5'
+        }`}
+      >
       <CentralizarNaMinhaLocalizacao map={mapa} />
       {selecionada && (
         <div className="card-brand anim-cartao pointer-events-auto flex w-full flex-col gap-2.5 !bg-brand-cream p-3.5">

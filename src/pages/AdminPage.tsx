@@ -21,6 +21,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useDenuncias } from '../hooks/useDenuncias'
 import { useDenunciasDoUsuario } from '../hooks/useDenunciasDoUsuario'
 import { useDenunciasPorUsuario } from '../hooks/useDenunciasPorUsuario'
+import { useNomesUsuarios } from '../hooks/useNomesUsuarios'
 import { useLinhas } from '../hooks/useLinhas'
 import { useUsuarios } from '../hooks/useUsuarios'
 import { supabase } from '../lib/supabaseClient'
@@ -266,6 +267,7 @@ function UsuariosAdmin({
 }) {
   const [verUsuarioId, setVerUsuarioId] = useState<string | null>(null)
   const totalPorUsuario = useDenunciasPorUsuario()
+  const nomePorUsuario = useNomesUsuarios()
   const { user } = useAuth()
   const { usuarios, loading, error, alterarPapel, alterarBloqueio, excluir } = useUsuarios()
   const [confirmando, setConfirmando] = useState<string | null>(null)
@@ -299,6 +301,7 @@ function UsuariosAdmin({
           <TabelaAdmin
             legenda="Lista de usuários"
             colunas={[
+              { rotulo: 'Nome' },
               { rotulo: 'E-mail' },
               { rotulo: 'Denúncias' },
               { rotulo: 'Papel' },
@@ -311,9 +314,10 @@ function UsuariosAdmin({
                 <Fragment key={u.id}>
                 <tr className="anim-entra" style={{ animationDelay: `${i * 35}ms` }}>
                   <td className={`${celula} font-bold`}>
-                    {u.email || 'Sem e-mail'}
+                    {nomePorUsuario.get(u.id) || <span className="font-normal text-brand-green-dark/50">—</span>}
                     {euMesmo && ' (você)'}
                   </td>
+                  <td className={celula}>{u.email || 'Sem e-mail'}</td>
                   <td className={celula}>
                     {(totalPorUsuario.get(u.id) ?? 0) > 0 ? (
                       <button
@@ -369,7 +373,7 @@ function UsuariosAdmin({
                 </tr>
                 {u.id === verUsuarioId && (
                   <tr>
-                    <td colSpan={4} className="border-t border-[#cfe3c6] bg-[#f3fcee] p-3.5">
+                    <td colSpan={5} className="border-t border-[#cfe3c6] bg-[#f3fcee] p-3.5">
                       {painelDenuncias}
                     </td>
                   </tr>
@@ -404,7 +408,10 @@ function UsuariosAdmin({
           <div className="card-brand anim-entra p-3.5" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="truncate font-bold text-brand-green-dark">
+                {nomePorUsuario.get(u.id) && (
+                  <p className="truncate font-bold text-brand-green-dark">{nomePorUsuario.get(u.id)}</p>
+                )}
+                <p className={`truncate ${nomePorUsuario.get(u.id) ? 'text-sm text-brand-green-dark/80' : 'font-bold text-brand-green-dark'}`}>
                   {u.email || 'Sem e-mail'}
                   {euMesmo && ' (você)'}
                 </p>
