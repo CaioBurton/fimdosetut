@@ -13,6 +13,10 @@ dist-ssr
 *.local
 .env
 
+# Backup do banco: tem dados pessoais (LGPD) e a chave service_role. Nunca vai para o Git.
+.env.backup
+backups/
+
 # Arquivo de referência de marca grande demais para o GitHub (>100MB)
 identidadevisual/forumIDV.pdf
 
