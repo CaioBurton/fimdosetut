@@ -37,8 +37,8 @@ export function FeedbacksAdmin() {
         <p className="py-10 text-center text-brand-green-dark/70">Nenhum feedback recebido ainda.</p>
       )}
 
-      {feedbacks.map((f) => (
-        <article key={f.id} className="card-brand space-y-2.5 p-3.5">
+      {feedbacks.map((f, i) => (
+        <article key={f.id} className="card-brand anim-entra space-y-2.5 p-3.5" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="truncate text-sm font-bold">{f.perfil?.email ?? 'Conta removida'}</p>

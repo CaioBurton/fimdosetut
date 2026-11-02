@@ -101,9 +101,9 @@ export function SidebarNav() {
 
       <NavLink
         to="/nova"
-        className="ttl relative flex min-h-14 items-center justify-center gap-2.5 rounded-[2px] border-2 border-brand-cream bg-brand-cream text-lg text-brand-green shadow-[4px_4px_0_#052d00]"
+        className="btn-reportar ttl relative flex min-h-14 items-center justify-center gap-2.5 rounded-[2px] border-2 border-brand-cream bg-brand-cream text-lg text-brand-green shadow-[4px_4px_0_#052d00]"
       >
-        <svg {...ic} strokeWidth={3.2} width={22} height={22}><path d="M12 5v14M5 12h14" /></svg>
+        <svg {...ic} strokeWidth={3.2} width={22} height={22} className="btn-reportar-mais"><path d="M12 5v14M5 12h14" /></svg>
         Reportar
       </NavLink>
 

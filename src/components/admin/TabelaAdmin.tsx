@@ -40,7 +40,7 @@ export function TabelaAdmin({
 export const celula = 'border-t border-[#cfe3c6] px-3.5 py-2.5 align-middle text-sm font-semibold'
 
 export const botaoTabela =
-  'inline-flex min-h-11 min-w-11 items-center justify-center rounded-[2px] border-2 border-brand-green bg-brand-cream px-3 text-[13px] font-bold text-brand-green disabled:cursor-not-allowed disabled:opacity-35'
+  'transition-transform active:scale-95 inline-flex min-h-11 min-w-11 items-center justify-center rounded-[2px] border-2 border-brand-green bg-brand-cream px-3 text-[13px] font-bold text-brand-green disabled:cursor-not-allowed disabled:opacity-35'
 
 export const botaoPerigoTabela = `${botaoTabela} !border-[#c23838] !text-[#c23838]`
 

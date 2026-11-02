@@ -118,6 +118,7 @@ export function ListaPage() {
               value={filtroLinha}
               onChange={setFiltroLinha}
               placeholder="Todas as linhas"
+              comoFiltro
               listaLarga
             />
           </div>

@@ -115,6 +115,36 @@ export function MapaDenuncias({
         ),
       ]
     : []
+  // Dá um pop no marcador selecionado quando a contagem de "Também vi" dele aumenta (uma vez só; ao tirar, não).
+  const [pulso, setPulso] = useState(0)
+  const anterior = useRef<{ id: string; total: number } | null>(null)
+  const totalSel = selecionada?.confirmacoes ?? 0
+  useEffect(() => {
+    const ant = anterior.current
+    if (selecionada && ant && ant.id === selecionada.id && totalSel > ant.total) setPulso((n) => n + 1)
+    anterior.current = selecionada ? { id: selecionada.id, total: totalSel } : null
+  }, [selecionada, totalSel])
+
+  // Denúncia recém-criada (vista pela primeira vez e com menos de 1 min): o marcador entra com pop.
+  // O conjunto é limpo logo depois, para o pop não tocar de novo quando o ícone mudar (ex.: ao selecionar).
+  const vistas = useRef(new Set<string>())
+  const novas = useRef(new Set<string>())
+  const [, setTickNovas] = useState(0)
+  for (const { principal } of grupos) {
+    if (vistas.current.has(principal.id)) continue
+    vistas.current.add(principal.id)
+    if (Date.now() - new Date(principal.created_at).getTime() < 60_000) novas.current.add(principal.id)
+  }
+  const qtdNovas = novas.current.size
+  useEffect(() => {
+    if (qtdNovas === 0) return
+    const t = setTimeout(() => {
+      novas.current.clear()
+      setTickNovas((n) => n + 1)
+    }, 900)
+    return () => clearTimeout(t)
+  }, [qtdNovas])
+
   const zonaSel = selecionada?.linha?.zona ?? 'outras'
 
   // "Ver no mapa": seleciona o grupo que contém a denúncia pedida e leva o mapa até ela (uma vez).
@@ -154,7 +184,9 @@ export function MapaDenuncias({
                 denuncia.status === 'resolvido',
                 denuncia.linha?.codigo ?? '',
                 denuncia.id === selecionadaId,
-                membros.length
+                membros.length,
+                denuncia.id === selecionadaId ? pulso : 0,
+                novas.current.has(denuncia.id)
               )}
               zIndexOffset={denuncia.id === selecionadaId ? 1000 : 0}
               eventHandlers={{ click: () => setSelecionadaId(denuncia.id) }}

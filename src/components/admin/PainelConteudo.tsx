@@ -6,11 +6,13 @@ import { TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Zona } from '../../types'
 const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
 const PERIODOS: Periodo[] = ['7d', '30d', 'todos']
 
-function Kpi({ rotulo, valor, cor }: { rotulo: string; valor: string | number; cor?: string }) {
+const atraso = (i: number) => ({ animationDelay: `${Math.min(i, 8) * 60}ms` })
+
+function Kpi({ rotulo, valor, cor, ordem = 0 }: { rotulo: string; valor: string | number; cor?: string; ordem?: number }) {
   return (
-    <div className="card-brand p-3">
+    <div className="card-brand anim-entra p-3" style={atraso(ordem)}>
       <p className="text-xs font-bold uppercase tracking-wide text-brand-green-dark/70">{rotulo}</p>
-      <p className="ttl text-3xl" style={cor ? { color: cor } : undefined}>
+      <p key={valor} className="ttl anim-contador text-3xl" style={cor ? { color: cor } : undefined}>
         {valor}
       </p>
     </div>
@@ -20,19 +22,21 @@ function Kpi({ rotulo, valor, cor }: { rotulo: string; valor: string | number; c
 function Barras({
   titulo,
   itens,
+  ordem = 0,
 }: {
   titulo: string
   itens: { rotulo: string; total: number; cor: string }[]
+  ordem?: number
 }) {
   const max = Math.max(1, ...itens.map((i) => i.total))
   return (
-    <section className="card-brand p-3.5" aria-label={titulo}>
+    <section className="card-brand anim-entra p-3.5" style={atraso(ordem)} aria-label={titulo}>
       <h3 className="ttl mb-3 text-lg">{titulo}</h3>
       {itens.length === 0 ? (
         <p className="text-sm text-brand-green-dark/70">Sem dados.</p>
       ) : (
         <ul className="space-y-3">
-          {itens.map((i) => (
+          {itens.map((i, n) => (
             <li key={i.rotulo} className="text-[13px]">
               <div className="mb-1 flex justify-between gap-2 font-bold">
                 <span className="flex items-center gap-1.5 truncate">
@@ -42,7 +46,7 @@ function Barras({
                 <span>{i.total}</span>
               </div>
               <div className="h-2.5 border border-brand-green bg-[#e3f2da]">
-                <div className="h-full" style={{ width: `${(i.total / max) * 100}%`, backgroundColor: i.cor }} />
+                <div className="barra-x h-full" style={{ width: `${(i.total / max) * 100}%`, backgroundColor: i.cor, animationDelay: `${200 + n * 70}ms` }} />
               </div>
             </li>
           ))}
@@ -129,7 +133,7 @@ export function PainelConteudo({
       {!desktop && (
       <section
         aria-label="Resumo"
-        className="relative overflow-hidden rounded-[2px] border-2 border-brand-green bg-brand-green p-[18px] text-brand-cream shadow-[4px_4px_0_#052d00]"
+        className="anim-entra relative overflow-hidden rounded-[2px] border-2 border-brand-green bg-brand-green p-[18px] text-brand-cream shadow-[4px_4px_0_#052d00]"
       >
         <img
           src="/brand/explosao-contorno.svg"
@@ -139,12 +143,12 @@ export function PainelConteudo({
         />
         <div className="relative">
           <p className="text-xs font-bold uppercase tracking-wider">Pendentes agora</p>
-          <p className="ttl mt-1 text-7xl">{resumo.pendentes}</p>
+          <p key={resumo.pendentes} className="ttl anim-contador mt-1 text-7xl">{resumo.pendentes}</p>
           <p className="mt-1.5 text-sm font-medium">
             de {resumo.total} {resumo.total === 1 ? 'denúncia' : 'denúncias'} no período
           </p>
           <div className="mt-3.5 h-3 border border-brand-cream bg-brand-green-dark">
-            <div className="h-full bg-brand-cream" style={{ width: `${taxa}%` }} />
+            <div className="barra-x h-full bg-brand-cream" style={{ width: `${taxa}%`, animationDelay: '250ms' }} />
           </div>
           <p className="mt-1.5 text-[13px] font-bold">{taxa}% resolvidas</p>
         </div>
@@ -153,20 +157,20 @@ export function PainelConteudo({
 
       {desktop ? (
         <section aria-label="Resumo" className="grid grid-cols-4 gap-5 lg:col-span-2">
-          <Kpi rotulo="Total" valor={resumo.total} />
-          <Kpi rotulo="Pendentes" valor={resumo.pendentes} cor="#c23838" />
-          <Kpi rotulo="Resolvidas" valor={resumo.resolvidas} />
-          <Kpi rotulo="Hoje" valor={resumo.hoje} />
+          <Kpi rotulo="Total" valor={resumo.total} ordem={0} />
+          <Kpi rotulo="Pendentes" valor={resumo.pendentes} cor="#c23838" ordem={1} />
+          <Kpi rotulo="Resolvidas" valor={resumo.resolvidas} ordem={2} />
+          <Kpi rotulo="Hoje" valor={resumo.hoje} ordem={3} />
         </section>
       ) : (
         <section className="grid grid-cols-3 gap-2.5">
-          <Kpi rotulo="Total" valor={resumo.total} />
-          <Kpi rotulo="Resolvidas" valor={resumo.resolvidas} />
-          <Kpi rotulo="Hoje" valor={resumo.hoje} cor="#c23838" />
+          <Kpi rotulo="Total" valor={resumo.total} ordem={1} />
+          <Kpi rotulo="Resolvidas" valor={resumo.resolvidas} ordem={2} />
+          <Kpi rotulo="Hoje" valor={resumo.hoje} cor="#c23838" ordem={3} />
         </section>
       )}
 
-      <section className="card-brand p-3.5 lg:col-span-2 lg:p-5" aria-label="Denúncias por dia">
+      <section className="card-brand anim-entra p-3.5 lg:col-span-2 lg:p-5" style={atraso(4)} aria-label="Denúncias por dia">
         <div className="flex items-baseline justify-between">
           <h3 className="ttl text-lg">Por dia</h3>
           <span className="text-xs font-bold text-brand-green-dark/70">últimos {porDia.length} dias</span>
@@ -176,8 +180,9 @@ export function PainelConteudo({
             <div key={d.data.toISOString()} className="flex h-full flex-1 flex-col items-center justify-end">
               <span className="mb-0.5 text-[11px] font-bold">{d.total}</span>
               <div
-                className="w-full"
+                className="barra-y w-full"
                 style={{
+                  animationDelay: `${250 + i * 25}ms`,
                   height: `${(d.total / maxDia) * (desktop ? 140 : 100)}px`,
                   backgroundColor: i === porDia.length - 1 ? '#c23838' : '#084400',
                 }}
@@ -196,6 +201,7 @@ export function PainelConteudo({
 
       <Barras
         titulo="Por zona"
+        ordem={5}
         itens={resumo.porZona.map((i) => ({
           rotulo: ZONA_LABELS[i.chave],
           total: i.total,
@@ -204,10 +210,11 @@ export function PainelConteudo({
       />
       <Barras
         titulo="Por tipo de problema"
+        ordem={6}
         itens={resumo.porTipo.map((i) => ({ rotulo: TIPO_LABELS[i.chave], total: i.total, cor: '#084400' }))}
       />
 
-      <section className="card-brand overflow-hidden lg:col-span-2" aria-label="Linhas com mais denúncias">
+      <section className="card-brand anim-entra overflow-hidden lg:col-span-2" style={atraso(7)} aria-label="Linhas com mais denúncias">
         <h3 className="ttl px-3.5 pb-2.5 pt-3.5 text-lg">Linhas com mais denúncias</h3>
         {resumo.topLinhas.length === 0 ? (
           <p className="px-3.5 pb-3.5 text-sm text-brand-green-dark/70">Sem dados.</p>
@@ -215,7 +222,7 @@ export function PainelConteudo({
           <ol className="lg:grid lg:grid-cols-2 lg:gap-x-7">
             {resumo.topLinhas.map((l, i) => {
               return (
-                <li key={`${l.linhaId}-${i}`} className="flex items-center gap-3 border-t border-[#cfe3c6] px-3.5 py-2.5">
+                <li key={`${l.linhaId}-${i}`} className="anim-entra flex items-center gap-3 border-t border-[#cfe3c6] px-3.5 py-2.5" style={{ animationDelay: `${450 + i * 50}ms` }}>
                   <span className="ttl w-5 text-lg text-[#307800]">{i + 1}</span>
                   <span className="ttl bg-brand-green px-2 py-1.5 text-[15px] leading-none text-brand-cream">
                     {l.codigo}
@@ -223,7 +230,7 @@ export function PainelConteudo({
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold">{l.nome}</p>
                     <div className="mt-1.5 h-2 border border-brand-green bg-[#e3f2da]">
-                      <div className="h-full bg-[#307800]" style={{ width: `${(l.total / maxLinha) * 100}%` }} />
+                      <div className="barra-x h-full bg-[#307800]" style={{ width: `${(l.total / maxLinha) * 100}%`, animationDelay: `${550 + i * 50}ms` }} />
                     </div>
                   </div>
                   <span className="min-w-6 text-right text-base font-extrabold">{l.total}</span>

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -8,7 +9,15 @@ function activeClass(isActive: boolean) {
   return isActive ? 'bg-brand-green text-brand-cream' : 'text-brand-green'
 }
 
+// A barra é recriada a cada troca de página; este flag leva o clique em "Reportar" para a página nova,
+// onde o pop toca de verdade.
+let popReportarPendente = false
+
 export function BottomNav() {
+  const [pop, setPop] = useState(popReportarPendente ? 1 : 0)
+  useEffect(() => {
+    popReportarPendente = false
+  }, [])
   const { user, isAnonymous, isAdmin } = useAuth()
   // Sessão anônima (denúncia sem cadastro) conta como deslogada na navegação.
   const logado = !!user && !isAnonymous
@@ -28,11 +37,15 @@ export function BottomNav() {
       </NavLink>
       <NavLink
         to="/nova"
-        className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-xs font-bold"
+        onClick={() => {
+          popReportarPendente = true
+          setPop((n) => n + 1)
+        }}
+        className="btn-reportar flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-xs font-bold"
       >
-        <span className="relative -mt-7 flex h-12 w-[78px] items-center justify-center text-brand-cream">
+        <span key={pop} className={`${pop > 0 ? 'btn-reportar-pop' : ''} relative -mt-7 flex h-12 w-[78px] items-center justify-center text-brand-cream`}>
           <img src="/brand/explosao-cheia.svg" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full" />
-          <span className="relative"><PlusIcon /></span>
+          <span className="btn-reportar-mais relative"><PlusIcon /></span>
         </span>
         <span className="mt-1 text-brand-green">Reportar</span>
       </NavLink>

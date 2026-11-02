@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { AppLayout } from '../components/layout/AppLayout'
 import { FeedbacksAdmin } from '../components/admin/FeedbacksAdmin'
@@ -19,6 +19,7 @@ import { useDesktop } from '../hooks/useDesktop'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../hooks/useAuth'
 import { useDenuncias } from '../hooks/useDenuncias'
+import { useDenunciasDoUsuario } from '../hooks/useDenunciasDoUsuario'
 import { useDenunciasPorUsuario } from '../hooks/useDenunciasPorUsuario'
 import { useLinhas } from '../hooks/useLinhas'
 import { useUsuarios } from '../hooks/useUsuarios'
@@ -113,8 +114,9 @@ export function AdminPage() {
           <CabecalhoPagina titulo="Feedbacks" subtitulo="O que as pessoas mandaram pelo app" />
         )}
 
-        {acaoErro && <p className="text-center text-sm text-zona-leste">{acaoErro}</p>}
+        {acaoErro && <p role="alert" className="anim-abre text-center text-sm text-zona-leste">{acaoErro}</p>}
 
+        <div key={aba} className="anim-entra space-y-3">
         {aba === 'painel' && (
           <>
             {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
@@ -164,16 +166,16 @@ export function AdminPage() {
                       Nenhuma denúncia com esses filtros.
                     </p>
                   )}
-                  {filtradas.map((denuncia) => (
+                  {filtradas.map((denuncia, i) => (
+              <div key={denuncia.id} className="anim-entra" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
               <DenunciaCard
-                key={denuncia.id}
                 denuncia={denuncia}
                 actions={
                   confirmando === denuncia.id ? (
                     <>
                       <Button
                         variant="ghost"
-                        className="w-auto flex-1 py-2 text-sm text-zona-leste"
+                        className="anim-abre w-auto flex-1 py-2 text-sm text-zona-leste"
                         onClick={() => excluirDenuncia(denuncia.id)}
                       >
                         Confirmar exclusão
@@ -206,6 +208,7 @@ export function AdminPage() {
                   )
                 }
               />
+              </div>
                   ))}
                 </div>
                 )
@@ -217,19 +220,60 @@ export function AdminPage() {
         {aba === 'feedbacks' && <FeedbacksAdmin />}
 
         {aba === 'usuarios' && (
-          <UsuariosAdmin onErro={setAcaoErro} desktop={desktop} />
+          <UsuariosAdmin onErro={setAcaoErro} desktop={desktop} denuncias={denuncias} />
         )}
+        </div>
       </div>
     </AppLayout>
   )
 }
 
-function UsuariosAdmin({ onErro, desktop }: { onErro: (mensagem: string | null) => void; desktop: boolean }) {
+function DenunciasDoUsuario({ usuario, denuncias, onFechar }: { usuario: Perfil; denuncias: Denuncia[]; onFechar: () => void }) {
+  const { ids, error } = useDenunciasDoUsuario(usuario.id)
+  const doUsuario = ids ? denuncias.filter((d) => ids.has(d.id)) : []
+  return (
+    <section aria-label={`Denúncias de ${usuario.email}`} className="anim-abre space-y-3 rounded-[2px] border-2 border-brand-green p-3.5">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="ttl min-w-0 break-words text-lg">Denúncias de {usuario.email || 'Sem e-mail'}</h3>
+        <button type="button" className={botaoTabela} onClick={onFechar}>
+          Fechar
+        </button>
+      </div>
+      {error && <p className="text-sm text-zona-leste">{error}</p>}
+      {!error && ids === null && <p className="text-sm text-brand-green-dark/60">Carregando...</p>}
+      {ids !== null && doUsuario.length === 0 && (
+        <p className="text-sm text-brand-green-dark/60">Nenhuma denúncia encontrada.</p>
+      )}
+      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:space-y-0">
+        {doUsuario.map((d, i) => (
+          <div key={d.id} className="anim-entra" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
+            <DenunciaCard denuncia={d} />
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function UsuariosAdmin({
+  onErro,
+  desktop,
+  denuncias,
+}: {
+  onErro: (mensagem: string | null) => void
+  desktop: boolean
+  denuncias: Denuncia[]
+}) {
+  const [verUsuarioId, setVerUsuarioId] = useState<string | null>(null)
   const totalPorUsuario = useDenunciasPorUsuario()
   const { user } = useAuth()
   const { usuarios, loading, error, alterarPapel, alterarBloqueio, excluir } = useUsuarios()
   const [confirmando, setConfirmando] = useState<string | null>(null)
   const [pagina, setPagina] = useState(1)
+  const usuarioVisto = usuarios.find((u) => u.id === verUsuarioId) ?? null
+  const painelDenuncias = usuarioVisto && (
+    <DenunciasDoUsuario usuario={usuarioVisto} denuncias={denuncias} onFechar={() => setVerUsuarioId(null)} />
+  )
 
   async function executar(acao: Promise<string | null>) {
     onErro(null)
@@ -261,15 +305,29 @@ function UsuariosAdmin({ onErro, desktop }: { onErro: (mensagem: string | null) 
               { rotulo: 'Ações', direita: true },
             ]}
           >
-            {daPagina.map((u: Perfil) => {
+            {daPagina.map((u: Perfil, i) => {
               const euMesmo = u.id === user?.id
               return (
-                <tr key={u.id}>
+                <Fragment key={u.id}>
+                <tr className="anim-entra" style={{ animationDelay: `${i * 35}ms` }}>
                   <td className={`${celula} font-bold`}>
                     {u.email || 'Sem e-mail'}
                     {euMesmo && ' (você)'}
                   </td>
-                  <td className={celula}>{totalPorUsuario.get(u.id) ?? 0}</td>
+                  <td className={celula}>
+                    {(totalPorUsuario.get(u.id) ?? 0) > 0 ? (
+                      <button
+                        type="button"
+                        className="font-bold underline"
+                        aria-label={`Ver as ${totalPorUsuario.get(u.id)} denúncias de ${u.email || 'este usuário'}`}
+                        onClick={() => setVerUsuarioId(u.id)}
+                      >
+                        {totalPorUsuario.get(u.id)}
+                      </button>
+                    ) : (
+                      0
+                    )}
+                  </td>
                   <td className={celula}>
                     <span className="inline-flex gap-1.5">
                       {u.role === 'admin' ? <Badge color="#084400">Admin</Badge> : <Badge color="#084400" outlined>Usuário</Badge>}
@@ -278,7 +336,7 @@ function UsuariosAdmin({ onErro, desktop }: { onErro: (mensagem: string | null) 
                   </td>
                   <td className={`${celula} whitespace-nowrap text-right`}>
                     {euMesmo ? null : confirmando === u.id ? (
-                      <span className="inline-flex gap-2">
+                      <span className="anim-abre inline-flex gap-2">
                         <button type="button" className={botaoPerigoTabela} onClick={() => executar(excluir(u.id))}>
                           Confirmar exclusão
                         </button>
@@ -309,6 +367,14 @@ function UsuariosAdmin({ onErro, desktop }: { onErro: (mensagem: string | null) 
                     )}
                   </td>
                 </tr>
+                {u.id === verUsuarioId && (
+                  <tr>
+                    <td colSpan={4} className="border-t border-[#cfe3c6] bg-[#f3fcee] p-3.5">
+                      {painelDenuncias}
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               )
             })}
           </TabelaAdmin>
@@ -330,20 +396,29 @@ function UsuariosAdmin({ onErro, desktop }: { onErro: (mensagem: string | null) 
       {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
       {loading && <p className="text-center text-brand-green-dark/60">Carregando...</p>}
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:space-y-0">
-      {usuarios.map((u: Perfil) => {
+      {usuarios.map((u: Perfil, i) => {
         const euMesmo = u.id === user?.id
         const total = totalPorUsuario.get(u.id) ?? 0
         return (
-          <div key={u.id} className="card-brand p-3.5">
+          <Fragment key={u.id}>
+          <div className="card-brand anim-entra p-3.5" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="truncate font-bold text-brand-green-dark">
                   {u.email || 'Sem e-mail'}
                   {euMesmo && ' (você)'}
                 </p>
-                <p className="text-xs text-brand-green-dark/70">
-                  {total} {total === 1 ? 'denúncia' : 'denúncias'}
-                </p>
+                {total > 0 ? (
+                  <button
+                    type="button"
+                    className="text-xs font-bold text-brand-green underline"
+                    onClick={() => setVerUsuarioId(u.id)}
+                  >
+                    {total} {total === 1 ? 'denúncia' : 'denúncias'} · ver
+                  </button>
+                ) : (
+                  <p className="text-xs text-brand-green-dark/70">0 denúncias</p>
+                )}
               </div>
               <div className="flex flex-wrap justify-end gap-1.5">
                 {u.role === 'admin' && <Badge color="#084400">Admin</Badge>}
@@ -357,7 +432,7 @@ function UsuariosAdmin({ onErro, desktop }: { onErro: (mensagem: string | null) 
                   <>
                     <Button
                       variant="ghost"
-                      className="w-auto flex-1 py-2 text-sm text-zona-leste"
+                      className="anim-abre w-auto flex-1 py-2 text-sm text-zona-leste"
                       onClick={() => executar(excluir(u.id))}
                     >
                       Confirmar exclusão
@@ -400,6 +475,8 @@ function UsuariosAdmin({ onErro, desktop }: { onErro: (mensagem: string | null) 
               </div>
             )}
           </div>
+          {u.id === verUsuarioId && <div className="lg:col-span-2">{painelDenuncias}</div>}
+          </Fragment>
         )
       })}
       </div>
@@ -440,10 +517,10 @@ function TabelaDenuncias({ denuncias, pagina, onPagina, confirmando, onConfirmar
             { rotulo: 'Ações', direita: true },
           ]}
         >
-          {daPagina.map((d) => {
+          {daPagina.map((d, i) => {
             const zona = d.linha?.zona ?? 'outras'
             return (
-              <tr key={d.id}>
+              <tr key={d.id} className="anim-entra" style={{ animationDelay: `${i * 35}ms` }}>
                 <td className={celula}>
                   <span className="ttl inline-block bg-brand-green px-2 py-1.5 text-[15px] leading-none text-brand-cream">
                     {d.linha?.codigo ?? '—'}
@@ -464,7 +541,7 @@ function TabelaDenuncias({ denuncias, pagina, onPagina, confirmando, onConfirmar
                 </td>
                 <td className={`${celula} whitespace-nowrap text-right`}>
                   {confirmando === d.id ? (
-                    <span className="inline-flex gap-2">
+                    <span className="anim-abre inline-flex gap-2">
                       <button type="button" className={botaoPerigoTabela} onClick={() => onExcluir(d.id)}>
                         Confirmar exclusão
                       </button>

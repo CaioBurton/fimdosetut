@@ -17,7 +17,9 @@ import {
   type TipoProblema,
   type Zona,
 } from '../../types'
+import { LinhaSelect } from '../denuncia/LinhaSelect'
 import { Paginacao } from '../ui/Paginacao'
+import { SelectBrand } from '../ui/SelectBrand'
 
 const POR_PAGINA = 10
 const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
@@ -82,57 +84,38 @@ export function DashboardDenuncias({ denuncias, linhas, children }: Props) {
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <select
-            className="input-brand"
-            aria-label="Status"
+          <SelectBrand
+            label="Status"
             value={filtros.status}
-            onChange={(e) => definir('status', e.target.value as StatusDenuncia | 'todos')}
-          >
-            <option value="todos">Todos os status</option>
-            {(Object.keys(STATUS_LABELS) as StatusDenuncia[]).map((s) => (
-              <option key={s} value={s}>
-                {STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input-brand"
-            aria-label="Tipo de problema"
+            onChange={(v) => definir('status', v)}
+            options={[
+              { value: 'todos', label: 'Todos os status' },
+              ...(Object.keys(STATUS_LABELS) as StatusDenuncia[]).map((s) => ({ value: s, label: STATUS_LABELS[s] })),
+            ]}
+          />
+          <SelectBrand
+            label="Tipo de problema"
             value={filtros.tipo}
-            onChange={(e) => definir('tipo', e.target.value as TipoProblema | 'todos')}
-          >
-            <option value="todos">Todos os tipos</option>
-            {(Object.keys(TIPO_LABELS) as TipoProblema[]).map((t) => (
-              <option key={t} value={t}>
-                {TIPO_LABELS[t]}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input-brand"
-            aria-label="Período"
-            value={filtros.periodo}
-            onChange={(e) => definir('periodo', e.target.value as Periodo)}
-          >
-            {(Object.keys(PERIODO_LABELS) as Periodo[]).map((p) => (
-              <option key={p} value={p}>
-                {PERIODO_LABELS[p]}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input-brand"
-            aria-label="Linha"
+            onChange={(v) => definir('tipo', v)}
+            options={[
+              { value: 'todos', label: 'Todos os tipos' },
+              ...(Object.keys(TIPO_LABELS) as TipoProblema[]).map((t) => ({ value: t, label: TIPO_LABELS[t] })),
+            ]}
+          />
+          <LinhaSelect
+            linhas={linhas}
             value={filtros.linhaId}
-            onChange={(e) => definir('linhaId', e.target.value)}
-          >
-            <option value="">Todas as linhas</option>
-            {linhas.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.codigo} - {l.nome}
-              </option>
-            ))}
-          </select>
+            onChange={(id) => definir('linhaId', id)}
+            placeholder="Todas as linhas"
+            comoFiltro
+            listaLarga
+          />
+          <SelectBrand
+            label="Período"
+            value={filtros.periodo}
+            onChange={(v) => definir('periodo', v)}
+            options={(Object.keys(PERIODO_LABELS) as Periodo[]).map((p) => ({ value: p, label: PERIODO_LABELS[p] }))}
+          />
         </div>
 
         {filtrosAtivos && (

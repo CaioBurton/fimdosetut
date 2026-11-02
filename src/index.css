@@ -137,6 +137,8 @@ select.input-brand {
 }
 
 /* ---- Movimento ----
+   Os estados finais usam `transform: none` (e não translateY(0)): com fill-mode `both` um transform
+   restante viraria o bloco de contenção de filhos `position: fixed` (modais), e eles ficariam presos.
    Curtas e suaves: 120 ms de feedback, 240 ms de entrada, 320 ms para painéis e 40 ms entre itens
    de uma lista. Saída suave (--ease-suave) para entradas, mola leve (--ease-mola) para confirmações
    e linear só para o que fica carregando. Quem pede "reduzir movimento" no sistema vê tudo direto. */
@@ -147,7 +149,7 @@ select.input-brand {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -158,7 +160,7 @@ select.input-brand {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -169,7 +171,38 @@ select.input-brand {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
+  }
+}
+
+@keyframes fundo {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-sobe {
+  from {
+    opacity: 0;
+    transform: translateY(48px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes modal-abre {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -195,6 +228,24 @@ select.input-brand {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes cresce-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes cresce-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
   }
 }
 
@@ -237,15 +288,30 @@ select.input-brand {
 }
 
 .anim-entra {
-  animation: entra 280ms var(--ease-suave) both;
+  animation: entra 280ms var(--ease-suave) backwards;
 }
 
 .anim-abre {
-  animation: abre 280ms var(--ease-suave) both;
+  animation: abre 280ms var(--ease-suave) backwards;
+}
+
+.anim-fundo {
+  animation: fundo 200ms ease-out backwards;
+}
+
+/* modal: no celular sobe de baixo (folha); no desktop abre no centro com um leve zoom */
+.anim-modal {
+  animation: modal-sobe 320ms var(--ease-suave) 40ms backwards;
+}
+
+@media (min-width: 1024px) {
+  .anim-modal {
+    animation-name: modal-abre;
+  }
 }
 
 .anim-cartao {
-  animation: sobe-cartao 320ms var(--ease-suave) both;
+  animation: sobe-cartao 320ms var(--ease-suave) backwards;
 }
 
 .anim-pop {
@@ -256,6 +322,37 @@ select.input-brand {
 .anim-contador {
   display: inline-block;
   animation: contador 280ms var(--ease-mola) both;
+}
+
+/* barras do painel: crescem a partir da base e acompanham mudanças de filtro */
+.barra-x {
+  transform-origin: left;
+  transition: width 400ms var(--ease-suave), height 400ms var(--ease-suave);
+  animation: cresce-x 600ms var(--ease-suave) both;
+}
+
+.barra-y {
+  transform-origin: bottom;
+  transition: height 400ms var(--ease-suave);
+  animation: cresce-y 600ms var(--ease-suave) both;
+}
+
+/* botão Reportar: a explosão dá um pop só ao clicar; o + gira */
+.btn-reportar-pop {
+  animation: pop 320ms var(--ease-mola) both;
+}
+
+.btn-reportar-mais {
+  transition: transform 260ms var(--ease-mola);
+}
+
+.btn-reportar:hover .btn-reportar-mais,
+.btn-reportar:active .btn-reportar-mais {
+  transform: rotate(90deg) scale(1.15);
+}
+
+.btn-reportar:active {
+  transform: scale(0.96);
 }
 
 /* ponto do GPS: amarelo pulsando enquanto busca, verde com um pop quando acha */
@@ -306,8 +403,13 @@ select.input-brand {
   .anim-entra,
   .anim-abre,
   .anim-cartao,
+  .anim-fundo,
+  .anim-modal,
   .anim-pop,
   .anim-contador,
+  .barra-x,
+  .barra-y,
+  .btn-reportar-pop,
   .gps-ponto-ok,
   .gps-ponto-buscando::after,
   .spinner,
