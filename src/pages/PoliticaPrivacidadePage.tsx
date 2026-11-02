@@ -41,6 +41,18 @@ const SECOES: SecaoLegal[] = [
           marcado por você ou obtido pelo seu aparelho, se você autorizar o acesso à localização.
         </p>
         <p>
+          <strong>Uso sem cadastro:</strong> você pode enviar denúncias e marcar “Também vi” sem criar
+          conta. Nesse caso, o app cria uma <strong>sessão anônima</strong>: um identificador aleatório,
+          guardado no seu navegador, sem nome nem e-mail. Ele serve para ligar as suas denúncias e
+          confirmações ao seu aparelho, impedir abusos (há um limite de envios por hora) e permitir que
+          você crie uma conta depois e leve essas denúncias junto.
+        </p>
+        <p>
+          <strong>Confirmações (“Também vi”):</strong> quando você confirma uma denúncia de outra pessoa,
+          guardamos qual denúncia foi confirmada e por qual conta ou sessão anônima, para contar cada
+          pessoa uma só vez e permitir que você desfaça a confirmação.
+        </p>
+        <p>
           <strong>Feedbacks:</strong> o tipo e o texto da mensagem que você enviar pela aba Perfil.
         </p>
         <p>
@@ -62,8 +74,12 @@ const SECOES: SecaoLegal[] = [
         </p>
         <p>
           <strong>Seu nome, seu e-mail e o seu perfil não aparecem</strong> junto das denúncias. O
-          vínculo entre a denúncia e a sua conta é guardado em separado e só você e a administração do
-          app conseguem ver.
+          vínculo entre a denúncia e a sua conta (ou sessão anônima) é guardado em separado e só você e a
+          administração do app conseguem ver. Isso vale também para quem usa o app sem cadastro.
+        </p>
+        <p>
+          Do “Também vi”, o público vê apenas <strong>quantas pessoas confirmaram</strong> cada
+          denúncia, nunca quem foram.
         </p>
         <p>
           Por isso, <strong>não escreva dados pessoais de outras pessoas</strong> (nomes, telefones,
@@ -79,6 +95,8 @@ const SECOES: SecaoLegal[] = [
         <li>criar e manter a sua conta e permitir o seu login;</li>
         <li>receber, mostrar e organizar as denúncias de problemas no transporte público de Teresina;</li>
         <li>gerar os números do painel (por zona, tipo de problema, linha e dia);</li>
+        <li>contar quantas pessoas confirmaram cada denúncia (“Também vi”);</li>
+        <li>limitar o número de envios por hora de quem usa o app sem cadastro, para evitar abusos;</li>
         <li>avisar você sobre denúncias nas linhas que você cadastrou no perfil;</li>
         <li>receber as suas sugestões, críticas e elogios para melhorar o app;</li>
         <li>proteger o app contra abusos e cumprir obrigações legais.</li>
@@ -91,8 +109,8 @@ const SECOES: SecaoLegal[] = [
       <>
         <p>
           Tratamos os seus dados com base no seu <strong>consentimento</strong> (art. 7º, I, da LGPD),
-          que você dá ao criar a conta, ao preencher o perfil, ao autorizar a localização e ao ativar as
-          notificações. Também usamos o <strong>legítimo interesse</strong> (art. 7º, IX) para a
+          que você dá ao aceitar estes documentos (ao criar a conta ou ao enviar uma denúncia sem
+          cadastro), ao preencher o perfil, ao autorizar a localização e ao ativar as notificações. Também usamos o <strong>legítimo interesse</strong> (art. 7º, IX) para a
           segurança do app e a prevenção de abusos, e <strong>obrigações legais</strong> quando exigido.
         </p>
         <p>
@@ -109,8 +127,8 @@ const SECOES: SecaoLegal[] = [
         <p>Não vendemos os seus dados. Eles passam apenas pelos serviços que fazem o app funcionar:</p>
         <ul>
           <li>
-            <strong>Supabase</strong>: banco de dados e autenticação (guarda contas, perfis, denúncias e
-            feedbacks);
+            <strong>Supabase</strong>: banco de dados e autenticação (guarda contas e sessões anônimas,
+            perfis, denúncias, confirmações e feedbacks);
           </li>
           <li>
             <strong>Vercel</strong>: hospedagem do app;
@@ -144,12 +162,20 @@ const SECOES: SecaoLegal[] = [
       <>
         <p>
           Guardamos os seus dados enquanto a sua conta existir. Quando uma conta é excluída, apagamos o
-          perfil, as linhas cadastradas e as denúncias feitas por ela. Mensagens de feedback podem ser
+          perfil, as linhas cadastradas, as confirmações e as denúncias feitas por ela. Mensagens de feedback podem ser
           mantidas sem qualquer identificação de quem as enviou.
         </p>
         <p>
-          Hoje não há exclusão automática: contas sem uso ficam guardadas até que a própria pessoa ou a
-          administração as exclua.
+          <strong>Quem nunca criou conta:</strong> as denúncias e confirmações feitas numa sessão anônima
+          continuam ligadas a ela e ficam guardadas, como as demais denúncias públicas, até serem
+          excluídas. Como não há login, o app não oferece como apagá-las: se quiser excluir ou corrigir
+          alguma, escreva para {CONTATO.email} indicando a denúncia (linha, data e descrição). Se você
+          limpar os dados do navegador ou trocar de aparelho, a sessão anônima se perde e as denúncias
+          deixam de poder ser levadas para uma conta.
+        </p>
+        <p>
+          Hoje não há exclusão automática: contas e sessões sem uso ficam guardadas até que a própria
+          pessoa ou a administração as exclua.
         </p>
       </>
     ),
@@ -173,6 +199,11 @@ const SECOES: SecaoLegal[] = [
           denúncias, <strong>baixa uma cópia dos seus dados</strong> e{' '}
           <strong>exclui a sua conta</strong> (em “Meus dados e privacidade”). Para qualquer outro
           pedido, escreva para {CONTATO.email}. Respondemos no prazo legal.
+        </p>
+        <p>
+          Se você usa o app <strong>sem cadastro</strong>, não há área para ver ou apagar as suas
+          denúncias pelo app. <strong>Criar uma conta</strong> leva as denúncias já enviadas para ela e
+          libera todas as opções acima; sem conta, os pedidos são feitos pelo e-mail {CONTATO.email}.
         </p>
         <p>
           Se achar que seus dados foram tratados de forma irregular, você também pode reclamar à
