@@ -122,7 +122,7 @@ export function MapaDenuncias({
       )}
 
       {selecionada && (
-        <div className="card-brand absolute inset-x-3 bottom-3.5 z-[500] flex flex-col gap-2.5 !bg-brand-cream p-3.5">
+        <div className="card-brand anim-cartao absolute inset-x-3 bottom-3.5 z-[500] flex flex-col gap-2.5 !bg-brand-cream p-3.5">
           <div className="flex items-center gap-3">
             <span className="ttl bg-brand-green px-2.5 py-2 text-xl leading-none text-brand-cream">
               {selecionada.linha?.codigo ?? '—'}

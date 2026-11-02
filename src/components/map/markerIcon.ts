@@ -23,7 +23,7 @@ export function criarIconeZona(
 
   return L.divIcon({
     className: 'denuncia-marker',
-    html: `<div style="position: relative; width: ${largura}px; height: ${altura}px; opacity: ${opacidade};">
+    html: `<div style="position: relative; width: ${largura}px; height: ${altura}px; opacity: ${opacidade};${selecionado ? ' animation: marcador-pop 360ms var(--ease-mola) both;' : ''}">
       <svg viewBox="0 0 274 166" width="${largura}" height="${altura}" aria-hidden="true">
         <path fill="${cor}" stroke="#084400" stroke-width="6" stroke-linejoin="round" d="${EXPLOSAO}" />
       </svg>
