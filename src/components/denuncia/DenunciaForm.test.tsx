@@ -142,6 +142,20 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
     )
   })
 
+  it('destaca o número do veículo quando o problema é de acessibilidade', async () => {
+    const user = userEvent.setup()
+    render(<DenunciaForm linhas={linhas} onSuccess={vi.fn()} />)
+
+    expect(screen.getByLabelText(/número do veículo.*\(opcional\)/i)).toBeInTheDocument()
+    expect(screen.queryByText('(importante)')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('combobox', { name: 'Tipo de problema' }))
+    await user.click(screen.getByRole('option', { name: /elevador\/plataforma/ }))
+
+    expect(screen.getByLabelText(/número do veículo.*\(importante\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/provar quais veículos estão sem acessibilidade/i)).toBeInTheDocument()
+  })
+
   it('mostra uma mensagem amigável e não chama onSuccess quando o envio falha', async () => {
     vi.mocked(supabase.rpc).mockReturnValue(
       Promise.resolve({ data: null, error: { message: 'TypeError: Failed to fetch' } }) as never
