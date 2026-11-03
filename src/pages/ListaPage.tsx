@@ -10,7 +10,7 @@ import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { useConfirmacoes } from '../hooks/useConfirmacoes'
 import { DIAS_PADRAO, useDenuncias } from '../hooks/useDenuncias'
 import { useLinhas } from '../hooks/useLinhas'
-import { TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Denuncia, type TipoProblema, type Zona } from '../types'
+import { ehAcessibilidade, TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Denuncia, type TipoProblema, type Zona } from '../types'
 
 const POR_PAGINA = 12
 const TIPOS = Object.keys(TIPO_LABELS) as TipoProblema[]
@@ -40,7 +40,7 @@ export function ListaPage() {
   } = useConfirmacoes((id, total) => atualizarDenuncia(id, { confirmacoes: total }))
   const desktop = useDesktop()
   const [filtroStatus, setFiltroStatus] = useState<Denuncia['status'] | 'todos'>('todos')
-  const [filtroTipo, setFiltroTipo] = useState<TipoProblema | 'todos'>('todos')
+  const [filtroTipo, setFiltroTipo] = useState<TipoProblema | 'pcd' | 'todos'>('todos')
   const [pagina, setPagina] = useState(1)
   const [filtroZona, setFiltroZona] = useState<Zona | 'todas'>('todas')
 
@@ -54,7 +54,7 @@ export function ListaPage() {
       (!filtroDia || diaLocal(d.created_at) === filtroDia)
   )
   const filtradas = base.filter(
-    (d) => (filtroStatus === 'todos' || d.status === filtroStatus) && (filtroTipo === 'todos' || d.tipo === filtroTipo)
+    (d) => (filtroStatus === 'todos' || d.status === filtroStatus) && (filtroTipo === 'todos' || (filtroTipo === 'pcd' ? ehAcessibilidade(d.tipo) : d.tipo === filtroTipo))
   )
   const pendentes = base.filter((d) => d.status === 'pendente').length
   const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA))
@@ -157,6 +157,17 @@ export function ListaPage() {
               ))}
             </div>
             <div className="flex flex-wrap gap-2" aria-label="Filtrar por tipo de problema">
+              <button
+                type="button"
+                aria-pressed={filtroTipo === 'pcd'}
+                onClick={() => {
+                  setFiltroTipo(filtroTipo === 'pcd' ? 'todos' : 'pcd')
+                  setPagina(1)
+                }}
+                className={`chip-brand ${filtroTipo === 'pcd' ? 'chip-brand-ativo' : ''}`}
+              >
+                Acessibilidade (PcD)
+              </button>
               {TIPOS.map((t) => (
                 <button
                   key={t}

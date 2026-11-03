@@ -10,6 +10,11 @@ export type TipoProblema =
   | 'pcd_espaco'
   | 'pcd_motorista'
 
+/** Tipos de denúncia ligados à acessibilidade para pessoas com deficiência (PcD). */
+export const TIPOS_ACESSIBILIDADE: TipoProblema[] = ['pcd_elevador', 'pcd_espaco', 'pcd_motorista']
+
+export const ehAcessibilidade = (tipo: TipoProblema) => TIPOS_ACESSIBILIDADE.includes(tipo)
+
 export type StatusDenuncia = 'pendente' | 'resolvido'
 
 export interface Linha {
