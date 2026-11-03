@@ -1,7 +1,16 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { TIPO_LABELS, type TipoProblema } from '../../types'
 
-const TIPOS: TipoProblema[] = ['quebrado', 'acidente', 'atraso', 'lotacao', 'outro']
+const TIPOS: TipoProblema[] = [
+  'quebrado',
+  'acidente',
+  'atraso',
+  'lotacao',
+  'pcd_elevador',
+  'pcd_espaco',
+  'pcd_motorista',
+  'outro',
+]
 
 function IconeTipo({ tipo }: { tipo: TipoProblema }) {
   const props = {
@@ -43,6 +52,16 @@ function IconeTipo({ tipo }: { tipo: TipoProblema }) {
           <circle cx="9" cy="8" r="3.5" />
           <path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6" />
           <path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.5.7 4 2.6 4 5" />
+        </svg>
+      )
+    case 'pcd_elevador':
+    case 'pcd_espaco':
+    case 'pcd_motorista':
+      return (
+        <svg {...props}>
+          <circle cx="12" cy="4.5" r="1.5" />
+          <path d="M12 7v6h5l2 5M12 10h4" />
+          <path d="M8.5 11.5a5 5 0 1 0 6.5 6.5" />
         </svg>
       )
     default:

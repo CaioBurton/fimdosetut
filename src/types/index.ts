@@ -1,6 +1,14 @@
 export type Zona = 'norte' | 'sul' | 'leste' | 'sudeste' | 'outras'
 
-export type TipoProblema = 'quebrado' | 'acidente' | 'atraso' | 'lotacao' | 'outro'
+export type TipoProblema =
+  | 'quebrado'
+  | 'acidente'
+  | 'atraso'
+  | 'lotacao'
+  | 'outro'
+  | 'pcd_elevador'
+  | 'pcd_espaco'
+  | 'pcd_motorista'
 
 export type StatusDenuncia = 'pendente' | 'resolvido'
 
@@ -59,6 +67,9 @@ export const TIPO_LABELS: Record<TipoProblema, string> = {
   atraso: 'Atraso',
   lotacao: 'Lotação excessiva',
   outro: 'Outro',
+  pcd_elevador: 'PcD: elevador/plataforma quebrado',
+  pcd_espaco: 'PcD: sem espaço reservado',
+  pcd_motorista: 'PcD: motorista não parou/ajudou',
 }
 
 export const STATUS_LABELS: Record<StatusDenuncia, string> = {
