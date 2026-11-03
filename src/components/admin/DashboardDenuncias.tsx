@@ -17,6 +17,8 @@ import {
   type TipoProblema,
   type Zona,
 } from '../../types'
+import { baixarCsv } from '../../lib/baixarArquivo'
+import { denunciasParaCsv } from '../../lib/exportarCsv'
 import { LinhaSelect } from '../denuncia/LinhaSelect'
 import { Paginacao } from '../ui/Paginacao'
 import { SelectBrand } from '../ui/SelectBrand'
@@ -99,6 +101,7 @@ export function DashboardDenuncias({ denuncias, linhas, children }: Props) {
             onChange={(v) => definir('tipo', v)}
             options={[
               { value: 'todos', label: 'Todos os tipos' },
+              { value: 'pcd', label: 'Acessibilidade (PcD)' },
               ...(Object.keys(TIPO_LABELS) as TipoProblema[]).map((t) => ({ value: t, label: TIPO_LABELS[t] })),
             ]}
           />
@@ -132,9 +135,21 @@ export function DashboardDenuncias({ denuncias, linhas, children }: Props) {
         )}
       </section>
 
-      <h3 className="pt-1 text-sm font-bold text-brand-green-dark">
-        {filtradas.length} {filtradas.length === 1 ? 'denúncia' : 'denúncias'}
-      </h3>
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <h3 className="text-sm font-bold text-brand-green-dark">
+          {filtradas.length} {filtradas.length === 1 ? 'denúncia' : 'denúncias'}
+        </h3>
+        <button
+          type="button"
+          className="chip-brand"
+          disabled={filtradas.length === 0}
+          onClick={() =>
+            baixarCsv(`denuncias-${new Date().toISOString().slice(0, 10)}.csv`, denunciasParaCsv(filtradas))
+          }
+        >
+          Baixar CSV ({filtradas.length})
+        </button>
+      </div>
       {children(daPagina)}
       <Paginacao pagina={paginaAtual} totalPaginas={totalPaginas} onChange={setPagina} />
     </div>

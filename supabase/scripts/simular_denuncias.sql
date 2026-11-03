@@ -14,7 +14,7 @@ with
     select
       -- A referência a g.n força a escolha de uma linha diferente a cada denúncia.
       (select id from linhas where g.n is not null order by random() limit 1),
-      (array['quebrado', 'acidente', 'atraso', 'lotacao', 'outro'])[1 + floor(random() * 5)::int],
+      (array['quebrado', 'acidente', 'atraso', 'lotacao', 'outro', 'pcd_elevador', 'pcd_espaco', 'pcd_motorista'])[1 + floor(random() * 8)::int],
       case when random() < 0.3 then 'resolvido' else 'pendente' end,
       '[SIMULADA] Denúncia de teste número ' || g.n,
       case when random() < 0.5 then (1000 + floor(random() * 9000))::int::text end,

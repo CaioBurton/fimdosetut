@@ -3,7 +3,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useDesktop } from '../../hooks/useDesktop'
 import { CabecalhoPagina } from '../ui/CabecalhoPagina'
 import { supabase } from '../../lib/supabaseClient'
-import { TIPO_LABELS, type Linha, type TipoProblema } from '../../types'
+import { ehAcessibilidade, TIPO_LABELS, type Linha, type TipoProblema } from '../../types'
 import { LinksLegais } from '../legal/LinksLegais'
 import { VERSAO_DOCUMENTOS } from '../../lib/legal'
 import { SecaoNumerada } from '../ui/SecaoNumerada'
@@ -90,6 +90,7 @@ export function DenunciaForm({
     onSuccess({ semConta: !user || isAnonymous })
   }
 
+  const destacarVeiculo = ehAcessibilidade(tipo)
   const rotulo = 'mb-1.5 block text-xs font-bold uppercase tracking-wide'
   const dica = erro === 'Marque a localização no mapa.' ? 'Sem o local, a denúncia não aparece no mapa.' : null
 
@@ -129,11 +130,17 @@ export function DenunciaForm({
           <span className={rotulo}>Linha</span>
           <LinhaSelect linhas={linhas} value={linhaId} onChange={setLinhaId} />
         </div>
-        <div>
+        <div
+          className={
+            destacarVeiculo
+              ? 'border-2 border-brand-green bg-brand-green/10 p-3 shadow-[3px_3px_0_#052d00]'
+              : undefined
+          }
+        >
           <label htmlFor="numero-veiculo" className={rotulo}>
             Número do veículo{' '}
             <span className="font-semibold normal-case tracking-normal text-brand-green-dark/70">
-              (opcional)
+              {destacarVeiculo ? '(importante)' : '(opcional)'}
             </span>
           </label>
           <input
@@ -146,7 +153,9 @@ export function DenunciaForm({
             className="input-brand"
           />
           <p className="mt-1.5 text-xs font-semibold text-brand-green-dark/70">
-            Está no painel ou na lateral do ônibus.
+            {destacarVeiculo
+              ? 'Com o número do ônibus dá para provar quais veículos estão sem acessibilidade. Está no painel ou na lateral.'
+              : 'Está no painel ou na lateral do ônibus.'}
           </p>
         </div>
       </SecaoNumerada>

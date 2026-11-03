@@ -1,4 +1,4 @@
-import type { Denuncia, TipoProblema, Zona } from '../types'
+import { ehAcessibilidade, type Denuncia, type TipoProblema, type Zona } from '../types'
 import {
   calcularEstatisticas,
   contarPorDia,
@@ -10,6 +10,22 @@ import {
 /** Quantidade de dias do gráfico "Por dia" (o último é hoje). */
 export const DIAS_GRAFICO = 14
 
+export interface ResumoAcessibilidade {
+  total: number
+  pendentes: number
+  porTipo: { chave: TipoProblema; total: number }[]
+  topLinhas: { linhaId: string; codigo: string; nome: string; total: number }[]
+  topVeiculos: { numero: string; total: number }[]
+}
+
+export const ACESSIBILIDADE_VAZIA: ResumoAcessibilidade = {
+  total: 0,
+  pendentes: 0,
+  porTipo: [],
+  topLinhas: [],
+  topVeiculos: [],
+}
+
 export interface ResumoPainel {
   total: number
   pendentes: number
@@ -19,6 +35,8 @@ export interface ResumoPainel {
   porZona: { chave: Zona; total: number }[]
   porTipo: { chave: TipoProblema; total: number }[]
   topLinhas: { linhaId: string; codigo: string; nome: string; total: number }[]
+  /** Problemas de acessibilidade (PcD) dentro do período e da zona escolhidos. */
+  acessibilidade: ResumoAcessibilidade
   porDia: { data: Date; total: number }[]
 }
 
@@ -30,6 +48,7 @@ export const RESUMO_VAZIO: ResumoPainel = {
   porZona: [],
   porTipo: [],
   topLinhas: [],
+  acessibilidade: ACESSIBILIDADE_VAZIA,
   porDia: [],
 }
 
@@ -43,6 +62,36 @@ export function diasDoPeriodo(periodo: Periodo): number | null {
   if (periodo === '7d') return 7
   if (periodo === '30d') return 30
   return null
+}
+
+function nomeLinha(l: { rotulo: string; linhaId: string; total: number }) {
+  const [codigo, ...resto] = l.rotulo.split(' - ')
+  return {
+    linhaId: l.linhaId,
+    codigo: resto.length ? codigo : '—',
+    nome: resto.length ? resto.join(' - ') : l.rotulo,
+    total: l.total,
+  }
+}
+
+function resumirAcessibilidade(filtradas: Denuncia[]): ResumoAcessibilidade {
+  const pcd = filtradas.filter((d) => ehAcessibilidade(d.tipo))
+  const stats = calcularEstatisticas(pcd)
+  const veiculos = new Map<string, number>()
+  for (const d of pcd) {
+    const numero = d.numero_veiculo?.trim().toUpperCase()
+    if (numero) veiculos.set(numero, (veiculos.get(numero) ?? 0) + 1)
+  }
+  return {
+    total: stats.total,
+    pendentes: stats.pendentes,
+    porTipo: stats.porTipo,
+    topLinhas: stats.topLinhas.map(nomeLinha),
+    topVeiculos: [...veiculos.entries()]
+      .map(([numero, total]) => ({ numero, total }))
+      .sort((a, b) => b.total - a.total || a.numero.localeCompare(b.numero))
+      .slice(0, 5),
+  }
 }
 
 /** Calcula o resumo no navegador, a partir das denúncias já carregadas (usado no admin). */
@@ -65,15 +114,8 @@ export function resumirDenuncias(
     hoje: porDia[porDia.length - 1]?.total ?? 0,
     porZona: stats.porZona,
     porTipo: stats.porTipo,
-    topLinhas: stats.topLinhas.map((l) => {
-      const [codigo, ...resto] = l.rotulo.split(' - ')
-      return {
-        linhaId: l.linhaId,
-        codigo: resto.length ? codigo : '—',
-        nome: resto.length ? resto.join(' - ') : l.rotulo,
-        total: l.total,
-      }
-    }),
+    topLinhas: stats.topLinhas.map(nomeLinha),
+    acessibilidade: resumirAcessibilidade(filtradas),
     porDia: porDia.map((d) => ({ data: d.data, total: d.total })),
   }
 }
@@ -85,6 +127,13 @@ interface RespostaRpc {
   porZona: { chave: Zona; total: number }[]
   porTipo: { chave: TipoProblema; total: number }[]
   topLinhas: { linhaId: string | null; codigo: string | null; nome: string | null; total: number }[]
+  acessibilidade?: {
+    total: number
+    pendentes: number
+    porTipo: { chave: TipoProblema; total: number }[]
+    topLinhas: { linhaId: string | null; codigo: string | null; nome: string | null; total: number }[]
+    topVeiculos: { numero: string; total: number }[]
+  }
   porDia: { dia: string; total: number }[]
 }
 
@@ -108,6 +157,18 @@ export function resumoDaRpc(r: RespostaRpc): ResumoPainel {
       nome: l.nome ?? 'Linha removida',
       total: l.total,
     })),
+    acessibilidade: {
+      total: r.acessibilidade?.total ?? 0,
+      pendentes: r.acessibilidade?.pendentes ?? 0,
+      porTipo: r.acessibilidade?.porTipo ?? [],
+      topLinhas: (r.acessibilidade?.topLinhas ?? []).map((l) => ({
+        linhaId: l.linhaId ?? '',
+        codigo: l.codigo ?? '—',
+        nome: l.nome ?? 'Linha removida',
+        total: l.total,
+      })),
+      topVeiculos: r.acessibilidade?.topVeiculos ?? [],
+    },
     porDia,
   }
 }
