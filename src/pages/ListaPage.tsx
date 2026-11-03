@@ -8,7 +8,8 @@ import { LinhaSelect } from '../components/denuncia/LinhaSelect'
 import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { useConfirmacoes } from '../hooks/useConfirmacoes'
-import { DIAS_PADRAO, useDenuncias } from '../hooks/useDenuncias'
+import { useDenuncias } from '../hooks/useDenuncias'
+import { diaLocal, diaMinimo, hoje } from '../lib/dia'
 import { useLinhas } from '../hooks/useLinhas'
 import { ehAcessibilidade, TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Denuncia, type TipoProblema, type Zona } from '../types'
 
@@ -17,17 +18,6 @@ const TIPOS = Object.keys(TIPO_LABELS) as TipoProblema[]
 
 const ORDEM_ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
 
-// Data local no formato yyyy-mm-dd, o mesmo valor do <input type="date">.
-function diaLocal(iso: string) {
-  const data = new Date(iso)
-  const mes = String(data.getMonth() + 1).padStart(2, '0')
-  const dia = String(data.getDate()).padStart(2, '0')
-  return `${data.getFullYear()}-${mes}-${dia}`
-}
-
-const hoje = () => diaLocal(new Date().toISOString())
-// A lista só carrega os últimos DIAS_PADRAO dias; datas anteriores ficariam sempre vazias.
-const diaMinimo = () => diaLocal(new Date(Date.now() - DIAS_PADRAO * 24 * 60 * 60 * 1000).toISOString())
 
 export function ListaPage() {
   const { linhas } = useLinhas()
