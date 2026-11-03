@@ -1,10 +1,11 @@
-import type { Denuncia, StatusDenuncia, TipoProblema, Zona } from '../types'
+import { ehAcessibilidade, type Denuncia, type StatusDenuncia, type TipoProblema, type Zona } from '../types'
 
 export type Periodo = 'todos' | 'hoje' | '7d' | '30d'
 
 export interface FiltrosDashboard {
   zona: Zona | 'todas'
-  tipo: TipoProblema | 'todos'
+  /** 'pcd' junta os três tipos de acessibilidade. */
+  tipo: TipoProblema | 'pcd' | 'todos'
   status: StatusDenuncia | 'todos'
   periodo: Periodo
   linhaId: string
@@ -50,7 +51,9 @@ export function filtrarDenuncias(
 
   return denuncias.filter((d) => {
     if (filtros.zona !== 'todas' && (d.linha?.zona ?? 'outras') !== filtros.zona) return false
-    if (filtros.tipo !== 'todos' && d.tipo !== filtros.tipo) return false
+    if (filtros.tipo === 'pcd') {
+      if (!ehAcessibilidade(d.tipo)) return false
+    } else if (filtros.tipo !== 'todos' && d.tipo !== filtros.tipo) return false
     if (filtros.status !== 'todos' && d.status !== filtros.status) return false
     if (filtros.linhaId && d.linha_id !== filtros.linhaId) return false
     if (inicio && new Date(d.created_at) < inicio) return false
