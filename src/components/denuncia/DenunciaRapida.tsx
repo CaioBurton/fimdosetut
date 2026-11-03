@@ -23,7 +23,11 @@ function BotaoFecharCard({ onClick }: { onClick: () => void }) {
   )
 }
 
-const TIPOS = Object.keys(TIPO_LABELS) as TipoProblema[]
+// "Outro" fica sempre por último.
+const TIPOS: TipoProblema[] = [
+  ...(Object.keys(TIPO_LABELS) as TipoProblema[]).filter((t) => t !== 'pcd_espaco' && t !== 'outro'),
+  'outro',
+]
 
 type Gps =
   | { estado: 'parado' }
@@ -43,6 +47,7 @@ export function DenunciaRapida({ linhas }: { linhas: Linha[] }) {
   const { linhaIds, loading } = usePerfilUsuario(logado ? user.id : undefined)
   const [linhaId, setLinhaId] = useState<string | null>(null)
   const [tipo, setTipo] = useState<TipoProblema | null>(null)
+  const [outroTexto, setOutroTexto] = useState('')
   const [gps, setGps] = useState<Gps>({ estado: 'parado' })
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
@@ -110,6 +115,7 @@ export function DenunciaRapida({ linhas }: { linhas: Linha[] }) {
   function fechar() {
     setLinhaId(null)
     setTipo(null)
+    setOutroTexto('')
     setErro(null)
   }
 
@@ -120,7 +126,10 @@ export function DenunciaRapida({ linhas }: { linhas: Linha[] }) {
     const { error } = await supabase.rpc('criar_denuncia', {
       p_linha_id: linhaId,
       p_tipo: tipo,
-      p_descricao: `Denúncia rápida: ${TIPO_LABELS[tipo].toLowerCase()}.`,
+      p_descricao:
+        tipo === 'outro' && outroTexto.trim()
+          ? outroTexto.trim()
+          : `Denúncia rápida: ${TIPO_LABELS[tipo].toLowerCase()}.`,
       p_numero_veiculo: null,
       p_latitude: gps.lat,
       p_longitude: gps.lng,
@@ -192,6 +201,24 @@ export function DenunciaRapida({ linhas }: { linhas: Linha[] }) {
               </button>
             ))}
           </div>
+
+          {tipo === 'outro' && (
+            <div className="anim-abre">
+              <label htmlFor="outro-rapida" className="mb-1 block text-xs font-bold text-brand-green-dark">
+                O que aconteceu?{' '}
+                <span className="font-semibold text-brand-green-dark/70">(opcional)</span>
+              </label>
+              <textarea
+                id="outro-rapida"
+                value={outroTexto}
+                onChange={(e) => setOutroTexto(e.target.value)}
+                rows={3}
+                maxLength={500}
+                placeholder="Descreva o problema..."
+                className="input-brand !py-3"
+              />
+            </div>
+          )}
 
           <p role="status" className="text-xs font-semibold text-brand-green-dark/80">
             {gps.estado === 'buscando' && <span aria-hidden="true" className="gps-ponto gps-ponto-buscando" />}

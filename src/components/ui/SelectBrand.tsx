@@ -64,7 +64,7 @@ export function SelectBrand<T extends string>({ label, value, options, onChange 
 
       {aberto && (
         <div className="card-brand anim-abre absolute inset-x-0 top-full z-[1000] mt-2 overflow-hidden !bg-brand-cream">
-          <div id={listaId} role="listbox" aria-label={label}>
+          <div id={listaId} role="listbox" aria-label={label} className="scroll-visivel-claro max-h-[260px] overflow-y-auto overscroll-contain">
             {options.map((o) => {
               const ativo = o.value === value
               return (

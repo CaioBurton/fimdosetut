@@ -122,7 +122,7 @@ export function LinhaSelect({ linhas, value, onChange, placeholder = 'Selecione 
               className="input-brand !min-h-11 !text-sm"
             />
           </div>
-          <div id={listaId} role="listbox" aria-label="Linhas" className="overflow-y-auto">
+          <div id={listaId} role="listbox" aria-label="Linhas" className="scroll-visivel-claro overflow-y-auto overscroll-contain">
             {grupos.length === 0 && (
               <p className="p-4 text-center text-sm text-brand-green-dark/70">
                 Nenhuma linha encontrada.

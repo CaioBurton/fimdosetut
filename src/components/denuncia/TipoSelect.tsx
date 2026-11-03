@@ -143,7 +143,12 @@ export function TipoSelect({ value, onChange }: TipoSelectProps) {
 
       {aberto && (
         <div className="card-brand absolute inset-x-0 top-full z-[1000] mt-2 overflow-hidden !bg-brand-cream">
-          <div id={listaId} role="listbox" aria-label="Tipos de problema">
+          <div
+            id={listaId}
+            role="listbox"
+            aria-label="Tipos de problema"
+            className="scroll-visivel-claro max-h-[260px] overflow-y-auto overscroll-contain"
+          >
             {TIPOS.map((tipo) => {
               const ativo = tipo === value
               return (
