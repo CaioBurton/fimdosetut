@@ -12,6 +12,7 @@ import {
 import { agruparDenuncias, normalizarVeiculo } from '../../lib/agruparDenuncias'
 import { criarIconeZona } from './markerIcon'
 import { BotaoMinhaLocalizacao } from './BotaoMinhaLocalizacao'
+import { BotaoCalendario } from './BotaoCalendario'
 
 const TERESINA_CENTER: [number, number] = [-5.0892, -42.8019]
 const ZONAS_FILTRO: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
@@ -108,8 +109,11 @@ export function MapaDenuncias({
   semFiltroZona = false,
   acoesSelecionada,
   focoId,
+  seletorDia,
 }: {
   denuncias: Denuncia[]
+  /** Botão de calendário (dia das denúncias), exibido acima do botão de localização. */
+  seletorDia?: { dia: string; onChange: (dia: string) => void; min: string; max: string }
   /** Ações extras no cartão da denúncia selecionada (ex.: o botão "Também vi"). */
   acoesSelecionada?: (denuncia: Denuncia) => ReactNode
   /** No desktop o filtro fica fora do mapa e a legenda das zonas aparece no lugar. */
@@ -253,7 +257,21 @@ export function MapaDenuncias({
           semFiltroZona ? 'bottom-[5.5rem]' : 'bottom-3.5'
         }`}
       >
-      <CentralizarNaMinhaLocalizacao map={mapa} onLocalizado={setMinhaPosicao} />
+      <div className="pointer-events-auto flex flex-col items-end gap-2.5">
+        {seletorDia && (
+          <div
+            ref={(el) => {
+              if (el) {
+                L.DomEvent.disableClickPropagation(el)
+                L.DomEvent.disableScrollPropagation(el)
+              }
+            }}
+          >
+            <BotaoCalendario {...seletorDia} />
+          </div>
+        )}
+        <CentralizarNaMinhaLocalizacao map={mapa} onLocalizado={setMinhaPosicao} />
+      </div>
       {selecionada && (
         <div className="card-brand anim-cartao pointer-events-auto flex w-full flex-col gap-2.5 !bg-brand-cream p-3.5">
           <div className="flex items-center gap-3">

@@ -8,6 +8,7 @@ import { useConfirmacoes } from '../hooks/useConfirmacoes'
 import { useDenuncias } from '../hooks/useDenuncias'
 import { useDesktop } from '../hooks/useDesktop'
 import { useLinhas } from '../hooks/useLinhas'
+import { diaLocal, diaMinimo, hoje } from '../lib/dia'
 import { STATUS_LABELS, TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Denuncia, type Zona } from '../types'
 
 const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
@@ -31,11 +32,12 @@ export function MapaPage() {
   const [busca, setBusca] = useState('')
   const [status, setStatus] = useState<Denuncia['status'] | 'todas'>('todas')
 
-  const denuncias = useMemo(() => {
-    const inicioDoDia = new Date()
-    inicioDoDia.setHours(0, 0, 0, 0)
-    return todas.filter((d) => new Date(d.created_at) >= inicioDoDia || d.id === focoId)
-  }, [todas, focoId])
+  const [dia, setDia] = useState(hoje)
+
+  const denuncias = useMemo(
+    () => todas.filter((d) => diaLocal(d.created_at) === dia || d.id === focoId),
+    [todas, dia, focoId]
+  )
 
   // No desktop, a busca por linha e o filtro de status ficam sobre o mapa.
   const visiveis = useMemo(() => {
@@ -78,6 +80,7 @@ export function MapaPage() {
               denuncias={visiveis}
               semFiltroZona={desktop}
               focoId={focoId}
+              seletorDia={{ dia, onChange: setDia, min: diaMinimo(), max: hoje() }}
               acoesSelecionada={(d) => (
                 <BotaoTambemVi
                   total={d.confirmacoes ?? 0}
@@ -149,7 +152,7 @@ export function MapaPage() {
                 <p className="mt-1.5 text-sm font-medium text-[#2f5a28]">Atualiza em tempo real</p>
               </div>
               {visiveis.length === 0 && (
-                <p className="py-6 text-center text-brand-green-dark/70">Nenhuma denúncia hoje.</p>
+                <p className="py-6 text-center text-brand-green-dark/70">{dia === hoje() ? 'Nenhuma denúncia hoje.' : 'Nenhuma denúncia neste dia.'}</p>
               )}
               {visiveis.map((d) => {
                 const zona = d.linha?.zona ?? 'outras'
