@@ -40,7 +40,7 @@ export function DenunciaCard({ denuncia, actions }: { denuncia: Denuncia; action
         )}
       </div>
       <p className="mt-2 text-sm text-brand-green-dark/90">{denuncia.descricao}</p>
-      {actions && <div className="mt-3 flex gap-2">{actions}</div>}
+      {actions && <div className="mt-3 flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   )
 }

@@ -11,8 +11,8 @@ Qualquer pessoa vê o mapa, a lista e o painel de denúncias. Para registrar uma
 | Tela | Rota | Quem acessa |
 | --- | --- | --- |
 | Mapa com as denúncias do dia (tempo real), botão "Também vi" e denúncia rápida em 3 toques (linha favorita, problema, enviar; GPS automático) | `/` | todos |
-| Lista de denúncias, com filtros por zona, linha, dia, status e tipo, e botão "Também vi" (confirmar com conta) | `/denuncias` | todos |
-| Painel público com totais, gráfico por dia, zonas e linhas mais citadas | `/painel` | todos |
+| Lista de denúncias, com filtros por zona, linha, dia, status e tipo, botão "Também vi" (confirmar com conta) e "Compartilhar" (imagem para Instagram e WhatsApp) | `/denuncias` | todos |
+| Painel público com totais, gráfico por dia, zonas e linhas mais citadas, e "Compartilhar ranking" (imagem) | `/painel` | todos |
 | Nova denúncia (linha, tipo, descrição e local no mapa). Dá para enviar a primeira sem cadastro e criar a conta depois | `/nova` | todos |
 | Perfil: nome, linhas que a pessoa pega, minhas denúncias, feedback, baixar meus dados e excluir a conta | `/minhas` | quem tem conta |
 | Entrar e Criar conta | `/login`, `/cadastro` | todos |
@@ -95,6 +95,10 @@ Para virar admin, ajuste o papel da conta em `profiles` (`role = 'admin'`) pelo 
 O template do e-mail de confirmação, no estilo do app, está em `supabase/templates/confirmacao-email.html`. No Supabase, vá em **Authentication → Emails → Confirm signup** e cole o conteúdo (assunto sugerido: `Confirme seu e-mail — Deu o Prego!`). A variável `{{ .ConfirmationURL }}` é preenchida pelo Supabase.
 
 O e-mail padrão do Supabase tem limite baixo de envios por hora. Para uso real, configure um SMTP próprio em **Project Settings → Authentication → SMTP**.
+
+## Cartões compartilháveis
+
+O botão **Compartilhar** (na lista, no cartão do mapa e no ranking do painel) gera uma imagem PNG 1080×1350 (formato 4:5 do feed do Instagram, que também serve para o WhatsApp) com a identidade visual do Fórum. A imagem é desenhada no próprio navegador, num `<canvas>`, sem enviar nada a servidor, e só leva dados que já são públicos (nunca a autoria). No celular abre o compartilhamento do sistema (Instagram, WhatsApp...); no computador baixa o arquivo. O desenho fica em `src/lib/cartaoCompartilhavel.ts`.
 
 ## Privacidade e LGPD
 
