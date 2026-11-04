@@ -13,7 +13,7 @@ export interface LinhaEmAlta {
   pendentes: number
 }
 
-const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
+const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'outras']
 const numero = (valor: unknown) => (typeof valor === 'number' && Number.isFinite(valor) ? valor : 0)
 
 /** Converte a resposta da função `ranking_linhas_semana` (nunca confia no formato). */
