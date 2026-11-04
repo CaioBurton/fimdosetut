@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createChainable, createSupabaseMock } from '../test/supabaseMock'
 import { supabase } from '../lib/supabaseClient'
 import type { Linha } from '../types'
-import { DIAS_PADRAO, limparCacheDenuncias, useDenuncias } from './useDenuncias'
+import { DIAS_PADRAO, janelaDoDia, limparCacheDenuncias, useDenuncias } from './useDenuncias'
 
 vi.mock('../lib/supabaseClient', () => ({ supabase: createSupabaseMock() }))
 
@@ -309,5 +309,112 @@ describe('useDenuncias (cache entre páginas)', () => {
     const segundo = renderHook(() => useDenuncias(linhas))
     expect(segundo.result.current.loading).toBe(false)
     expect(vi.mocked(supabase.from).mock.calls.length).toBe(consultas)
+  })
+
+  describe('modo "um dia só" (mapa)', () => {
+    const denunciaDoDia = (id: string, criada: string) => ({
+      id,
+      linha_id: 'l1',
+      tipo: 'quebrado',
+      status: 'pendente',
+      descricao: 'teste',
+      latitude: -5.09,
+      longitude: -42.8,
+      created_at: criada,
+      updated_at: criada,
+    })
+
+    it('janelaDoDia vai da meia-noite local até a meia-noite seguinte', () => {
+      const { desde, ate } = janelaDoDia('2026-11-02')
+
+      expect(new Date(desde).getHours()).toBe(0)
+      expect(new Date(desde).getDate()).toBe(2)
+      expect(new Date(ate).getDate()).toBe(3)
+      expect(new Date(ate).getTime() - new Date(desde).getTime()).toBeGreaterThanOrEqual(23 * 60 * 60 * 1000)
+    })
+
+    it('pede ao banco só o dia escolhido, e não os últimos dias', async () => {
+      const consulta = createChainable({ data: [], error: null })
+      vi.mocked(supabase.from).mockReturnValue(consulta as never)
+      mockChannelComHandlers()
+
+      const { result } = renderHook(() => useDenuncias(linhas, DIAS_PADRAO, false, '2026-11-02'))
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      const { desde, ate } = janelaDoDia('2026-11-02')
+      expect(consulta.gte).toHaveBeenCalledWith('created_at', desde)
+      expect(consulta.lt).toHaveBeenCalledWith('created_at', ate)
+    })
+
+    it('ao trocar de dia busca o novo dia, sem voltar ao "carregando" da primeira vez', async () => {
+      const dia1 = createChainable({ data: [denunciaDoDia('d1', new Date(2026, 10, 2, 9).toISOString())], error: null })
+      const dia2 = createChainable({ data: [denunciaDoDia('d2', new Date(2026, 10, 1, 9).toISOString())], error: null })
+      vi.mocked(supabase.from)
+        .mockReturnValueOnce(dia1 as never)
+        .mockReturnValueOnce(dia2 as never)
+      mockChannelComHandlers()
+
+      const { result, rerender } = renderHook(({ dia }) => useDenuncias(linhas, DIAS_PADRAO, false, dia), {
+        initialProps: { dia: '2026-11-02' },
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.denuncias.map((d) => d.id)).toEqual(['d1'])
+      expect(result.current.atualizando).toBe(false)
+
+      rerender({ dia: '2026-11-01' })
+
+      expect(result.current.loading).toBe(false)
+      await waitFor(() => expect(result.current.denuncias.map((d) => d.id)).toEqual(['d2']))
+      expect(result.current.atualizando).toBe(false)
+      expect(dia2.gte).toHaveBeenCalledWith('created_at', janelaDoDia('2026-11-01').desde)
+    })
+
+    it('voltar a um dia já visto usa o cache, sem nova consulta', async () => {
+      const dia1 = createChainable({ data: [denunciaDoDia('d1', new Date(2026, 10, 2, 9).toISOString())], error: null })
+      const dia2 = createChainable({ data: [], error: null })
+      vi.mocked(supabase.from).mockReturnValueOnce(dia1 as never).mockReturnValueOnce(dia2 as never)
+      mockChannelComHandlers()
+
+      const { result, rerender } = renderHook(({ dia }) => useDenuncias(linhas, DIAS_PADRAO, false, dia), {
+        initialProps: { dia: '2026-11-02' },
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      rerender({ dia: '2026-11-01' })
+      await waitFor(() => expect(result.current.atualizando).toBe(false))
+      rerender({ dia: '2026-11-02' })
+
+      await waitFor(() => expect(result.current.denuncias.map((d) => d.id)).toEqual(['d1']))
+      expect(vi.mocked(supabase.from)).toHaveBeenCalledTimes(2)
+    })
+
+    it('denúncia nova de outro dia (realtime) não entra no dia escolhido', async () => {
+      vi.mocked(supabase.from).mockReturnValue(createChainable({ data: [], error: null }) as never)
+      const handlers = mockChannelComHandlers()
+
+      const { result } = renderHook(() => useDenuncias(linhas, DIAS_PADRAO, false, '2026-11-02'))
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      act(() => handlers.INSERT({ new: denunciaDoDia('fora', new Date(2026, 10, 3, 10).toISOString()) }))
+      expect(result.current.denuncias).toHaveLength(0)
+
+      act(() => handlers.INSERT({ new: denunciaDoDia('dentro', new Date(2026, 10, 2, 10).toISOString()) }))
+      expect(result.current.denuncias.map((d) => d.id)).toEqual(['dentro'])
+    })
+
+    it('se a busca do novo dia falhar, não mostra as denúncias do dia anterior', async () => {
+      const dia1 = createChainable({ data: [denunciaDoDia('d1', new Date(2026, 10, 2, 9).toISOString())], error: null })
+      const falha = createChainable({ data: null, error: { message: 'x' } })
+      vi.mocked(supabase.from).mockReturnValueOnce(dia1 as never).mockReturnValueOnce(falha as never)
+      mockChannelComHandlers()
+
+      const { result, rerender } = renderHook(({ dia }) => useDenuncias(linhas, DIAS_PADRAO, false, dia), {
+        initialProps: { dia: '2026-11-02' },
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      rerender({ dia: '2026-11-01' })
+
+      await waitFor(() => expect(result.current.error).toMatch(/Não foi possível carregar/))
+      expect(result.current.denuncias).toHaveLength(0)
+    })
   })
 })
