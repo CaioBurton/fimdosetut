@@ -215,7 +215,7 @@ export function ListaPage() {
                     carregando={confirmando.has(denuncia.id)}
                     onClick={() => alternar(denuncia.id)}
                   />
-                  <Link to="/" state={{ denunciaId: denuncia.id }} className="chip-brand">
+                  <Link to="/" state={{ denunciaId: denuncia.id, dia: diaLocal(denuncia.created_at) }} className="chip-brand">
                     Ver no mapa
                   </Link>
                   <BotaoCompartilharDenuncia denuncia={denuncia} />

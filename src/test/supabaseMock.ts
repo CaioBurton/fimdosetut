@@ -18,6 +18,7 @@ export function createChainable(result: QueryResult) {
     limit: vi.fn(() => chain),
     range: vi.fn(() => chain),
     gte: vi.fn(() => chain),
+    lt: vi.fn(() => chain),
     eq: vi.fn(() => chain),
     maybeSingle: vi.fn(() => chain),
     single: vi.fn(() => chain),

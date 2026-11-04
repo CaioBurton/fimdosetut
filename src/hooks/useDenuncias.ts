@@ -12,13 +12,14 @@ const COLUNAS =
 // para não cortar as denúncias mais antigas sem avisar.
 const TAMANHO_PAGINA = 1000
 
-async function buscarTodasDenuncias(desde: string | null, apenasMinhas: boolean) {
+async function buscarTodasDenuncias(desde: string | null, ate: string | null, apenasMinhas: boolean) {
   const todas: Denuncia[] = []
   for (let inicio = 0; ; inicio += TAMANHO_PAGINA) {
     // `minhas_denuncias` é uma visão do banco com só as denúncias de quem está logado: a autoria
     // não é pública, então o app não filtra por usuário no cliente.
     let consulta = supabase.from(apenasMinhas ? 'minhas_denuncias' : 'denuncias').select(COLUNAS)
     if (desde) consulta = consulta.gte('created_at', desde)
+    if (ate) consulta = consulta.lt('created_at', ate)
     const { data, error } = await consulta
       .order('created_at', { ascending: false })
       .order('id')
@@ -37,6 +38,23 @@ async function buscarTodasDenuncias(desde: string | null, apenasMinhas: boolean)
  */
 export const DIAS_PADRAO = 14
 
+/** Dia local `yyyy-mm-dd` de um instante ISO (o mesmo que `diaLocal` de `lib/dia`, sem importá-lo: ele importa este arquivo). */
+function diaLocalDe(iso: string) {
+  const data = new Date(iso)
+  const mes = String(data.getMonth() + 1).padStart(2, '0')
+  const d = String(data.getDate()).padStart(2, '0')
+  return `${data.getFullYear()}-${mes}-${d}`
+}
+
+/** Início do dia local `yyyy-mm-dd` (o mesmo valor do <input type="date">) e do dia seguinte, em ISO. */
+export function janelaDoDia(dia: string) {
+  const [ano, mes, d] = dia.split('-').map(Number)
+  return {
+    desde: new Date(ano, mes - 1, d).toISOString(),
+    ate: new Date(ano, mes - 1, d + 1).toISOString(),
+  }
+}
+
 // Cache em memória (vale enquanto a aba estiver aberta): trocar de página (Mapa ↔ Lista) reaproveita
 // as denúncias já baixadas em vez de buscar tudo de novo. O tempo real mantém o cache atualizado
 // enquanto uma página que usa o hook estiver aberta.
@@ -50,22 +68,29 @@ export function limparCacheDenuncias() {
 registrarLimpezaDeCache(limparCacheDenuncias)
 
 /**
- * Carrega as denúncias dos últimos `dias` dias (padrão 30). Passe `null` para carregar
+ * Carrega as denúncias dos últimos `dias` dias (padrão 14). Passe `null` para carregar
  * todo o histórico (usado no painel admin e em "minhas denúncias"). Com `apenasMinhas`, busca só
  * as denúncias de quem está logado (visão `minhas_denuncias`); a autoria nunca vem na denúncia.
+ *
+ * Com `dia` (`yyyy-mm-dd`, dia local), busca SÓ as denúncias daquele dia e ignora `dias`: é o que o
+ * mapa usa, para não baixar duas semanas de denúncias quando só mostra um dia. Trocar o `dia`
+ * busca o novo dia (com `atualizando` ligado) sem perder os dados já na tela.
  */
 export function useDenuncias(
   linhas: Linha[],
   dias: number | null = DIAS_PADRAO,
-  apenasMinhas = false
+  apenasMinhas = false,
+  dia?: string
 ) {
   // Denúncias sem a linha anexada: a linha é ligada abaixo, pelo `linha_id`, assim a lista
   // se completa sozinha quando as linhas terminam de carregar.
-  const chave = `${dias ?? 'tudo'}|${apenasMinhas}`
+  const chave = `${dia ? `dia:${dia}` : (dias ?? 'tudo')}|${apenasMinhas}`
   const emCache = cache.get(chave)
   const cacheValido = !!emCache && Date.now() - emCache.em < VALIDADE_CACHE_MS
   const [brutas, setBrutas] = useState<Denuncia[]>(cacheValido ? emCache.dados : [])
+  // `loading`: ainda não chegou nenhum dado. `chaveDosDados`: de qual consulta é o que está na tela.
   const [loading, setLoading] = useState(!cacheValido)
+  const [chaveDosDados, setChaveDosDados] = useState(cacheValido ? chave : '')
   const [error, setError] = useState<string | null>(null)
 
   // Aplica uma mudança à lista e ao cache, para o próximo uso do hook já vir atualizado.
@@ -93,28 +118,36 @@ export function useDenuncias(
     const guardado = cache.get(chave)
     if (guardado && Date.now() - guardado.em < VALIDADE_CACHE_MS) {
       setBrutas(guardado.dados)
+      setChaveDosDados(chave)
+      setError(null)
       setLoading(false)
       return
     }
 
+    const janela = dia ? janelaDoDia(dia) : null
     const desde =
-      dias === null ? null : new Date(Date.now() - dias * 24 * 60 * 60 * 1000).toISOString()
+      janela?.desde ??
+      (dias === null ? null : new Date(Date.now() - dias * 24 * 60 * 60 * 1000).toISOString())
 
-    buscarTodasDenuncias(desde, apenasMinhas).then(({ data, error }) => {
+    buscarTodasDenuncias(desde, janela?.ate ?? null, apenasMinhas).then(({ data, error }) => {
       if (!active) return
       if (error || !data) {
         setError('Não foi possível carregar as denúncias. Verifique sua conexão.')
+        // Sem dados novos: ao trocar de dia, a tela não mostra o dia anterior como se fosse o atual.
+        setBrutas([])
       } else {
+        setError(null)
         cache.set(chave, { dados: data, em: Date.now() })
         setBrutas(data)
       }
+      setChaveDosDados(chave)
       setLoading(false)
     })
 
     return () => {
       active = false
     }
-  }, [dias, apenasMinhas, chave])
+  }, [dias, dia, apenasMinhas, chave])
 
   useEffect(() => {
     const canal = supabase
@@ -145,6 +178,8 @@ export function useDenuncias(
         { event: 'INSERT', schema: 'public', table: 'denuncias' },
         (payload) => {
           const nova = payload.new as Denuncia
+          // Vendo um dia específico, denúncia de outro dia não entra na lista.
+          if (dia && diaLocalDe(nova.created_at) !== dia) return
           aplicar((atual) => (atual.some((d) => d.id === nova.id) ? atual : [nova, ...atual]))
         }
       )
@@ -155,12 +190,15 @@ export function useDenuncias(
     return () => {
       supabase.removeChannel(canal)
     }
-  }, [apenasMinhas, aplicar])
+  }, [apenasMinhas, aplicar, dia])
 
   /** Atualiza campos de uma denúncia já carregada (ex.: o total de confirmações, sem esperar o tempo real). */
   const atualizarDenuncia = useCallback((id: string, campos: Partial<Denuncia>) => {
     aplicar((atual) => atual.map((d) => (d.id === id ? { ...d, ...campos } : d)))
   }, [aplicar])
 
-  return { denuncias, loading, error, atualizarDenuncia }
+  // Buscando outra consulta (ex.: outro dia) enquanto os dados da anterior ainda estão na tela.
+  const atualizando = !loading && chaveDosDados !== chave
+
+  return { denuncias, loading, atualizando, error, atualizarDenuncia }
 }
