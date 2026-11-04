@@ -35,7 +35,6 @@ describe('LinhaDaSemana', () => {
     expect(within(secao).getByText('103')).toBeInTheDocument()
     expect(within(secao).getByText('Zona Norte')).toBeInTheDocument()
     expect(within(secao).getByText(/12 denúncias de 8 pessoas/)).toBeInTheDocument()
-    expect(within(secao).getByText(/5 pendentes/)).toBeInTheDocument()
     expect(within(secao).getByText(/20 confirmações/)).toBeInTheDocument()
     expect(supabase.rpc).toHaveBeenCalledWith('ranking_linhas_semana', { p_limite: 3 })
   })
@@ -55,7 +54,6 @@ describe('LinhaDaSemana', () => {
     render(<LinhaDaSemana />)
 
     expect(await screen.findByText(/1 denúncia de 1 pessoa/)).toBeInTheDocument()
-    expect(screen.getByText(/1 pendente/)).toBeInTheDocument()
     expect(screen.getByText(/1 confirmação/)).toBeInTheDocument()
   })
 

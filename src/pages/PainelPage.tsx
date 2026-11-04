@@ -18,13 +18,7 @@ export function PainelPage() {
   return (
     <AppLayout title="Painel">
       <div className="space-y-5 p-4 lg:p-0">
-        {desktop ? (
-          <CabecalhoPagina titulo="Painel" subtitulo="Como anda o transporte público, segundo quem usa" />
-        ) : (
-          <p className="text-sm font-medium text-brand-green-dark/80">
-            Veja como está o transporte público de Teresina, a partir das denúncias de quem usa.
-          </p>
-        )}
+        {desktop && <CabecalhoPagina titulo="Painel" subtitulo="Como anda o transporte público, segundo quem usa" />}
         {error && (
           <p role="alert" className="text-center text-sm font-semibold text-zona-leste">
             {error}

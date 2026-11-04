@@ -66,11 +66,16 @@ export function Selos() {
 
   return (
     <section aria-label="Meus selos" className="space-y-3">
-      <TituloSecao>Meus selos</TituloSecao>
-      <p className="text-[13px] font-medium leading-snug text-brand-green-dark/80">
-        Só você vê estes selos. Eles nascem de denúncias que outras pessoas confirmaram com “Também vi”,
-        e não de quantas você enviou. Não existe ranking de pessoas.
-      </p>
+      <TituloSecao
+        dica={
+          <>
+            Só você vê estes selos. Eles nascem de denúncias que outras pessoas confirmaram com “Também vi”,
+            e não de quantas você enviou. Não existe ranking de pessoas.
+          </>
+        }
+      >
+        Meus selos
+      </TituloSecao>
 
       {error && <p role="alert" className="text-sm font-semibold text-zona-leste">{error}</p>}
       {loading && <p className="text-sm text-brand-green-dark/60">Carregando...</p>}

@@ -15,8 +15,7 @@ function Destaque({ linha }: { linha: LinhaEmAlta }) {
           Zona {ZONA_LABELS[linha.zona]}
         </p>
         <p className="mt-2 text-sm font-medium">
-          {plural(linha.denuncias, 'denúncia', 'denúncias')} de {plural(linha.pessoas, 'pessoa', 'pessoas')} ·{' '}
-          {plural(linha.pendentes, 'pendente', 'pendentes')}
+          {plural(linha.denuncias, 'denúncia', 'denúncias')} de {plural(linha.pessoas, 'pessoa', 'pessoas')}
           {linha.confirmacoes > 0 && <> · {plural(linha.confirmacoes, 'confirmação', 'confirmações')}</>}
         </p>
       </div>
@@ -45,7 +44,27 @@ export function LinhaDaSemana() {
       />
       <div className="relative space-y-3">
         <p className="text-xs font-bold uppercase tracking-wider">Últimos 7 dias</p>
-        <h2 className="ttl text-3xl">Linha mais problemática da semana</h2>
+        <div className="flex items-start gap-2">
+          <h2 className="ttl text-3xl">Linha mais problemática da semana</h2>
+          <span className="group relative mt-1 shrink-0">
+            <button
+              type="button"
+              aria-label="Como funciona"
+              aria-describedby="dica-linha-semana"
+              className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-brand-cream text-xs font-bold leading-none"
+            >
+              ?
+            </button>
+            <span
+              id="dica-linha-semana"
+              role="tooltip"
+              className="pointer-events-none absolute right-0 top-full z-10 mt-2 hidden w-64 max-w-[calc(100vw-6rem)] rounded-[2px] bg-brand-green-dark px-3 py-2 text-left text-xs font-semibold leading-snug text-brand-cream shadow-lg group-hover:block group-focus-within:block"
+            >
+              Conta as denúncias dos últimos 7 dias. Entram só linhas denunciadas por 2 ou mais pessoas diferentes.
+              O ranking é de linhas, não de pessoas.
+            </span>
+          </span>
+        </div>
 
         {loading && <p className="text-sm font-medium">Carregando...</p>}
         {!loading && error && <p role="alert" className="text-sm font-medium">Não foi possível carregar o ranking.</p>}
@@ -74,11 +93,6 @@ export function LinhaDaSemana() {
             </ol>
           </div>
         )}
-
-        <p className="text-xs font-medium text-brand-cream/80">
-          Conta as denúncias dos últimos 7 dias. Entram só linhas denunciadas por 2 ou mais pessoas diferentes.
-          O ranking é de linhas, não de pessoas.
-        </p>
       </div>
     </section>
   )
