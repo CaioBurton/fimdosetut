@@ -74,6 +74,25 @@ describe('PainelPage (público)', () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível carregar o painel')
+    const avisos = await screen.findAllByRole('alert')
+    expect(avisos.some((a) => a.textContent?.includes('Não foi possível carregar o painel'))).toBe(true)
+  })
+
+  it('mostra a linha mais problemática da semana, vinda de uma consulta própria', async () => {
+    vi.mocked(supabase.rpc).mockImplementation(((nome: string) =>
+      Promise.resolve(
+        nome === 'ranking_linhas_semana'
+          ? { data: [{ linha_id: 'l1', codigo: '063', nome: 'DIRCEU / CENTRO', zona: 'leste', denuncias: 6, pessoas: 4, confirmacoes: 2, pendentes: 3 }], error: null }
+          : { data: resposta, error: null }
+      )) as never)
+    render(
+      <MemoryRouter>
+        <PainelPage />
+      </MemoryRouter>
+    )
+
+    const destaque = await screen.findByRole('region', { name: 'Linha mais problemática da semana' })
+    expect(await within(destaque).findByText(/6 denúncias de 4 pessoas/)).toBeInTheDocument()
+    expect(supabase.rpc).toHaveBeenCalledWith('ranking_linhas_semana', { p_limite: 3 })
   })
 })

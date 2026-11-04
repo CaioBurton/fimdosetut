@@ -12,9 +12,9 @@ Qualquer pessoa vê o mapa, a lista e o painel de denúncias. Para registrar uma
 | --- | --- | --- |
 | Mapa com as denúncias do dia (tempo real), botão "Também vi" e denúncia rápida em 3 toques (linha favorita, problema, enviar; GPS automático) | `/` | todos |
 | Lista de denúncias, com filtros por zona, linha, dia, status e tipo, botão "Também vi" (confirmar com conta) e "Compartilhar" (imagem para Instagram e WhatsApp) | `/denuncias` | todos |
-| Painel público com totais, gráfico por dia, zonas e linhas mais citadas, e "Compartilhar ranking" (imagem) | `/painel` | todos |
+| Painel público com a "Linha mais problemática da semana", totais, gráfico por dia, zonas e linhas mais citadas, e "Compartilhar ranking" (imagem) | `/painel` | todos |
 | Nova denúncia (linha, tipo, descrição e local no mapa). Dá para enviar a primeira sem cadastro e criar a conta depois | `/nova` | todos |
-| Perfil: nome, linhas que a pessoa pega, minhas denúncias, feedback, baixar meus dados e excluir a conta | `/minhas` | quem tem conta |
+| Perfil: nome, linhas que a pessoa pega, meus selos, minhas denúncias, feedback, baixar meus dados e excluir a conta | `/minhas` | quem tem conta |
 | Entrar e Criar conta | `/login`, `/cadastro` | todos |
 | Política de Privacidade e Termos de Uso | `/privacidade`, `/termos` | todos |
 | Administração: painel, denúncias, linhas (CRUD), usuários e feedbacks | `/admin` | só admins |
@@ -95,6 +95,13 @@ Para virar admin, ajuste o papel da conta em `profiles` (`role = 'admin'`) pelo 
 O template do e-mail de confirmação, no estilo do app, está em `supabase/templates/confirmacao-email.html`. No Supabase, vá em **Authentication → Emails → Confirm signup** e cole o conteúdo (assunto sugerido: `Confirme seu e-mail — Deu o Prego!`). A variável `{{ .ConfirmationURL }}` é preenchida pelo Supabase.
 
 O e-mail padrão do Supabase tem limite baixo de envios por hora. Para uso real, configure um SMTP próprio em **Project Settings → Authentication → SMTP**.
+
+## Selos e ranking de linhas
+
+Pequenos incentivos, sem competição entre pessoas:
+
+- **Selos (só da própria pessoa, em Perfil):** "Voz ouvida" (uma denúncia sua foi confirmada por outra pessoa), "Fiscal da linha 603" (3 denúncias suas na mesma linha confirmadas por outras pessoas) e sequência de dias colaborando (3, 7 e 30 dias seguidos, enviando ou confirmando denúncias). O ganho vem de denúncias **confirmadas por outras pessoas** ("Também vi") e não de quantas a pessoa enviou, então mandar denúncia falsa não rende selo. Não existe ranking de pessoas. Os limites ficam em `src/lib/selos.ts` e os números vêm da função `meus_selos` (migration `0023`).
+- **Linha mais problemática da semana (público, no Painel):** ranking de **linhas** dos últimos 7 dias, calculado por `ranking_linhas_semana`. Só entram linhas denunciadas por pelo menos 2 pessoas diferentes, para uma conta sozinha não fabricar o destaque. O banco devolve só totais; quem denunciou continua privado.
 
 ## Cartões compartilháveis
 

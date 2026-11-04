@@ -3,6 +3,7 @@ import { CabecalhoPagina } from '../components/ui/CabecalhoPagina'
 import { useDesktop } from '../hooks/useDesktop'
 import { AppLayout } from '../components/layout/AppLayout'
 import { PainelConteudo } from '../components/admin/PainelConteudo'
+import { LinhaDaSemana } from '../components/painel/LinhaDaSemana'
 import { usePainelResumo } from '../hooks/usePainelResumo'
 import type { Periodo } from '../lib/dashboardDenuncias'
 import type { Zona } from '../types'
@@ -29,6 +30,7 @@ export function PainelPage() {
             {error}
           </p>
         )}
+        <LinhaDaSemana />
         <PainelConteudo
           resumo={resumo}
           periodo={periodo}

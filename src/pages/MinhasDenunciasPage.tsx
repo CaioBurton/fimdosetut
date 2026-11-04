@@ -3,6 +3,7 @@ import { VincularConta } from '../components/auth/VincularConta'
 import { AppLayout } from '../components/layout/AppLayout'
 import { EnviarFeedback } from '../components/perfil/EnviarFeedback'
 import { PerfilUsuario } from '../components/perfil/PerfilUsuario'
+import { Selos } from '../components/perfil/Selos'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { Button } from '../components/ui/Button'
 import { MeusDadosPrivacidade } from '../components/perfil/MeusDadosPrivacidade'
@@ -67,6 +68,9 @@ export function MinhasDenunciasPage() {
             colunaDireita={desktop ? <MeusDadosPrivacidade /> : undefined}
             entreLinhasEDados={
               <div className="space-y-4">
+                <div className="pt-4">
+                  <Selos />
+                </div>
                 <div className="pt-4">
                   <TituloSecao>Minhas denúncias</TituloSecao>
                 </div>
