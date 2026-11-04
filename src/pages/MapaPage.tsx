@@ -9,7 +9,7 @@ import { useConfirmacoes } from '../hooks/useConfirmacoes'
 import { DIAS_PADRAO, useDenuncias } from '../hooks/useDenuncias'
 import { useDesktop } from '../hooks/useDesktop'
 import { useLinhas } from '../hooks/useLinhas'
-import { diaLocal, diaMinimo, hoje } from '../lib/dia'
+import { diaLocal, diaMinimoMapa, hoje } from '../lib/dia'
 import { STATUS_LABELS, TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Denuncia, type Zona } from '../types'
 
 const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'outras']
@@ -27,7 +27,7 @@ export function MapaPage() {
   // O mapa busca só o dia escolhido (e não as últimas duas semanas). O "Ver no mapa" da lista já
   // abre no dia da denúncia, mesmo que não seja hoje.
   const [dia, setDia] = useState(() =>
-    estado?.dia && /^\d{4}-\d{2}-\d{2}$/.test(estado.dia) && estado.dia >= diaMinimo() && estado.dia <= hoje()
+    estado?.dia && /^\d{4}-\d{2}-\d{2}$/.test(estado.dia) && estado.dia >= diaMinimoMapa() && estado.dia <= hoje()
       ? estado.dia
       : hoje()
   )
@@ -95,7 +95,7 @@ export function MapaPage() {
               denuncias={visiveis}
               semFiltroZona={desktop}
               focoId={focoId}
-              seletorDia={{ dia, onChange: setDia, min: diaMinimo(), max: hoje() }}
+              seletorDia={{ dia, onChange: setDia, min: diaMinimoMapa(), max: hoje() }}
               acoesSelecionada={(d) => (
                 <>
                   <BotaoTambemVi
