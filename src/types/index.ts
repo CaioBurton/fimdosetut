@@ -1,4 +1,4 @@
-export type Zona = 'norte' | 'sul' | 'leste' | 'sudeste' | 'outras'
+export type Zona = 'norte' | 'sul' | 'leste' | 'sudeste' | 'timon' | 'outras'
 
 export type TipoProblema =
   | 'quebrado'
@@ -55,6 +55,7 @@ export const ZONA_LABELS: Record<Zona, string> = {
   sul: 'Sul',
   leste: 'Leste',
   sudeste: 'Sudeste',
+  timon: 'Timon',
   outras: 'Outras',
 }
 
@@ -63,6 +64,7 @@ export const ZONA_COLORS: Record<Zona, string> = {
   sul: '#d9a404',
   leste: '#d64545',
   sudeste: '#2563eb',
+  timon: '#0e8a8a',
   outras: '#6b5b95',
 }
 
