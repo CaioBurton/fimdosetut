@@ -116,7 +116,7 @@ describe('dados dos cartões', () => {
 
     expect(texto).toContain('linha 103')
     expect(texto).toContain('ônibus quebrado')
-    expect(texto).toContain('https://deu-o-prego.vercel.app')
+    expect(texto).toContain('https://deuoprego.com.br')
   })
 })
 
@@ -133,7 +133,7 @@ describe('desenho dos cartões', () => {
     expect(tudo).toContain('PENDENTE')
     expect(tudo).toContain('Ônibus parado na pista.')
     expect(tudo).toContain('3 PESSOAS TAMBÉM VIRAM')
-    expect(tudo).toContain('deu-o-prego.vercel.app')
+    expect(tudo).toContain('deuoprego.com.br')
   })
 
   it('só desenha o logo quando ele carregou', () => {

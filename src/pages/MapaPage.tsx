@@ -6,10 +6,10 @@ import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
 import { AppLayout } from '../components/layout/AppLayout'
 import { MapaDenuncias, tempoRelativo } from '../components/map/MapaDenuncias'
 import { useConfirmacoes } from '../hooks/useConfirmacoes'
-import { useDenuncias } from '../hooks/useDenuncias'
+import { DIAS_PADRAO, useDenuncias } from '../hooks/useDenuncias'
 import { useDesktop } from '../hooks/useDesktop'
 import { useLinhas } from '../hooks/useLinhas'
-import { diaLocal, diaMinimo, hoje } from '../lib/dia'
+import { diaLocal, diaMinimoMapa, hoje } from '../lib/dia'
 import { STATUS_LABELS, TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Denuncia, type Zona } from '../types'
 
 const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'outras']
@@ -21,9 +21,17 @@ function normalizar(texto: string) {
 export function MapaPage() {
   const desktop = useDesktop()
   // Vindo do "Ver no mapa" da lista: a denúncia a destacar (mesmo que seja de outro dia).
-  const focoId = (useLocation().state as { denunciaId?: string } | null)?.denunciaId
+  const estado = useLocation().state as { denunciaId?: string; dia?: string } | null
+  const focoId = estado?.denunciaId
   const { linhas } = useLinhas()
-  const { denuncias: todas, loading, error, atualizarDenuncia } = useDenuncias(linhas)
+  // O mapa busca só o dia escolhido (e não as últimas duas semanas). O "Ver no mapa" da lista já
+  // abre no dia da denúncia, mesmo que não seja hoje.
+  const [dia, setDia] = useState(() =>
+    estado?.dia && /^\d{4}-\d{2}-\d{2}$/.test(estado.dia) && estado.dia >= diaMinimoMapa() && estado.dia <= hoje()
+      ? estado.dia
+      : hoje()
+  )
+  const { denuncias: todas, loading, atualizando, error, atualizarDenuncia } = useDenuncias(linhas, DIAS_PADRAO, false, dia)
   const {
     confirmadas,
     pendentes: confirmando,
@@ -32,8 +40,6 @@ export function MapaPage() {
   } = useConfirmacoes((id, total) => atualizarDenuncia(id, { confirmacoes: total }))
   const [busca, setBusca] = useState('')
   const [status, setStatus] = useState<Denuncia['status'] | 'todas'>('todas')
-
-  const [dia, setDia] = useState(hoje)
 
   const denuncias = useMemo(
     () => todas.filter((d) => diaLocal(d.created_at) === dia || d.id === focoId),
@@ -77,11 +83,19 @@ export function MapaPage() {
       ) : (
         <div className="flex h-full">
           <div className="relative min-w-0 flex-1">
+            {atualizando && (
+              <div
+                role="status"
+                className="card-brand anim-abre pointer-events-none absolute bottom-4 left-1/2 z-[600] -translate-x-1/2 !bg-brand-cream px-4 py-2 text-sm font-bold"
+              >
+                Carregando o dia...
+              </div>
+            )}
             <MapaDenuncias
               denuncias={visiveis}
               semFiltroZona={desktop}
               focoId={focoId}
-              seletorDia={{ dia, onChange: setDia, min: diaMinimo(), max: hoje() }}
+              seletorDia={{ dia, onChange: setDia, min: diaMinimoMapa(), max: hoje() }}
               acoesSelecionada={(d) => (
                 <>
                   <BotaoTambemVi

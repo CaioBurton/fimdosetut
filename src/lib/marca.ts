@@ -6,5 +6,5 @@ export const EXPLOSAO_LARGURA = 274
 export const EXPLOSAO_ALTURA = 166
 
 /** Endereço público do app, escrito nos cartões compartilháveis. */
-export const SITE_URL = 'https://deu-o-prego.vercel.app'
-export const SITE_HOST = 'deu-o-prego.vercel.app'
+export const SITE_URL = 'https://deuoprego.com.br'
+export const SITE_HOST = 'deuoprego.com.br'
