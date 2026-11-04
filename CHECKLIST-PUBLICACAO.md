@@ -35,7 +35,7 @@ publicando a `main` automaticamente — então o site no ar pode estar quebrado 
 ## 2. Migrations aplicadas (leitura)
 
 - [ ] Liste as migrations aplicadas (`supabase migration list` ou a tabela `supabase_migrations.schema_migrations`)
-      e confirme que **`0001` a `0013`** estão todas lá, na ordem.
+      e confirme que **`0001` a `0023`** estão todas lá, na ordem.
 - [ ] Confirme objetos criados:
 
 ```sql
@@ -50,7 +50,7 @@ select column_name, data_type, column_default from information_schema.columns
 -- funções
 select proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace
  where n.nspname='public' and proname in
- ('criar_denuncia','alternar_confirmacao','sincronizar_email_perfil','atualizar_total_confirmacoes','proteger_total_confirmacoes','is_admin','is_banido');
+ ('criar_denuncia','alternar_confirmacao','sincronizar_email_perfil','atualizar_total_confirmacoes','proteger_total_confirmacoes','is_admin','is_banido','meus_selos','ranking_linhas_semana');
 -- gatilhos
 select tgname, tgrelid::regclass from pg_trigger where not tgisinternal and tgname in
  ('denuncia_confirmacoes_total','denuncias_proteger_confirmacoes','on_auth_user_email_updated','on_auth_user_created_aceite','on_auth_user_created');
@@ -92,6 +92,8 @@ Para simular visitante deslogado: `set local role anon;` (sem claims). Para sess
 | 3.8 | `profiles`: usuário comum tenta `update profiles set role='admin'` no próprio id | **negado** |
 | 3.9 | `select proname, prosecdef from pg_proc ...` das funções `security definer` | todas com `set search_path = public` |
 | 3.10 | `has_function_privilege('anon','criar_denuncia(uuid,text,text,text,double precision,double precision)','execute')` e o mesmo para `alternar_confirmacao(uuid)` | **false** |
+| 3.12 | `meus_selos()`: `has_function_privilege('anon','meus_selos()','execute')` e como `authenticated` A e B | `anon` = **false**; cada pessoa recebe só os próprios números (nunca os de outra) |
+| 3.13 | `ranking_linhas_semana(3)` como `anon` | funciona e devolve **só totais por linha** (sem `user_id`, sem lista de pessoas) |
 | 3.11 | Rode `get_advisors` / o "Security Advisor" do Supabase (se disponível) | sem alertas de RLS desligado ou funções expostas |
 
 ## 4. Regras de negócio no banco
@@ -112,6 +114,9 @@ Para simular visitante deslogado: `set local role anon;` (sem claims). Para sess
 | 4.12 | `update auth.users set email='novo@exemplo.invalid' where id=<anônimo>` | `profiles.email` acompanha (gatilho `on_auth_user_email_updated`) |
 | 4.13 | Inserir em `auth.users` com `raw_user_meta_data->>'aceite_documentos' = '2026-11-01'` (anônimo ou não) | aparece linha em `aceites_documentos` |
 | 4.14 | `select * from minhas_denuncias` como A | só as dele, **com** a coluna `confirmacoes` |
+| 4.16 | Selos: A tem 4 denúncias na linha X, 3 confirmadas por B/C; `meus_selos()` como A | `denuncias_confirmadas=3`, linha X com `confirmadas=3`; denúncia sem confirmação **não** conta |
+| 4.17 | Sequência: denúncias/confirmações de A em dias seguidos (fuso `America/Fortaleza`), depois uma pausa | `sequencia_atual` e `melhor_sequencia` corretas; se o último dia foi há 2 dias ou mais, `sequencia_atual=0` |
+| 4.18 | `ranking_linhas_semana`: linha com denúncias de **1 só pessoa** | **não** aparece (mínimo de 2 pessoas distintas); denúncias com mais de 7 dias não contam |
 | 4.15 | `exportar_meus_dados()` e a exclusão da própria conta | funcionam também para quem veio de sessão anônima |
 
 ## 5. Autenticação (painel do Supabase / API)
@@ -156,7 +161,8 @@ Se o ambiente exigir, dê permissão e posição de GPS: `context.grantPermissio
       em tempo real; B desfaz → volta. A confirmar a própria → mensagem de aviso. Anônimo → vai para o login.
 - [ ] **Tempo real:** uma denúncia criada num contexto aparece na `/denuncias` e no mapa do outro sem recarregar.
 - [ ] `/denuncias`: filtros (zona, linha, dia, status, tipo), paginação no desktop e botão "Também vi" funcionam.
-- [ ] `/painel` carrega os números (função `painel_resumo`) sem erro.
+- [ ] `/painel` carrega os números (função `painel_resumo`) e o bloco "Linha mais problemática da semana" (função `ranking_linhas_semana`) sem erro; sem 2 pessoas diferentes na mesma linha, aparece a mensagem explicando a regra.
+- [ ] `/minhas` mostra "Meus selos" (só da própria pessoa) e a sequência atual; confirmar com duas contas que "Voz ouvida" aparece só depois que **outra** pessoa confirma uma denúncia.
 - [ ] `/minhas`: marcar resolvido, reabrir, excluir denúncia, baixar meus dados, excluir conta (use conta de teste).
 - [ ] `/admin` com o admin: painel, denúncias, linhas (CRUD), usuários (contas sem e-mail aparecem em branco — anotar), feedbacks.
 - [ ] **Animações:** com `page.emulateMedia({ reducedMotion: 'reduce' })` nada anima/desloca e tudo continua usável.
