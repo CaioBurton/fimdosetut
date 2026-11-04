@@ -38,12 +38,13 @@ export function BotaoCompartilhar({ rotulo = 'Compartilhar', gerar, nomeArquivo,
         type="button"
         onClick={compartilhar}
         disabled={gerando}
-        className="chip-brand disabled:opacity-50"
+        aria-label={gerando ? 'Gerando...' : rotulo}
+        title={gerando ? 'Gerando...' : rotulo}
+        className={`chip-brand disabled:opacity-50 ${gerando ? 'animate-pulse' : ''}`}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M12 15V3M7 8l5-5 5 5M5 14v5a2 2 0 002 2h10a2 2 0 002-2v-5" />
         </svg>
-        {gerando ? 'Gerando...' : rotulo}
       </button>
       {aviso && (
         <span role={aviso.erro ? 'alert' : 'status'} className={`text-xs font-bold ${aviso.erro ? 'text-zona-leste' : 'text-brand-green'}`}>
