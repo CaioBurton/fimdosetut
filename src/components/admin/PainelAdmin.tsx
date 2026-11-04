@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { Periodo } from '../../lib/dashboardDenuncias'
 import { resumirDenuncias } from '../../lib/resumoPainel'
 import type { Denuncia, Zona } from '../../types'
+import { LinhaDaSemana } from '../painel/LinhaDaSemana'
 import { PainelConteudo } from './PainelConteudo'
 
 interface Props {
@@ -19,13 +20,16 @@ export function PainelAdmin({ denuncias, onGerenciarLinhas }: Props) {
   )
 
   return (
-    <PainelConteudo
-      resumo={resumo}
-      periodo={periodo}
-      zona={zona}
-      onPeriodo={setPeriodo}
-      onZona={setZona}
-      onGerenciarLinhas={onGerenciarLinhas}
-    />
+    <div className="space-y-5">
+      <LinhaDaSemana />
+      <PainelConteudo
+        resumo={resumo}
+        periodo={periodo}
+        zona={zona}
+        onPeriodo={setPeriodo}
+        onZona={setZona}
+        onGerenciarLinhas={onGerenciarLinhas}
+      />
+    </div>
   )
 }
