@@ -6,6 +6,7 @@ import { useDesktop } from '../hooks/useDesktop'
 import { AppLayout } from '../components/layout/AppLayout'
 import { LinhaSelect } from '../components/denuncia/LinhaSelect'
 import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
+import { BotaoCompartilharDenuncia } from '../components/denuncia/BotaoCompartilharDenuncia'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { useConfirmacoes } from '../hooks/useConfirmacoes'
 import { useDenuncias } from '../hooks/useDenuncias'
@@ -217,6 +218,7 @@ export function ListaPage() {
                   <Link to="/" state={{ denunciaId: denuncia.id }} className="chip-brand">
                     Ver no mapa
                   </Link>
+                  <BotaoCompartilharDenuncia denuncia={denuncia} />
                 </>
               }
             />

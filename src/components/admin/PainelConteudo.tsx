@@ -1,4 +1,6 @@
 import { useDesktop } from '../../hooks/useDesktop'
+import { BotaoCompartilhar } from '../ui/BotaoCompartilhar'
+import { dadosDoRanking, gerarCartaoRanking, textoRanking } from '../../lib/cartaoCompartilhavel'
 import { PERIODO_LABELS, type Periodo } from '../../lib/dashboardDenuncias'
 import { taxaResolucao, type ResumoPainel } from '../../lib/resumoPainel'
 import { TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Zona } from '../../types'
@@ -282,7 +284,20 @@ export function PainelConteudo({
       </section>
 
       <section className="card-brand anim-entra overflow-hidden lg:col-span-2" style={atraso(8)} aria-label="Linhas com mais denúncias">
-        <h3 className="ttl px-3.5 pb-2.5 pt-3.5 text-lg">Linhas com mais denúncias</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 pb-2.5 pt-3.5">
+          <h3 className="ttl text-lg">Linhas com mais denúncias</h3>
+          {resumo.topLinhas.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <BotaoCompartilhar
+                rotulo="Compartilhar ranking"
+                gerar={() => gerarCartaoRanking(resumo, periodo, zona)}
+                nomeArquivo="deu-o-prego-ranking.png"
+                titulo="Deu o Prego!"
+                texto={textoRanking(dadosDoRanking(resumo, periodo, zona))}
+              />
+            </div>
+          )}
+        </div>
         {resumo.topLinhas.length === 0 ? (
           <p className="px-3.5 pb-3.5 text-sm text-brand-green-dark/70">Sem dados.</p>
         ) : (

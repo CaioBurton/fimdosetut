@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { DenunciaRapida } from '../components/denuncia/DenunciaRapida'
+import { BotaoCompartilharDenuncia } from '../components/denuncia/BotaoCompartilharDenuncia'
 import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
 import { AppLayout } from '../components/layout/AppLayout'
 import { MapaDenuncias, tempoRelativo } from '../components/map/MapaDenuncias'
@@ -82,12 +83,15 @@ export function MapaPage() {
               focoId={focoId}
               seletorDia={{ dia, onChange: setDia, min: diaMinimo(), max: hoje() }}
               acoesSelecionada={(d) => (
-                <BotaoTambemVi
-                  total={d.confirmacoes ?? 0}
-                  confirmado={confirmadas.has(d.id)}
-                  carregando={confirmando.has(d.id)}
-                  onClick={() => alternar(d.id)}
-                />
+                <>
+                  <BotaoTambemVi
+                    total={d.confirmacoes ?? 0}
+                    confirmado={confirmadas.has(d.id)}
+                    carregando={confirmando.has(d.id)}
+                    onClick={() => alternar(d.id)}
+                  />
+                  <BotaoCompartilharDenuncia denuncia={d} />
+                </>
               )}
             />
             {!desktop && (
