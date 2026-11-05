@@ -1,7 +1,5 @@
 import { useRankingSemana } from '../../hooks/useRankingSemana'
 import type { LinhaEmAlta } from '../../lib/rankingSemana'
-import { dadosDaLinhaSemana, gerarCartaoSemana, textoSemana } from '../../lib/cartaoCompartilhavel'
-import { BotaoCompartilhar } from '../ui/BotaoCompartilhar'
 import { ZONA_COLORS, ZONA_LABELS } from '../../types'
 
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`
@@ -20,15 +18,6 @@ function Destaque({ linha }: { linha: LinhaEmAlta }) {
           {plural(linha.denuncias, 'denúncia', 'denúncias')} de {plural(linha.pessoas, 'pessoa', 'pessoas')}
           {linha.confirmacoes > 0 && <> · {plural(linha.confirmacoes, 'confirmação', 'confirmações')}</>}
         </p>
-        <div className="mt-3 flex items-center gap-2">
-          <BotaoCompartilhar
-            rotulo="Compartilhar linha da semana"
-            gerar={() => gerarCartaoSemana(linha)}
-            nomeArquivo={`deu-o-prego-linha-da-semana-${linha.codigo}.png`}
-            titulo="Deu o Prego!"
-            texto={textoSemana(dadosDaLinhaSemana(linha))}
-          />
-        </div>
       </div>
     </div>
   )

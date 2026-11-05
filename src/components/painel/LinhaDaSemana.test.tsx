@@ -26,18 +26,6 @@ const linha = (sobrescrever: Record<string, unknown> = {}) => ({
 describe('LinhaDaSemana', () => {
   beforeEach(() => responder([]))
 
-  it('oferece o botão de compartilhar só quando há linha em destaque', async () => {
-    render(<LinhaDaSemana />)
-    await screen.findByText(/Ainda não há uma linha em destaque/)
-    expect(screen.queryByRole('button', { name: 'Compartilhar linha da semana' })).not.toBeInTheDocument()
-  })
-
-  it('mostra o botão de compartilhar na linha em destaque', async () => {
-    responder([linha()])
-    render(<LinhaDaSemana />)
-    expect(await screen.findByRole('button', { name: 'Compartilhar linha da semana' })).toBeInTheDocument()
-  })
-
   it('destaca a primeira linha com os totais, sem mostrar quem denunciou', async () => {
     responder([linha()])
     render(<LinhaDaSemana />)
