@@ -7,7 +7,7 @@ import { Paginacao } from '../ui/Paginacao'
 import { botaoPerigoTabela, botaoTabela, celula, RodapeTabela, TabelaAdmin } from './TabelaAdmin'
 import { ZONA_COLORS, ZONA_LABELS, type Denuncia, type Linha, type Zona } from '../../types'
 
-const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'outras']
+const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'rural', 'outras']
 
 function normalizar(texto: string) {
   return texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()

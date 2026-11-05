@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { ZONA_COLORS, ZONA_LABELS, type Linha, type Zona } from '../../types'
 
-const ORDEM_ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'outras']
+const ORDEM_ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'rural', 'outras']
 
 interface LinhaSelectProps {
   linhas: Linha[]

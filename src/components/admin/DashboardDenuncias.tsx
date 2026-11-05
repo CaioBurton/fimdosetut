@@ -24,7 +24,7 @@ import { Paginacao } from '../ui/Paginacao'
 import { SelectBrand } from '../ui/SelectBrand'
 
 const POR_PAGINA = 10
-const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'outras']
+const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'rural', 'outras']
 
 interface Props {
   denuncias: Denuncia[]

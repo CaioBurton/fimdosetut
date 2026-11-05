@@ -12,7 +12,7 @@ import { useLinhas } from '../hooks/useLinhas'
 import { diaLocal, diaMinimoMapa, hoje } from '../lib/dia'
 import { STATUS_LABELS, TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Denuncia, type Zona } from '../types'
 
-const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'outras']
+const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'rural', 'outras']
 
 function normalizar(texto: string) {
   return texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
