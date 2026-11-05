@@ -171,23 +171,26 @@ export function MapaDenuncias({
   )
   const grupos = useMemo(() => agruparDenuncias(visiveis), [visiveis])
   const grupoSelecionado = grupos.find((g) => g.principal.id === selecionadaId) ?? null
-  const selecionada = grupoSelecionado?.principal ?? null
-  const veiculos = grupoSelecionado
-    ? [
-        ...new Set(
-          grupoSelecionado.denuncias.map((d) => normalizarVeiculo(d.numero_veiculo)).filter(Boolean)
-        ),
-      ]
-    : []
+  // Grupo com várias denúncias: o cartão navega entre elas (a mais recente primeiro).
+  const [navegacao, setNavegacao] = useState<{ id: string | null; i: number }>({ id: null, i: 0 })
+  // Ao trocar (ou fechar) a seleção, volta para a primeira denúncia.
+  useEffect(() => setNavegacao({ id: selecionadaId, i: 0 }), [selecionadaId])
+  const membrosSel = grupoSelecionado?.denuncias ?? []
+  const indice = navegacao.id === selecionadaId ? Math.min(navegacao.i, membrosSel.length - 1) : 0
+  const selecionada = membrosSel[indice] ?? null
+  const irPara = (i: number) =>
+    setNavegacao({ id: selecionadaId, i })
+  const veiculo = normalizarVeiculo(selecionada?.numero_veiculo)
   // Dá um pop no marcador selecionado quando a contagem de "Também vi" dele aumenta (uma vez só; ao tirar, não).
   const [pulso, setPulso] = useState(0)
   const anterior = useRef<{ id: string; total: number } | null>(null)
   const totalSel = selecionada?.confirmacoes ?? 0
+  const selId = selecionada?.id ?? null
   useEffect(() => {
     const ant = anterior.current
-    if (selecionada && ant && ant.id === selecionada.id && totalSel > ant.total) setPulso((n) => n + 1)
-    anterior.current = selecionada ? { id: selecionada.id, total: totalSel } : null
-  }, [selecionada, totalSel])
+    if (selId && ant && ant.id === selId && totalSel > ant.total) setPulso((n) => n + 1)
+    anterior.current = selId ? { id: selId, total: totalSel } : null
+  }, [selId, totalSel])
 
   // Denúncia recém-criada (vista pela primeira vez e com menos de 1 min): o marcador entra com pop.
   // O conjunto é limpo logo depois, para o pop não tocar de novo quando o ícone mudar (ex.: ao selecionar).
@@ -325,7 +328,7 @@ export function MapaDenuncias({
               </p>
               <p className="mt-0.5 text-[13px] text-brand-green-dark/70">
                 {tempoRelativo(selecionada.created_at)} · {TIPO_LABELS[selecionada.tipo]}
-                {veiculos.length > 0 && ` · Veículo ${veiculos.join(', ')}`}
+                {veiculo && ` · Veículo ${veiculo}`}
               </p>
             </div>
             <span
@@ -337,6 +340,26 @@ export function MapaDenuncias({
               {STATUS_LABELS[selecionada.status]}
             </span>
           </div>
+          {membrosSel.length > 1 && (
+            <div className="flex w-full shrink-0 items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => irPara(indice - 1)}
+                disabled={indice === 0}
+                className="chip-brand disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                ‹ Anterior
+              </button>
+              <button
+                type="button"
+                onClick={() => irPara(indice + 1)}
+                disabled={indice === membrosSel.length - 1}
+                className="chip-brand disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Próxima ›
+              </button>
+            </div>
+          )}
           {/* Denúncia muito longa: o texto rola dentro do cartão, sem passar por baixo do cabeçalho. */}
           <div className="min-h-0 overflow-y-auto overscroll-contain">
             <TextoExpansivel key={selecionada.id} texto={selecionada.descricao} linhas={3} className="text-sm leading-snug" />
