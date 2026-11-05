@@ -13,6 +13,7 @@ import { agruparDenuncias, normalizarVeiculo } from '../../lib/agruparDenuncias'
 import { criarIconeZona } from './markerIcon'
 import { BotaoMinhaLocalizacao } from './BotaoMinhaLocalizacao'
 import { BotaoCalendario } from './BotaoCalendario'
+import { TextoExpansivel } from '../ui/TextoExpansivel'
 
 const TERESINA_CENTER: [number, number] = [-5.0892, -42.8019]
 const ZONAS_FILTRO: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'outras']
@@ -296,7 +297,7 @@ export function MapaDenuncias({
               {STATUS_LABELS[selecionada.status]}
             </span>
           </div>
-          <p className="text-sm leading-snug">{selecionada.descricao}</p>
+          <TextoExpansivel key={selecionada.id} texto={selecionada.descricao} linhas={3} className="text-sm leading-snug" />
           <div className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 text-[13px] font-bold">
               <i
