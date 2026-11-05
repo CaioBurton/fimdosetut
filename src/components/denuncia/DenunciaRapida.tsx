@@ -25,7 +25,7 @@ function BotaoFecharCard({ onClick }: { onClick: () => void }) {
 
 // "Outro" fica sempre por último.
 const TIPOS: TipoProblema[] = [
-  ...(Object.keys(TIPO_LABELS) as TipoProblema[]).filter((t) => t !== 'pcd_espaco' && t !== 'outro'),
+  ...(Object.keys(TIPO_LABELS) as TipoProblema[]).filter((t) => t !== 'outro'),
   'outro',
 ]
 

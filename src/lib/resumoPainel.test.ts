@@ -88,9 +88,9 @@ describe('diasDoPeriodo', () => {
 
 describe('resumo de acessibilidade (PcD)', () => {
   const denuncias = [
-    d({ id: '1', tipo: 'pcd_elevador', numero_veiculo: ' ab12 ' }),
-    d({ id: '2', tipo: 'pcd_elevador', numero_veiculo: 'AB12', status: 'resolvido' }),
-    d({ id: '3', tipo: 'pcd_motorista', numero_veiculo: '' }),
+    d({ id: '1', tipo: 'pcd', numero_veiculo: ' ab12 ' }),
+    d({ id: '2', tipo: 'pcd', numero_veiculo: 'AB12', status: 'resolvido' }),
+    d({ id: '3', tipo: 'pcd', numero_veiculo: '' }),
     d({ id: '4', tipo: 'quebrado', numero_veiculo: 'ZZ99' }),
   ]
 
@@ -100,8 +100,7 @@ describe('resumo de acessibilidade (PcD)', () => {
     expect(acessibilidade.total).toBe(3)
     expect(acessibilidade.pendentes).toBe(2)
     expect(acessibilidade.porTipo).toEqual([
-      { chave: 'pcd_elevador', total: 2 },
-      { chave: 'pcd_motorista', total: 1 },
+      { chave: 'pcd', total: 3 },
     ])
     expect(acessibilidade.topVeiculos).toEqual([{ numero: 'AB12', total: 2 }])
     expect(acessibilidade.topLinhas[0]).toMatchObject({ codigo: '063', total: 3 })
