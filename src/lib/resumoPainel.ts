@@ -13,7 +13,6 @@ export const DIAS_GRAFICO = 14
 export interface ResumoAcessibilidade {
   total: number
   pendentes: number
-  porTipo: { chave: TipoProblema; total: number }[]
   topLinhas: { linhaId: string; codigo: string; nome: string; total: number }[]
   topVeiculos: { numero: string; total: number }[]
 }
@@ -21,7 +20,6 @@ export interface ResumoAcessibilidade {
 export const ACESSIBILIDADE_VAZIA: ResumoAcessibilidade = {
   total: 0,
   pendentes: 0,
-  porTipo: [],
   topLinhas: [],
   topVeiculos: [],
 }
@@ -85,7 +83,6 @@ function resumirAcessibilidade(filtradas: Denuncia[]): ResumoAcessibilidade {
   return {
     total: stats.total,
     pendentes: stats.pendentes,
-    porTipo: stats.porTipo,
     topLinhas: stats.topLinhas.map(nomeLinha),
     topVeiculos: [...veiculos.entries()]
       .map(([numero, total]) => ({ numero, total }))
@@ -130,7 +127,6 @@ interface RespostaRpc {
   acessibilidade?: {
     total: number
     pendentes: number
-    porTipo: { chave: TipoProblema; total: number }[]
     topLinhas: { linhaId: string | null; codigo: string | null; nome: string | null; total: number }[]
     topVeiculos: { numero: string; total: number }[]
   }
@@ -160,7 +156,6 @@ export function resumoDaRpc(r: RespostaRpc): ResumoPainel {
     acessibilidade: {
       total: r.acessibilidade?.total ?? 0,
       pendentes: r.acessibilidade?.pendentes ?? 0,
-      porTipo: r.acessibilidade?.porTipo ?? [],
       topLinhas: (r.acessibilidade?.topLinhas ?? []).map((l) => ({
         linhaId: l.linhaId ?? '',
         codigo: l.codigo ?? '—',

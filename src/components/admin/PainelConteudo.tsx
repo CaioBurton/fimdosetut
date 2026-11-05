@@ -234,18 +234,7 @@ export function PainelConteudo({
             Nenhum problema de acessibilidade registrado no período.
           </p>
         ) : (
-          <div className="mt-3 space-y-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0">
-            <div>
-              <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-green-dark/70">Por tipo</h4>
-              <ul className="space-y-2 text-[13px]">
-                {acess.porTipo.map((i) => (
-                  <li key={i.chave} className="flex justify-between gap-2 font-bold">
-                    <span className="truncate">{TIPO_LABELS[i.chave]}</span>
-                    <span>{i.total}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="mt-3 space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
             <div>
               <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-green-dark/70">
                 Linhas com mais ocorrências

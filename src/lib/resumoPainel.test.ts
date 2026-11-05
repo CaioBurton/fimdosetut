@@ -99,9 +99,6 @@ describe('resumo de acessibilidade (PcD)', () => {
 
     expect(acessibilidade.total).toBe(3)
     expect(acessibilidade.pendentes).toBe(2)
-    expect(acessibilidade.porTipo).toEqual([
-      { chave: 'pcd', total: 3 },
-    ])
     expect(acessibilidade.topVeiculos).toEqual([{ numero: 'AB12', total: 2 }])
     expect(acessibilidade.topLinhas[0]).toMatchObject({ codigo: '063', total: 3 })
   })
@@ -116,6 +113,6 @@ describe('resumo de acessibilidade (PcD)', () => {
       topLinhas: [],
       porDia: [],
     })
-    expect(resumo.acessibilidade).toEqual({ total: 0, pendentes: 0, porTipo: [], topLinhas: [], topVeiculos: [] })
+    expect(resumo.acessibilidade).toEqual({ total: 0, pendentes: 0, topLinhas: [], topVeiculos: [] })
   })
 })
