@@ -294,11 +294,11 @@ export function MapaDenuncias({
 
       {/* No desktop a legenda das zonas fica no canto inferior esquerdo (fora deste componente): o cartão sobe para ficar acima dela. */}
       <div
-        className={`pointer-events-none absolute inset-x-3 z-[500] flex flex-col items-end gap-2.5 ${
+        className={`pointer-events-none absolute inset-x-3 z-[500] flex max-h-[calc(100%-4.5rem)] flex-col items-end gap-2.5 ${
           semFiltroZona ? 'bottom-[5.5rem]' : 'bottom-3.5'
         }`}
       >
-      <div className="pointer-events-auto flex flex-col items-end gap-2.5">
+      <div className="pointer-events-auto flex shrink-0 flex-col items-end gap-2.5">
         {seletorDia && (
           <div
             ref={(el) => {
@@ -314,8 +314,8 @@ export function MapaDenuncias({
         <CentralizarNaMinhaLocalizacao map={mapa} onLocalizado={setMinhaPosicao} />
       </div>
       {selecionada && (
-        <div className="card-brand anim-cartao pointer-events-auto flex w-full flex-col gap-2.5 !bg-brand-cream p-3.5">
-          <div className="flex items-center gap-3">
+        <div className="card-brand anim-cartao pointer-events-auto flex min-h-0 w-full flex-col gap-2.5 !bg-brand-cream p-3.5">
+          <div className="flex shrink-0 items-center gap-3">
             <span className="ttl bg-brand-green px-2.5 py-2 text-xl leading-none text-brand-cream">
               {selecionada.linha?.codigo ?? '—'}
             </span>
@@ -337,8 +337,11 @@ export function MapaDenuncias({
               {STATUS_LABELS[selecionada.status]}
             </span>
           </div>
-          <TextoExpansivel key={selecionada.id} texto={selecionada.descricao} linhas={3} className="text-sm leading-snug" />
-          <div className="flex items-center justify-between gap-2">
+          {/* Denúncia muito longa: o texto rola dentro do cartão, sem passar por baixo do cabeçalho. */}
+          <div className="min-h-0 overflow-y-auto overscroll-contain">
+            <TextoExpansivel key={selecionada.id} texto={selecionada.descricao} linhas={3} className="text-sm leading-snug" />
+          </div>
+          <div className="flex shrink-0 items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 text-[13px] font-bold">
               <i
                 className="block h-2.5 w-2.5 rounded-full"
