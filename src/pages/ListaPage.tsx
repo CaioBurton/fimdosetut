@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CabecalhoPagina } from '../components/ui/CabecalhoPagina'
+import { Paginacao } from '../components/ui/Paginacao'
 import { RodapeTabela } from '../components/admin/TabelaAdmin'
 import { useDesktop } from '../hooks/useDesktop'
 import { AppLayout } from '../components/layout/AppLayout'
@@ -51,7 +52,7 @@ export function ListaPage() {
   const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA))
   const paginaAtual = Math.min(pagina, totalPaginas)
   const inicio = (paginaAtual - 1) * POR_PAGINA
-  const visiveis = desktop ? filtradas.slice(inicio, inicio + POR_PAGINA) : filtradas
+  const visiveis = filtradas.slice(inicio, inicio + POR_PAGINA)
 
   return (
     <AppLayout title="Denúncias">
@@ -79,7 +80,10 @@ export function ListaPage() {
         <div className="sem-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Filtrar por zona">
           <button
             type="button"
-            onClick={() => setFiltroZona('todas')}
+            onClick={() => {
+              setFiltroZona('todas')
+              setPagina(1)
+            }}
             aria-pressed={filtroZona === 'todas'}
             className={`chip-brand ${filtroZona === 'todas' ? 'chip-brand-ativo' : ''}`}
           >
@@ -89,7 +93,10 @@ export function ListaPage() {
             <button
               key={zona}
               type="button"
-              onClick={() => setFiltroZona(zona)}
+              onClick={() => {
+                setFiltroZona(zona)
+                setPagina(1)
+              }}
               aria-pressed={filtroZona === zona}
               className={`chip-brand ${filtroZona === zona ? 'chip-brand-ativo' : ''}`}
             >
@@ -107,7 +114,10 @@ export function ListaPage() {
             <LinhaSelect
               linhas={linhas}
               value={filtroLinha}
-              onChange={setFiltroLinha}
+              onChange={(v) => {
+                setFiltroLinha(v)
+                setPagina(1)
+              }}
               placeholder="Todas as linhas"
               comoFiltro
               listaLarga
@@ -120,7 +130,10 @@ export function ListaPage() {
               max={hoje()}
               aria-label="Filtrar por dia"
               value={filtroDia}
-              onChange={(e) => setFiltroDia(e.target.value)}
+              onChange={(e) => {
+                setFiltroDia(e.target.value)
+                setPagina(1)
+              }}
               className="input-brand min-w-0"
             />
           </div>
@@ -183,6 +196,7 @@ export function ListaPage() {
             onClick={() => {
               setFiltroLinha('')
               setFiltroDia('')
+              setPagina(1)
             }}
           >
             Limpar filtros de linha e dia
@@ -225,7 +239,7 @@ export function ListaPage() {
             </div>
           ))}
         </div>
-        {desktop && (
+        {desktop ? (
           <RodapeTabela
             inicio={inicio + 1}
             fim={inicio + visiveis.length}
@@ -234,6 +248,8 @@ export function ListaPage() {
             totalPaginas={totalPaginas}
             onChange={setPagina}
           />
+        ) : (
+          <Paginacao pagina={paginaAtual} totalPaginas={totalPaginas} onChange={setPagina} />
         )}
       </div>
     </AppLayout>

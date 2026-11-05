@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useDesktop } from '../../hooks/useDesktop'
 import type { DadosLinha } from '../../hooks/useLinhas'
 import { CabecalhoPagina } from '../ui/CabecalhoPagina'
+import { Paginacao } from '../ui/Paginacao'
 import { botaoPerigoTabela, botaoTabela, celula, RodapeTabela, TabelaAdmin } from './TabelaAdmin'
 import { ZONA_COLORS, ZONA_LABELS, type Denuncia, type Linha, type Zona } from '../../types'
 
@@ -61,11 +62,12 @@ export function LinhasAdmin({ linhas, denuncias, onCriar, onAtualizar, onExcluir
     if (resultado) setErro(resultado)
   }
 
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA))
+  const atual = Math.min(pagina, totalPaginas)
+  const inicio = (atual - 1) * POR_PAGINA
+  const daPagina = filtradas.slice(inicio, inicio + POR_PAGINA)
+
   if (desktop) {
-    const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA))
-    const atual = Math.min(pagina, totalPaginas)
-    const inicio = (atual - 1) * POR_PAGINA
-    const daPagina = filtradas.slice(inicio, inicio + POR_PAGINA)
     const zonasUsadas = new Set(linhas.map((l) => l.zona)).size
 
     return (
@@ -323,7 +325,7 @@ export function LinhasAdmin({ linhas, denuncias, onCriar, onAtualizar, onExcluir
       )}
 
       <ul className="space-y-3.5 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 xl:grid-cols-3">
-        {filtradas.map((linha, i) => {
+        {daPagina.map((linha, i) => {
           const total = totalPorLinha.get(linha.id) ?? 0
           const bloqueada = total > 0
           return (
@@ -410,6 +412,7 @@ export function LinhasAdmin({ linhas, denuncias, onCriar, onAtualizar, onExcluir
           )
         })}
       </ul>
+      <Paginacao pagina={atual} totalPaginas={totalPaginas} onChange={setPagina} />
 
       {edicao && (
         <FormularioLinha

@@ -15,6 +15,7 @@ import {
   TabelaAdmin,
 } from '../components/admin/TabelaAdmin'
 import { CabecalhoPagina } from '../components/ui/CabecalhoPagina'
+import { Paginacao } from '../components/ui/Paginacao'
 import { useDesktop } from '../hooks/useDesktop'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../hooks/useAuth'
@@ -284,11 +285,12 @@ function UsuariosAdmin({
     if (erro) onErro(erro)
   }
 
+  const totalPaginas = Math.max(1, Math.ceil(usuarios.length / POR_PAGINA_TABELA))
+  const atual = Math.min(pagina, totalPaginas)
+  const inicio = (atual - 1) * POR_PAGINA_TABELA
+  const daPagina = usuarios.slice(inicio, inicio + POR_PAGINA_TABELA)
+
   if (desktop) {
-    const totalPaginas = Math.max(1, Math.ceil(usuarios.length / POR_PAGINA_TABELA))
-    const atual = Math.min(pagina, totalPaginas)
-    const inicio = (atual - 1) * POR_PAGINA_TABELA
-    const daPagina = usuarios.slice(inicio, inicio + POR_PAGINA_TABELA)
     return (
       <div className="space-y-4">
         <CabecalhoPagina
@@ -400,7 +402,7 @@ function UsuariosAdmin({
       {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
       {loading && <p className="text-center text-brand-green-dark/60">Carregando...</p>}
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:space-y-0">
-      {usuarios.map((u: Perfil, i) => {
+      {daPagina.map((u: Perfil, i) => {
         const euMesmo = u.id === user?.id
         const total = totalPorUsuario.get(u.id) ?? 0
         return (
@@ -487,6 +489,7 @@ function UsuariosAdmin({
         )
       })}
       </div>
+      <Paginacao pagina={atual} totalPaginas={totalPaginas} onChange={setPagina} />
     </>
   )
 }
