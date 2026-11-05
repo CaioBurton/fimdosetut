@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useDesktop } from '../../hooks/useDesktop'
 import { BotaoCompartilhar } from '../ui/BotaoCompartilhar'
 import { dadosDoRanking, gerarCartaoRanking, textoRanking } from '../../lib/cartaoCompartilhavel'
@@ -68,6 +69,8 @@ interface Props {
   onGerenciarLinhas?: () => void
   /** Escurece o conteúdo enquanto um novo resumo carrega. */
   carregando?: boolean
+  /** Conteúdo extra logo abaixo do gráfico "Por dia" (usado no painel público). */
+  aposPorDia?: ReactNode
 }
 
 export function PainelConteudo({
@@ -78,13 +81,13 @@ export function PainelConteudo({
   onZona,
   onGerenciarLinhas,
   carregando = false,
+  aposPorDia,
 }: Props) {
   const desktop = useDesktop()
   const porDia = resumo.porDia
   const maxDia = Math.max(1, ...porDia.map((d) => d.total))
   const maxLinha = Math.max(1, ...resumo.topLinhas.map((l) => l.total))
   const taxa = taxaResolucao(resumo)
-  const acess = resumo.acessibilidade
 
   return (
     <div className={`space-y-4 transition-opacity lg:grid lg:grid-cols-2 lg:items-start lg:gap-5 lg:space-y-0 ${carregando ? 'opacity-60' : ''}`} aria-busy={carregando}>
@@ -173,7 +176,7 @@ export function PainelConteudo({
         </section>
       )}
 
-      <section className="card-brand anim-entra p-3.5 lg:col-span-2 lg:p-5" style={atraso(4)} aria-label="Denúncias por dia">
+      <section className="card-brand anim-entra p-3.5 lg:self-stretch lg:p-5" style={atraso(4)} aria-label="Denúncias por dia">
         <div className="flex items-baseline justify-between">
           <h3 className="ttl text-lg">Por dia</h3>
           <span className="text-xs font-bold text-brand-green-dark/70">últimos {porDia.length} dias</span>
@@ -202,6 +205,8 @@ export function PainelConteudo({
         </div>
       </section>
 
+      {aposPorDia && <div className="lg:self-stretch">{aposPorDia}</div>}
+
       <Barras
         titulo="Por zona"
         ordem={5}
@@ -216,61 +221,6 @@ export function PainelConteudo({
         ordem={6}
         itens={resumo.porTipo.map((i) => ({ rotulo: TIPO_LABELS[i.chave], total: i.total, cor: '#084400' }))}
       />
-
-      <section
-        className="card-brand anim-entra p-3.5 lg:col-span-2 lg:p-5"
-        style={atraso(7)}
-        aria-label="Acessibilidade (PcD)"
-      >
-        <div className="flex items-baseline justify-between gap-2">
-          <h3 className="ttl text-lg">Acessibilidade (PcD)</h3>
-          <span className="text-xs font-bold text-brand-green-dark/70">
-            {acess.total} {acess.total === 1 ? 'ocorrência' : 'ocorrências'} · {acess.pendentes}{' '}
-            {acess.pendentes === 1 ? 'pendente' : 'pendentes'}
-          </span>
-        </div>
-        {acess.total === 0 ? (
-          <p className="mt-2 text-sm text-brand-green-dark/70">
-            Nenhum problema de acessibilidade registrado no período.
-          </p>
-        ) : (
-          <div className="mt-3 space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
-            <div>
-              <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-green-dark/70">
-                Linhas com mais ocorrências
-              </h4>
-              <ul className="space-y-2 text-[13px]">
-                {acess.topLinhas.map((l) => (
-                  <li key={l.linhaId || l.nome} className="flex items-center justify-between gap-2 font-bold">
-                    <span className="flex min-w-0 items-center gap-2">
-                      <span className="ttl bg-brand-green px-1.5 py-1 text-xs leading-none text-brand-cream">{l.codigo}</span>
-                      <span className="truncate">{l.nome}</span>
-                    </span>
-                    <span>{l.total}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-green-dark/70">
-                Veículos com mais ocorrências
-              </h4>
-              {acess.topVeiculos.length === 0 ? (
-                <p className="text-[13px] text-brand-green-dark/70">Nenhuma denúncia informou o número do veículo.</p>
-              ) : (
-                <ul className="space-y-2 text-[13px]">
-                  {acess.topVeiculos.map((v) => (
-                    <li key={v.numero} className="flex justify-between gap-2 font-bold">
-                      <span className="truncate">Veículo {v.numero}</span>
-                      <span>{v.total}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        )}
-      </section>
 
       <section className="card-brand anim-entra overflow-hidden lg:col-span-2" style={atraso(8)} aria-label="Linhas com mais denúncias">
         <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 pb-2.5 pt-3.5">

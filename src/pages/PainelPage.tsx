@@ -3,6 +3,7 @@ import { CabecalhoPagina } from '../components/ui/CabecalhoPagina'
 import { useDesktop } from '../hooks/useDesktop'
 import { AppLayout } from '../components/layout/AppLayout'
 import { PainelConteudo } from '../components/admin/PainelConteudo'
+import { DenunciasPorHora } from '../components/painel/DenunciasPorHora'
 import { LinhaDaSemana } from '../components/painel/LinhaDaSemana'
 import { usePainelResumo } from '../hooks/usePainelResumo'
 import type { Periodo } from '../lib/dashboardDenuncias'
@@ -32,6 +33,7 @@ export function PainelPage() {
           onPeriodo={setPeriodo}
           onZona={setZona}
           carregando={loading}
+          aposPorDia={<DenunciasPorHora />}
         />
       </div>
     </AppLayout>
