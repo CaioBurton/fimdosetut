@@ -4,8 +4,12 @@ export const RAIO_AGRUPAMENTO_METROS = 300
 export const JANELA_AGRUPAMENTO_MINUTOS = 60
 
 export interface GrupoDenuncias {
-  /** Denúncia mais recente do grupo; define a posição do marcador. */
+  /**
+   * Denúncia mais ANTIGA do grupo: âncora fixa. Define a posição e a identidade do marcador, que
+   * por isso não muda de lugar (nem perde a seleção) quando chega uma denúncia nova ao grupo.
+   */
   principal: Denuncia
+  /** Todas as denúncias do grupo, da mais recente para a mais antiga. */
   denuncias: Denuncia[]
 }
 
@@ -45,19 +49,22 @@ function pertenceAoGrupo(d: Denuncia, grupo: GrupoDenuncias) {
 
 /**
  * Agrupa denúncias da mesma linha, tipo e status que ocorreram perto uma da outra
- * (ou citam o mesmo veículo) dentro de uma janela de tempo.
+ * (ou citam o mesmo veículo) dentro de uma janela de tempo, contados a partir da primeira denúncia
+ * do grupo. Assim o grupo é ancorado na mais antiga e não "anda" a cada denúncia nova.
  */
 export function agruparDenuncias(denuncias: Denuncia[]): GrupoDenuncias[] {
-  const ordenadas = [...denuncias].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  const antigasPrimeiro = [...denuncias].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   )
   const grupos: GrupoDenuncias[] = []
 
-  for (const d of ordenadas) {
+  for (const d of antigasPrimeiro) {
     const grupo = grupos.find((g) => pertenceAoGrupo(d, g))
     if (grupo) grupo.denuncias.push(d)
     else grupos.push({ principal: d, denuncias: [d] })
   }
 
+  // O cartão do mapa mostra a mais recente primeiro.
+  for (const g of grupos) g.denuncias.reverse()
   return grupos
 }
