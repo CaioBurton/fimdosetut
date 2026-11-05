@@ -187,7 +187,7 @@ export function MapaDenuncias({
     <div className="relative isolate h-full w-full">
       <MapContainer
         center={TERESINA_CENTER}
-        zoom={12}
+        zoom={13}
         scrollWheelZoom
         zoomControl={false}
         className="mapa-brand isolate h-full w-full"
