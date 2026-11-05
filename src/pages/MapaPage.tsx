@@ -172,7 +172,7 @@ export function MapaPage() {
               {visiveis.length === 0 && (
                 <p className="py-6 text-center text-brand-green-dark/70">{dia === hoje() ? 'Nenhuma denúncia hoje.' : 'Nenhuma denúncia neste dia.'}</p>
               )}
-              {visiveis.map((d) => {
+              {visiveis.slice(0, 10).map((d) => {
                 const zona = d.linha?.zona ?? 'outras'
                 return (
                   <article key={d.id} className="card-brand flex items-center gap-2.5 p-3 !shadow-[3px_3px_0_#084400]">
