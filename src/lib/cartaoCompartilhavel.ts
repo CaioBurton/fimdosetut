@@ -10,6 +10,7 @@ import {
 } from '../types'
 import { PERIODO_LABELS, type Periodo } from './dashboardDenuncias'
 import { EXPLOSAO_PATH, SITE_HOST, SITE_URL } from './marca'
+import type { LinhaEmAlta } from './rankingSemana'
 import type { ResumoPainel } from './resumoPainel'
 
 /**
@@ -91,6 +92,25 @@ export function dadosDoRanking(resumo: ResumoPainel, periodo: Periodo, zona: Zon
     linhas: resumo.topLinhas.slice(0, MAX_LINHAS_RANKING).map((l) => ({ codigo: l.codigo, nome: l.nome, total: l.total })),
   }
 }
+
+export interface DadosCartaoSemana {
+  codigo: string
+  nomeLinha: string
+  zona: Zona
+  denuncias: number
+  pessoas: number
+  confirmacoes: number
+}
+
+/** Só totais: quem denunciou nunca entra no cartão. */
+export const dadosDaLinhaSemana = (l: LinhaEmAlta): DadosCartaoSemana => ({
+  codigo: l.codigo,
+  nomeLinha: l.nome,
+  zona: l.zona,
+  denuncias: l.denuncias,
+  pessoas: l.pessoas,
+  confirmacoes: l.confirmacoes,
+})
 
 // ---------- Texto ----------
 
@@ -304,6 +324,58 @@ export function desenharCartaoRanking(ctx: Contexto, d: DadosCartaoRanking, logo
   rodape(ctx, logo, 'Acompanhe e denuncie:')
 }
 
+export function desenharCartaoSemana(ctx: Contexto, d: DadosCartaoSemana, logo: CanvasImageSource | null) {
+  fundoComExplosao(ctx)
+  cabecalho(ctx)
+
+  ctx.fillStyle = CREME
+  ctx.font = texto(36, 700)
+  ctx.fillText('ÚLTIMOS 7 DIAS', MARGEM, 290)
+  ctx.font = titulo(104)
+  ctx.fillText('LINHA MAIS', MARGEM, 400)
+  ctx.fillText('PROBLEMÁTICA', MARGEM, 504)
+  ctx.fillText('DA SEMANA', MARGEM, 608)
+
+  const yCartao = 680
+  const altCartao = 300
+  const larguraCartao = LARGURA - MARGEM * 2 - 14
+  cartaoCreme(ctx, MARGEM, yCartao, larguraCartao, altCartao)
+
+  ctx.fillStyle = VERDE
+  ctx.font = titulo(112)
+  ctx.fillText(d.codigo, MARGEM + 40, yCartao + 128)
+
+  ctx.fillStyle = VERDE_ESCURO
+  ctx.font = texto(40, 700)
+  quebrarTexto(ctx, d.nomeLinha, larguraCartao - 80, 2).forEach((linha, i) =>
+    ctx.fillText(linha, MARGEM + 40, yCartao + 188 + i * 46)
+  )
+
+  const yInfo = yCartao + altCartao - 30
+  ctx.fillStyle = ZONA_COLORS[d.zona]
+  ctx.beginPath()
+  ctx.arc(MARGEM + 52, yInfo - 11, 12, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = VERDE_ESCURO
+  ctx.font = texto(32, 700)
+  ctx.fillText(`Zona ${ZONA_LABELS[d.zona]}`, MARGEM + 80, yInfo)
+
+  const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`
+  ctx.fillStyle = CREME
+  ctx.font = titulo(46)
+  ctx.fillText(
+    ajustarTexto(ctx, `${plural(d.denuncias, 'DENÚNCIA', 'DENÚNCIAS')} DE ${plural(d.pessoas, 'PESSOA', 'PESSOAS')}`.toUpperCase(), LARGURA - MARGEM * 2),
+    MARGEM,
+    yCartao + altCartao + 100
+  )
+  if (d.confirmacoes > 0) {
+    ctx.font = texto(36, 700)
+    ctx.fillText(plural(d.confirmacoes, 'confirmação', 'confirmações'), MARGEM, yCartao + altCartao + 160)
+  }
+
+  rodape(ctx, logo, 'Pega essa linha? Confirme no app:')
+}
+
 // ---------- Geração e compartilhamento ----------
 
 async function prepararFontes() {
@@ -344,6 +416,9 @@ export const gerarCartaoDenuncia = (denuncia: Denuncia) =>
 export const gerarCartaoRanking = (resumo: ResumoPainel, periodo: Periodo, zona: Zona | 'todas') =>
   gerarPng((ctx, logo) => desenharCartaoRanking(ctx, dadosDoRanking(resumo, periodo, zona), logo))
 
+export const gerarCartaoSemana = (linha: LinhaEmAlta) =>
+  gerarPng((ctx, logo) => desenharCartaoSemana(ctx, dadosDaLinhaSemana(linha), logo))
+
 export type ResultadoCompartilhamento = 'compartilhado' | 'baixado' | 'cancelado'
 
 /**
@@ -382,3 +457,6 @@ export const textoDenuncia = (d: DadosCartaoDenuncia) =>
 
 export const textoRanking = (d: DadosCartaoRanking) =>
   `Ranking das linhas com mais denúncias em Teresina (${d.recorte.toLowerCase()}). Veja no Deu o Prego!: ${SITE_URL}`
+
+export const textoSemana = (d: DadosCartaoSemana) =>
+  `A linha ${d.codigo} (${d.nomeLinha}) é a mais problemática da semana em Teresina. Veja e confirme no Deu o Prego!: ${SITE_URL}`
