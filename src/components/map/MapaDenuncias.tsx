@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import L from 'leaflet'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import {
@@ -98,6 +98,43 @@ function CentralizarNaMinhaLocalizacao({
   )
 }
 
+/** Avisa os limites visíveis do mapa (só quando a pessoa para de mexer, não a cada quadro do arrasto). */
+function LimitesDoMapa({ onLimites }: { onLimites: (limites: L.LatLngBounds) => void }) {
+  const map = useMapEvents({
+    moveend: () => onLimites(map.getBounds().pad(0.5)),
+    zoomend: () => onLimites(map.getBounds().pad(0.5)),
+  })
+  useEffect(() => onLimites(map.getBounds().pad(0.5)), [map, onLimites])
+  return null
+}
+
+interface MarcadorDenunciaProps {
+  id: string
+  lat: number
+  lng: number
+  cor: string
+  resolvido: boolean
+  codigo: string
+  selecionado: boolean
+  quantidade: number
+  pulso: number
+  novo: boolean
+  onSelecionar: (id: string) => void
+}
+
+/** Memoizado: selecionar uma denúncia ou mexer no filtro não refaz os outros marcadores. */
+const MarcadorDenuncia = memo(function MarcadorDenuncia(p: MarcadorDenunciaProps) {
+  const handlers = useMemo(() => ({ click: () => p.onSelecionar(p.id) }), [p.onSelecionar, p.id])
+  return (
+    <Marker
+      position={[p.lat, p.lng]}
+      icon={criarIconeZona(p.cor, p.resolvido, p.codigo, p.selecionado, p.quantidade, p.pulso, p.novo)}
+      zIndexOffset={p.selecionado ? 1000 : 0}
+      eventHandlers={handlers}
+    />
+  )
+})
+
 /** Entrega a instância do mapa a quem está fora do `MapContainer` (como o botão de localização). */
 function CapturarMapa({ onMapa }: { onMapa: (map: L.Map) => void }) {
   const map = useMap()
@@ -126,6 +163,7 @@ export function MapaDenuncias({
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null)
   const [mapa, setMapa] = useState<L.Map | null>(null)
   const [minhaPosicao, setMinhaPosicao] = useState<[number, number] | null>(null)
+  const [limites, setLimites] = useState<L.LatLngBounds | null>(null)
 
   const visiveis = useMemo(
     () => denuncias.filter((d) => filtro === 'todas' || (d.linha?.zona ?? 'outras') === filtro),
@@ -199,23 +237,25 @@ export function MapaDenuncias({
         />
         <CapturarMapa onMapa={setMapa} />
         <FecharAoClicarNoMapa onClick={() => setSelecionadaId(null)} />
+        <LimitesDoMapa onLimites={setLimites} />
         {grupos.map(({ principal: denuncia, denuncias: membros }) => {
-          const zona = denuncia.linha?.zona ?? 'outras'
+          // Só os marcadores perto da área visível: com muitas denúncias, o resto pesaria no arrasto.
+          const selecionado = denuncia.id === selecionadaId
+          if (limites && !selecionado && !limites.contains([denuncia.latitude, denuncia.longitude])) return null
           return (
-            <Marker
+            <MarcadorDenuncia
               key={denuncia.id}
-              position={[denuncia.latitude, denuncia.longitude]}
-              icon={criarIconeZona(
-                ZONA_COLORS[zona],
-                denuncia.status === 'resolvido',
-                denuncia.linha?.codigo ?? '',
-                denuncia.id === selecionadaId,
-                membros.length,
-                denuncia.id === selecionadaId ? pulso : 0,
-                novas.current.has(denuncia.id)
-              )}
-              zIndexOffset={denuncia.id === selecionadaId ? 1000 : 0}
-              eventHandlers={{ click: () => setSelecionadaId(denuncia.id) }}
+              id={denuncia.id}
+              lat={denuncia.latitude}
+              lng={denuncia.longitude}
+              cor={ZONA_COLORS[denuncia.linha?.zona ?? 'outras']}
+              resolvido={denuncia.status === 'resolvido'}
+              codigo={denuncia.linha?.codigo ?? ''}
+              selecionado={selecionado}
+              quantidade={membros.length}
+              pulso={selecionado ? pulso : 0}
+              novo={novas.current.has(denuncia.id)}
+              onSelecionar={setSelecionadaId}
             />
           )
         })}

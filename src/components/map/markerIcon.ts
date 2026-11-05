@@ -46,7 +46,8 @@ function montarIcone(
   return L.divIcon({
     className: 'denuncia-marker',
     html: `<div style="position: relative; width: ${largura}px; height: ${altura}px; opacity: ${opacidade};${selecionado ? ' animation: marcador-pop 360ms var(--ease-mola) both;' : novo ? ' animation: pop 420ms var(--ease-mola) both;' : ''}">
-      <svg viewBox="0 0 274 166" width="${largura}" height="${altura}" aria-hidden="true">
+      <svg viewBox="0 0 274 166" width="${largura}" height="${altura}" aria-hidden="true" style="overflow: visible">
+        <path fill="rgba(8,68,0,0.35)" transform="translate(9 9)" d="${EXPLOSAO}" />
         <path fill="${cor}" stroke="#084400" stroke-width="6" stroke-linejoin="round" d="${EXPLOSAO}" />
       </svg>
       <span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: ${corTexto}; font-family: 'Proxima Nova', sans-serif; font-weight: 800; font-size: ${fonte}px;">${rotulo}</span>

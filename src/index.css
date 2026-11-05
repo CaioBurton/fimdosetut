@@ -106,7 +106,7 @@ select.input-brand {
 .denuncia-marker {
   background: transparent;
   border: 0;
-  filter: drop-shadow(2px 2px 0 rgba(8, 68, 0, 0.35));
+  /* sem filter: drop-shadow aqui, é caro demais com muitos marcadores (a sombra é desenhada no SVG) */
 }
 
 .chip-brand {
