@@ -18,7 +18,7 @@ import { ehAcessibilidade, TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Denuncia,
 const POR_PAGINA = 12
 const TIPOS = Object.keys(TIPO_LABELS) as TipoProblema[]
 
-const ORDEM_ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'outras']
+const ORDEM_ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'rural', 'outras']
 
 
 export function ListaPage() {
