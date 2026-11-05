@@ -150,7 +150,7 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
     expect(screen.queryByText('(importante)')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('combobox', { name: 'Tipo de problema' }))
-    await user.click(screen.getByRole('option', { name: /elevador\/plataforma/ }))
+    await user.click(screen.getByRole('option', { name: /acessibilidade/i }))
 
     expect(screen.getByLabelText(/número do veículo.*\(importante\)/i)).toBeInTheDocument()
     expect(screen.getByText(/provar quais veículos estão sem acessibilidade/i)).toBeInTheDocument()

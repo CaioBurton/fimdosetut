@@ -5,7 +5,7 @@ import { denunciasParaCsv } from './exportarCsv'
 const base: Denuncia = {
   id: '1',
   linha_id: 'l1',
-  tipo: 'pcd_elevador',
+  tipo: 'pcd',
   status: 'pendente',
   descricao: 'Plataforma "travada"; motorista não ajudou',
   numero_veiculo: ' 12345 ',
@@ -23,7 +23,7 @@ describe('denunciasParaCsv', () => {
     const [cabecalho, linha] = denunciasParaCsv([base]).split('\r\n')
     expect(cabecalho.startsWith('Data;Hora;Linha;')).toBe(true)
     expect(linha).toBe(
-      '01/11/2026;22:30;063;DIRCEU / CENTRO;Leste;PcD: elevador/plataforma quebrado;Pendente;12345;' +
+      '01/11/2026;22:30;063;DIRCEU / CENTRO;Leste;Acessibilidade (PcD);Pendente;12345;' +
         '"Plataforma ""travada""; motorista não ajudou";-5.09;-42.8;3'
     )
   })

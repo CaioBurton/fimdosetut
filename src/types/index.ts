@@ -5,15 +5,14 @@ export type TipoProblema =
   | 'acidente'
   | 'atraso'
   | 'lotacao'
+  | 'nao_passou'
+  | 'ar_condicionado'
+  | 'gps'
+  | 'pcd'
   | 'outro'
-  | 'pcd_elevador'
-  | 'pcd_espaco'
-  | 'pcd_motorista'
 
-/** Tipos de denúncia ligados à acessibilidade para pessoas com deficiência (PcD). */
-export const TIPOS_ACESSIBILIDADE: TipoProblema[] = ['pcd_elevador', 'pcd_espaco', 'pcd_motorista']
-
-export const ehAcessibilidade = (tipo: TipoProblema) => TIPOS_ACESSIBILIDADE.includes(tipo)
+/** Tipo de denúncia ligado à acessibilidade para pessoas com deficiência (PcD). */
+export const ehAcessibilidade = (tipo: TipoProblema) => tipo === 'pcd'
 
 export type StatusDenuncia = 'pendente' | 'resolvido'
 
@@ -73,10 +72,11 @@ export const TIPO_LABELS: Record<TipoProblema, string> = {
   acidente: 'Acidente',
   atraso: 'Atraso',
   lotacao: 'Lotação excessiva',
+  nao_passou: 'Ônibus não passou',
+  ar_condicionado: 'Ar-condicionado quebrado',
+  gps: 'GPS/rastreador/letreiro com defeito',
+  pcd: 'Acessibilidade (PcD)',
   outro: 'Outro',
-  pcd_elevador: 'PcD: elevador/plataforma quebrado',
-  pcd_espaco: 'PcD: sem espaço reservado',
-  pcd_motorista: 'PcD: motorista não parou/ajudou',
 }
 
 export const STATUS_LABELS: Record<StatusDenuncia, string> = {
