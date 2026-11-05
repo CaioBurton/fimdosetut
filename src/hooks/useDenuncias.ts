@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { registrarLimpezaDeCache } from '../lib/cacheRegistro'
 import { supabase } from '../lib/supabaseClient'
 import type { Denuncia, Linha } from '../types'
@@ -84,6 +84,9 @@ export function useDenuncias(
 ) {
   // Denúncias sem a linha anexada: a linha é ligada abaixo, pelo `linha_id`, assim a lista
   // se completa sozinha quando as linhas terminam de carregar.
+  // Nome do canal único por uso do hook: duas telas/componentes com o hook ao mesmo tempo (ex.: admin + gráfico
+  // do painel) não podem dividir o mesmo canal, o Supabase recusa `.on` num canal já inscrito.
+  const idCanal = useId()
   const chave = `${dia ? `dia:${dia}` : (dias ?? 'tudo')}|${apenasMinhas}`
   const emCache = cache.get(chave)
   const cacheValido = !!emCache && Date.now() - emCache.em < VALIDADE_CACHE_MS
@@ -151,7 +154,7 @@ export function useDenuncias(
 
   useEffect(() => {
     const canal = supabase
-      .channel(apenasMinhas ? 'minhas-denuncias-realtime' : 'denuncias-realtime')
+      .channel(`${apenasMinhas ? 'minhas-denuncias-realtime' : 'denuncias-realtime'}-${idCanal}`)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'denuncias' },
@@ -190,7 +193,7 @@ export function useDenuncias(
     return () => {
       supabase.removeChannel(canal)
     }
-  }, [apenasMinhas, aplicar, dia])
+  }, [apenasMinhas, aplicar, dia, idCanal])
 
   /** Atualiza campos de uma denúncia já carregada (ex.: o total de confirmações, sem esperar o tempo real). */
   const atualizarDenuncia = useCallback((id: string, campos: Partial<Denuncia>) => {

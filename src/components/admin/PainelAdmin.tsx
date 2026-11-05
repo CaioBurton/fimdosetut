@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { Periodo } from '../../lib/dashboardDenuncias'
 import { resumirDenuncias } from '../../lib/resumoPainel'
 import type { Denuncia, Zona } from '../../types'
+import { DenunciasPorHora } from '../painel/DenunciasPorHora'
 import { LinhaDaSemana } from '../painel/LinhaDaSemana'
 import { PainelConteudo } from './PainelConteudo'
 
@@ -29,6 +30,7 @@ export function PainelAdmin({ denuncias, onGerenciarLinhas }: Props) {
         onPeriodo={setPeriodo}
         onZona={setZona}
         onGerenciarLinhas={onGerenciarLinhas}
+        aposPorDia={<DenunciasPorHora />}
       />
     </div>
   )
