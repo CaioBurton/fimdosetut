@@ -4,6 +4,9 @@ App colaborativo para avisar sobre ônibus quebrados, atrasados ou lotados nas l
 
 **Site: https://deuoprego.com.br/**
 
+> **Apresentação para não-desenvolvedores:** veja o `DOCUMENTO-EXECUTIVO.md` (visão geral do app,
+> recursos, regras, privacidade, custos e rotina de operação, sem termos técnicos).
+
 Qualquer pessoa vê o mapa, a lista e o painel de denúncias. Para registrar uma denúncia é preciso criar uma conta.
 
 ## O que o app faz
