@@ -40,7 +40,19 @@ export function createChannelMock() {
   return channel
 }
 
+export function createStorageBucketMock() {
+  return {
+    upload: vi.fn().mockResolvedValue({ data: { path: 'x' }, error: null }),
+    remove: vi.fn().mockResolvedValue({ data: [], error: null }),
+    list: vi.fn().mockResolvedValue({ data: [], error: null }),
+    getPublicUrl: vi.fn((path: string) => ({
+      data: { publicUrl: `https://exemplo.supabase.co/storage/v1/object/public/denuncias-fotos/${path}` },
+    })),
+  }
+}
+
 export function createSupabaseMock() {
+  const bucket = createStorageBucketMock()
   return {
     from: vi.fn(() => createChainable({ data: [], error: null })),
     auth: {
@@ -55,5 +67,6 @@ export function createSupabaseMock() {
     rpc: vi.fn(() => createChainable({ data: null, error: null })),
     channel: vi.fn(() => createChannelMock()),
     removeChannel: vi.fn(),
+    storage: { from: vi.fn(() => bucket) },
   }
 }

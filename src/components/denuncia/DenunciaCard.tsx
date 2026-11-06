@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { STATUS_LABELS, TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Denuncia } from '../../types'
 import { Badge } from '../ui/Badge'
 import { TextoExpansivel } from '../ui/TextoExpansivel'
+import { FotoDenuncia } from './FotoDenuncia'
 
 function formatarData(iso: string) {
   return new Date(iso).toLocaleString('pt-BR', {
@@ -41,6 +42,7 @@ export function DenunciaCard({ denuncia, actions }: { denuncia: Denuncia; action
         )}
       </div>
       <TextoExpansivel texto={denuncia.descricao} className="mt-2 text-sm text-brand-green-dark/90" />
+      {denuncia.foto_path && <FotoDenuncia key={denuncia.foto_path} path={denuncia.foto_path} className="mt-2.5" />}
       {actions && <div className="mt-3 flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   )

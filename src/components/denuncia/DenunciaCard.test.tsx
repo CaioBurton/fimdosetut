@@ -1,7 +1,11 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, it, vi } from 'vitest'
+import { createSupabaseMock } from '../../test/supabaseMock'
 import type { Denuncia } from '../../types'
 import { DenunciaCard } from './DenunciaCard'
+
+vi.mock('../../lib/supabaseClient', () => ({ supabase: createSupabaseMock() }))
 
 function criarDenuncia(sobrescrever: Partial<Denuncia> = {}): Denuncia {
   return {
@@ -20,6 +24,23 @@ function criarDenuncia(sobrescrever: Partial<Denuncia> = {}): Denuncia {
 }
 
 describe('DenunciaCard', () => {
+  it('só baixa a foto quando a pessoa pede', async () => {
+    const user = userEvent.setup()
+    render(<DenunciaCard denuncia={criarDenuncia({ foto_path: 'abc.webp' })} />)
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Ver foto da denúncia' }))
+    expect(screen.getByAltText('Foto enviada com a denúncia')).toHaveAttribute(
+      'src',
+      expect.stringContaining('/denuncias-fotos/abc.webp')
+    )
+  })
+
+  it('não mostra o botão de foto em denúncia sem foto', () => {
+    render(<DenunciaCard denuncia={criarDenuncia()} />)
+    expect(screen.queryByRole('button', { name: 'Ver foto da denúncia' })).not.toBeInTheDocument()
+  })
+
   it('mostra o código, nome da linha, zona, tipo, status e descrição', () => {
     render(<DenunciaCard denuncia={criarDenuncia()} />)
 

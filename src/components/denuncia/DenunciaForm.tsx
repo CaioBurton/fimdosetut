@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useDesktop } from '../../hooks/useDesktop'
 import { CabecalhoPagina } from '../ui/CabecalhoPagina'
 import { supabase } from '../../lib/supabaseClient'
+import { enviarFoto, removerFotos, TAMANHO_MAXIMO_ORIGINAL } from '../../lib/fotosDenuncias'
 import { ehAcessibilidade, TIPO_LABELS, type Linha, type TipoProblema } from '../../types'
 import { LinksLegais } from '../legal/LinksLegais'
 import { VERSAO_DOCUMENTOS } from '../../lib/legal'
@@ -30,8 +31,33 @@ export function DenunciaForm({
   const [numeroVeiculo, setNumeroVeiculo] = useState('')
   const [local, setLocal] = useState<{ lat: number; lng: number } | null>(null)
   const [aceitou, setAceitou] = useState(false)
+  const [foto, setFoto] = useState<File | null>(null)
+  const [erroFoto, setErroFoto] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+
+  // Prévia local da foto escolhida (nada é enviado antes de "Enviar denúncia").
+  const previa = useMemo(() => (foto ? URL.createObjectURL(foto) : null), [foto])
+  useEffect(() => {
+    if (!previa) return
+    return () => URL.revokeObjectURL(previa)
+  }, [previa])
+
+  function escolherFoto(e: ChangeEvent<HTMLInputElement>) {
+    const arquivo = e.target.files?.[0] ?? null
+    e.target.value = ''
+    if (!arquivo) return
+    if (!arquivo.type.startsWith('image/')) {
+      setErroFoto('Escolha um arquivo de imagem (foto).')
+      return
+    }
+    if (arquivo.size > TAMANHO_MAXIMO_ORIGINAL) {
+      setErroFoto('Essa imagem é grande demais. Escolha outra foto.')
+      return
+    }
+    setErroFoto(null)
+    setFoto(arquivo)
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -66,6 +92,19 @@ export function DenunciaForm({
       }
     }
 
+    // A foto vai antes, para a denúncia já nascer com ela (o envio precisa de sessão, por isso vem
+    // depois do login anônimo). O arquivo é comprimido no aparelho e perde os metadados (EXIF/GPS).
+    let fotoPath: string | null = null
+    if (foto) {
+      const envio = await enviarFoto(foto)
+      if (envio.error) {
+        setEnviando(false)
+        setErro(envio.error)
+        return
+      }
+      fotoPath = envio.path
+    }
+
     // A função do banco grava a denúncia e a autoria (privada) juntas, em nome de quem está logado.
     const { error } = await supabase.rpc('criar_denuncia', {
       p_linha_id: linhaId,
@@ -74,7 +113,10 @@ export function DenunciaForm({
       p_numero_veiculo: numeroVeiculo.trim() || null,
       p_latitude: local.lat,
       p_longitude: local.lng,
+      p_foto_path: fotoPath,
     })
+
+    if (error && fotoPath) await removerFotos([fotoPath])
 
     setEnviando(false)
 
@@ -181,6 +223,60 @@ export function DenunciaForm({
             className="input-brand !py-3"
           />
         </div>
+        <div>
+          <span className={rotulo}>
+            Foto{' '}
+            <span className="font-semibold normal-case tracking-normal text-brand-green-dark/70">
+              (opcional)
+            </span>
+          </span>
+          {previa ? (
+            <div className="space-y-2">
+              <img
+                src={previa}
+                alt="Prévia da foto escolhida"
+                className="max-h-60 w-full rounded-[2px] border-2 border-brand-green bg-brand-green/5 object-contain"
+              />
+              <div className="flex flex-wrap gap-2">
+                <label htmlFor="foto-denuncia" className="chip-brand cursor-pointer">
+                  Trocar foto
+                </label>
+                <button type="button" className="chip-brand" onClick={() => setFoto(null)}>
+                  Remover foto
+                </button>
+              </div>
+            </div>
+          ) : (
+            <label
+              htmlFor="foto-denuncia"
+              className="flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[2px] border-2 border-dashed border-brand-green bg-white px-3 text-sm font-bold text-brand-green-dark"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="6" width="18" height="14" rx="1" />
+                <circle cx="12" cy="13" r="3.5" />
+                <path d="M8 6l1.5-2h5L16 6" />
+              </svg>
+              Tirar ou escolher foto
+            </label>
+          )}
+          <input
+            id="foto-denuncia"
+            type="file"
+            accept="image/*"
+            onChange={escolherFoto}
+            className="sr-only"
+            aria-label="Foto da denúncia"
+          />
+          {erroFoto && (
+            <p role="alert" className="mt-1.5 text-xs font-bold text-[#8f1f1f]">
+              {erroFoto}
+            </p>
+          )}
+          <p className="mt-1.5 text-xs font-semibold text-brand-green-dark/70">
+            A foto fica pública junto da denúncia. Evite mostrar o rosto de pessoas e placas de carros
+            particulares.
+          </p>
+        </div>
       </SecaoNumerada>
 
       <div className="lg:col-start-2 lg:row-span-6 lg:row-start-2">
@@ -194,7 +290,7 @@ export function DenunciaForm({
       </div>
 
       <p className="text-xs font-semibold leading-snug text-brand-green-dark/80">
-        Sua denúncia (local, descrição e número do veículo) aparece para todos no mapa, sem o seu
+        Sua denúncia (local, descrição, número do veículo e foto) aparece para todos no mapa, sem o seu
         nome. Não escreva dados pessoais de outras pessoas.
       </p>
 

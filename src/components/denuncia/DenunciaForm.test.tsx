@@ -6,10 +6,16 @@ import { createSupabaseMock } from '../../test/supabaseMock'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabaseClient'
 import type { Linha } from '../../types'
+import { enviarFoto, removerFotos } from '../../lib/fotosDenuncias'
 import { DenunciaForm } from './DenunciaForm'
 
 vi.mock('../../lib/supabaseClient', () => ({ supabase: createSupabaseMock() }))
 vi.mock('../../hooks/useAuth')
+vi.mock('../../lib/fotosDenuncias', async (original) => ({
+  ...(await original<typeof import('../../lib/fotosDenuncias')>()),
+  enviarFoto: vi.fn(),
+  removerFotos: vi.fn().mockResolvedValue({ error: null }),
+}))
 
 vi.mock('react-leaflet', () => ({
   MapContainer: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
@@ -122,6 +128,7 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
       p_numero_veiculo: null,
       p_latitude: -5.09,
       p_longitude: -42.8,
+      p_foto_path: null,
     })
     expect(supabase.from).not.toHaveBeenCalled()
     expect(onSuccess).toHaveBeenCalled()
@@ -171,5 +178,86 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
       await screen.findByText('Não foi possível enviar a denúncia. Verifique sua conexão e tente novamente.')
     ).toBeInTheDocument()
     expect(onSuccess).not.toHaveBeenCalled()
+  })
+
+  describe('foto', () => {
+    const fotoArquivo = () => new File(['x'], 'onibus.jpg', { type: 'image/jpeg' })
+
+    beforeEach(() => {
+      vi.mocked(enviarFoto).mockReset()
+      vi.mocked(removerFotos).mockClear()
+      URL.createObjectURL = vi.fn(() => 'blob:previa')
+      URL.revokeObjectURL = vi.fn()
+    })
+
+    it('envia a foto e manda o caminho dela para a denúncia', async () => {
+      vi.mocked(enviarFoto).mockResolvedValue({ path: 'abc.webp', error: null })
+      vi.mocked(supabase.rpc).mockReturnValue(Promise.resolve({ data: 'd1', error: null }) as never)
+      const user = userEvent.setup()
+      const onSuccess = vi.fn()
+      render(<DenunciaForm linhas={linhas} onSuccess={onSuccess} />)
+
+      await preencherELocalizar(user)
+      await user.upload(screen.getByLabelText('Foto da denúncia'), fotoArquivo())
+      expect(screen.getByAltText('Prévia da foto escolhida')).toHaveAttribute('src', 'blob:previa')
+      await user.click(screen.getByRole('button', { name: 'Enviar denúncia' }))
+
+      expect(enviarFoto).toHaveBeenCalledTimes(1)
+      expect(supabase.rpc).toHaveBeenCalledWith(
+        'criar_denuncia',
+        expect.objectContaining({ p_foto_path: 'abc.webp' })
+      )
+      expect(onSuccess).toHaveBeenCalled()
+    })
+
+    it('não cria a denúncia quando a foto não sobe', async () => {
+      vi.mocked(enviarFoto).mockResolvedValue({
+        path: null,
+        error: 'Não foi possível enviar a foto. Tente novamente ou envie sem foto.',
+      })
+      const user = userEvent.setup()
+      const onSuccess = vi.fn()
+      render(<DenunciaForm linhas={linhas} onSuccess={onSuccess} />)
+
+      await preencherELocalizar(user)
+      await user.upload(screen.getByLabelText('Foto da denúncia'), fotoArquivo())
+      await user.click(screen.getByRole('button', { name: 'Enviar denúncia' }))
+
+      expect(await screen.findByText(/não foi possível enviar a foto/i)).toBeInTheDocument()
+      expect(supabase.rpc).not.toHaveBeenCalled()
+      expect(onSuccess).not.toHaveBeenCalled()
+    })
+
+    it('apaga a foto enviada quando a denúncia falha', async () => {
+      vi.mocked(enviarFoto).mockResolvedValue({ path: 'abc.webp', error: null })
+      vi.mocked(supabase.rpc).mockReturnValue(
+        Promise.resolve({ data: null, error: { message: 'erro' } }) as never
+      )
+      const user = userEvent.setup()
+      render(<DenunciaForm linhas={linhas} onSuccess={vi.fn()} />)
+
+      await preencherELocalizar(user)
+      await user.upload(screen.getByLabelText('Foto da denúncia'), fotoArquivo())
+      await user.click(screen.getByRole('button', { name: 'Enviar denúncia' }))
+
+      expect(await screen.findByText(/não foi possível enviar a denúncia/i)).toBeInTheDocument()
+      expect(removerFotos).toHaveBeenCalledWith(['abc.webp'])
+    })
+
+    it('recusa arquivos que não são imagem e permite remover a foto escolhida', async () => {
+      const user = userEvent.setup({ applyAccept: false })
+      render(<DenunciaForm linhas={linhas} onSuccess={vi.fn()} />)
+
+      await user.upload(
+        screen.getByLabelText('Foto da denúncia'),
+        new File(['x'], 'doc.pdf', { type: 'application/pdf' })
+      )
+      expect(screen.getByText('Escolha um arquivo de imagem (foto).')).toBeInTheDocument()
+
+      await user.upload(screen.getByLabelText('Foto da denúncia'), fotoArquivo())
+      expect(screen.getByAltText('Prévia da foto escolhida')).toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: 'Remover foto' }))
+      expect(screen.queryByAltText('Prévia da foto escolhida')).not.toBeInTheDocument()
+    })
   })
 })

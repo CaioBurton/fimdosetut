@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { removerFotosDoUsuario } from '../lib/fotosDenuncias'
 import { supabase } from '../lib/supabaseClient'
 import type { Papel, Perfil } from '../types'
 
@@ -44,6 +45,9 @@ export function useUsuarios() {
   )
 
   const excluir = useCallback(async (id: string) => {
+    // Fotos das denúncias primeiro: o Storage só apaga arquivos pela API, não junto com a conta.
+    const { error: erroFotos } = await removerFotosDoUsuario(id, false)
+    if (erroFotos) return 'Não foi possível apagar as fotos do usuário. Tente novamente.'
     const { error } = await supabase.rpc('admin_excluir_usuario', { alvo: id })
     if (error) return 'Não foi possível excluir o usuário. Tente novamente.'
     setUsuarios((atual) => atual.filter((u) => u.id !== id))

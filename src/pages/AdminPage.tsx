@@ -25,6 +25,7 @@ import { useDenunciasPorUsuario } from '../hooks/useDenunciasPorUsuario'
 import { useNomesUsuarios } from '../hooks/useNomesUsuarios'
 import { useLinhas } from '../hooks/useLinhas'
 import { useUsuarios } from '../hooks/useUsuarios'
+import { removerFotos, urlFoto } from '../lib/fotosDenuncias'
 import { supabase } from '../lib/supabaseClient'
 import {
   STATUS_LABELS,
@@ -72,11 +73,16 @@ export function AdminPage() {
     if (error) setAcaoErro('Não foi possível atualizar a denúncia. Tente novamente.')
   }
 
-  async function excluirDenuncia(id: string) {
+  async function excluirDenuncia(id: string, fotoPath?: string | null) {
     setAcaoErro(null)
     const { error } = await supabase.from('denuncias').delete().eq('id', id)
     setConfirmando(null)
-    if (error) setAcaoErro('Não foi possível excluir a denúncia. Tente novamente.')
+    if (error) {
+      setAcaoErro('Não foi possível excluir a denúncia. Tente novamente.')
+      return
+    }
+    // O arquivo não some junto com a denúncia: o Storage só apaga pela API.
+    await removerFotos([fotoPath])
   }
 
   return (
@@ -178,7 +184,7 @@ export function AdminPage() {
                       <Button
                         variant="ghost"
                         className="anim-abre w-auto flex-1 py-2 text-sm text-zona-leste"
-                        onClick={() => excluirDenuncia(denuncia.id)}
+                        onClick={() => excluirDenuncia(denuncia.id, denuncia.foto_path)}
                       >
                         Confirmar exclusão
                       </Button>
@@ -501,7 +507,7 @@ interface TabelaDenunciasProps {
   confirmando: string | null
   onConfirmar: (id: string | null) => void
   onAlternar: (id: string, statusAtual: string) => void
-  onExcluir: (id: string) => void
+  onExcluir: (id: string, fotoPath?: string | null) => void
 }
 
 function TabelaDenuncias({ denuncias, pagina, onPagina, confirmando, onConfirmar, onAlternar, onExcluir }: TabelaDenunciasProps) {
@@ -536,7 +542,19 @@ function TabelaDenuncias({ denuncias, pagina, onPagina, confirmando, onConfirmar
                     {d.linha?.codigo ?? '—'}
                   </span>
                 </td>
-                <td className={`${celula} font-bold`}>{TIPO_LABELS[d.tipo]}</td>
+                <td className={`${celula} font-bold`}>
+                  {TIPO_LABELS[d.tipo]}
+                  {d.foto_path && (
+                    <a
+                      href={urlFoto(d.foto_path)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-2 text-xs font-bold underline"
+                    >
+                      Ver foto
+                    </a>
+                  )}
+                </td>
                 <td className={celula}>
                   <span className="inline-flex items-center gap-1.5">
                     <i className="block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: ZONA_COLORS[zona] }} />
@@ -552,7 +570,7 @@ function TabelaDenuncias({ denuncias, pagina, onPagina, confirmando, onConfirmar
                 <td className={`${celula} whitespace-nowrap text-right`}>
                   {confirmando === d.id ? (
                     <span className="anim-abre inline-flex gap-2">
-                      <button type="button" className={botaoPerigoTabela} onClick={() => onExcluir(d.id)}>
+                      <button type="button" className={botaoPerigoTabela} onClick={() => onExcluir(d.id, d.foto_path)}>
                         Confirmar exclusão
                       </button>
                       <button type="button" className={botaoTabela} onClick={() => onConfirmar(null)}>

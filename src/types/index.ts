@@ -40,6 +40,8 @@ export interface Denuncia {
   status: StatusDenuncia
   descricao: string
   numero_veiculo?: string | null
+  /** Caminho da foto no bucket `denuncias-fotos` (opcional). */
+  foto_path?: string | null
   latitude: number
   longitude: number
   created_at: string

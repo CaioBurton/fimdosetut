@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { definirAvisoLogin } from '../../lib/avisoLogin'
 import { baixarJson } from '../../lib/baixarArquivo'
+import { removerFotosDoUsuario } from '../../lib/fotosDenuncias'
 import { supabase } from '../../lib/supabaseClient'
 import { Button } from '../ui/Button'
 import { TituloSecao } from '../ui/TituloSecao'
@@ -18,7 +19,7 @@ function mensagemDeErro(erro: { message?: string }) {
 
 /** Direitos do titular (LGPD, art. 18): baixar uma cópia dos dados e excluir a conta. */
 export function MeusDadosPrivacidade() {
-  const { signOut } = useAuth()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const [baixando, setBaixando] = useState(false)
   const [erroDados, setErroDados] = useState<string | null>(null)
@@ -43,6 +44,15 @@ export function MeusDadosPrivacidade() {
   async function excluir() {
     setExcluindo(true)
     setErroConta(null)
+    // Fotos primeiro: depois de excluída a conta, não dá mais para apagar os arquivos dela.
+    if (user) {
+      const { error: erroFotos } = await removerFotosDoUsuario(user.id, true)
+      if (erroFotos) {
+        setExcluindo(false)
+        setErroConta('Não foi possível apagar as suas fotos. Tente novamente.')
+        return
+      }
+    }
     const { error } = await supabase.rpc('excluir_minha_conta')
     if (error) {
       setExcluindo(false)

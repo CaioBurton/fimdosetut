@@ -16,6 +16,7 @@ import { useDesktop } from '../hooks/useDesktop'
 import { useAuth } from '../hooks/useAuth'
 import { useDenuncias } from '../hooks/useDenuncias'
 import { useLinhas } from '../hooks/useLinhas'
+import { removerFotos } from '../lib/fotosDenuncias'
 import { supabase } from '../lib/supabaseClient'
 
 const POR_PAGINA = 5
@@ -44,10 +45,15 @@ export function MinhasDenunciasPage() {
     if (error) setAcaoErro('Não foi possível atualizar a denúncia. Tente novamente.')
   }
 
-  async function excluir(id: string) {
+  async function excluir(id: string, fotoPath?: string | null) {
     setAcaoErro(null)
     const { error } = await supabase.from('denuncias').delete().eq('id', id)
-    if (error) setAcaoErro('Não foi possível excluir a denúncia. Tente novamente.')
+    if (error) {
+      setAcaoErro('Não foi possível excluir a denúncia. Tente novamente.')
+      return
+    }
+    // O arquivo não some junto com a denúncia: o Storage só apaga pela API.
+    await removerFotos([fotoPath])
   }
 
   return (
@@ -101,7 +107,7 @@ export function MinhasDenunciasPage() {
                         <Button
                           variant="ghost"
                           className="w-auto flex-1 py-2 text-sm text-zona-leste"
-                          onClick={() => excluir(denuncia.id)}
+                          onClick={() => excluir(denuncia.id, denuncia.foto_path)}
                         >
                           Excluir
                         </Button>

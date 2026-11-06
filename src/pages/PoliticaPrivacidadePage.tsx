@@ -37,8 +37,14 @@ const SECOES: SecaoLegal[] = [
         </p>
         <p>
           <strong>Denúncias:</strong> a linha, o tipo de problema, a descrição que você escreve, o número
-          do veículo (opcional), o local marcado no mapa e a data e hora do envio. O local pode ser
-          marcado por você ou obtido pelo seu aparelho, se você autorizar o acesso à localização.
+          do veículo (opcional), a foto (opcional), o local marcado no mapa e a data e hora do envio.
+          O local pode ser marcado por você ou obtido pelo seu aparelho, se você autorizar o acesso à
+          localização.
+        </p>
+        <p>
+          <strong>Fotos:</strong> antes de sair do seu aparelho, a foto é reduzida e perde os metadados
+          do arquivo (como a localização GPS e o modelo da câmera). O nome do arquivo é aleatório e não
+          identifica você.
         </p>
         <p>
           <strong>Uso sem cadastro:</strong> você pode enviar denúncias e marcar “Também vi” sem criar
@@ -70,7 +76,8 @@ const SECOES: SecaoLegal[] = [
       <>
         <p>
           <strong>As denúncias são públicas.</strong> Qualquer visitante vê o mapa, a lista e o painel,
-          com a linha, o tipo, a descrição, o número do veículo, o local e o horário de cada denúncia.
+          com a linha, o tipo, a descrição, o número do veículo, a foto, o local e o horário de cada
+          denúncia.
         </p>
         <p>
           <strong>Seu nome, seu e-mail e o seu perfil não aparecem</strong> junto das denúncias. O
@@ -83,7 +90,9 @@ const SECOES: SecaoLegal[] = [
         </p>
         <p>
           Por isso, <strong>não escreva dados pessoais de outras pessoas</strong> (nomes, telefones,
-          documentos, placas de carros particulares) na descrição da denúncia.
+          documentos, placas de carros particulares) na descrição da denúncia, e evite fotos em que
+          apareçam rostos de pessoas ou placas de carros particulares. A administração pode remover
+          fotos inadequadas.
         </p>
       </>
     ),
@@ -128,7 +137,7 @@ const SECOES: SecaoLegal[] = [
         <ul>
           <li>
             <strong>Supabase</strong>: banco de dados e autenticação (guarda contas e sessões anônimas,
-            perfis, denúncias, confirmações e feedbacks);
+            perfis, denúncias, fotos das denúncias, confirmações e feedbacks);
           </li>
           <li>
             <strong>Vercel</strong>: hospedagem do app;
@@ -162,7 +171,7 @@ const SECOES: SecaoLegal[] = [
       <>
         <p>
           Guardamos os seus dados enquanto a sua conta existir. Quando uma conta é excluída, apagamos o
-          perfil, as linhas cadastradas, as confirmações e as denúncias feitas por ela. Mensagens de feedback podem ser
+          perfil, as linhas cadastradas, as confirmações e as denúncias feitas por ela, com as fotos. Mensagens de feedback podem ser
           mantidas sem qualquer identificação de quem as enviou.
         </p>
         <p>

@@ -14,6 +14,7 @@ import { criarIconeZona } from './markerIcon'
 import { BotaoMinhaLocalizacao } from './BotaoMinhaLocalizacao'
 import { BotaoCalendario } from './BotaoCalendario'
 import { TextoExpansivel } from '../ui/TextoExpansivel'
+import { FotoDenuncia } from '../denuncia/FotoDenuncia'
 
 const TERESINA_CENTER: [number, number] = [-5.0892, -42.8019]
 const ZONAS_FILTRO: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'rural', 'outras']
@@ -363,6 +364,9 @@ export function MapaDenuncias({
           {/* Denúncia muito longa: o texto rola dentro do cartão, sem passar por baixo do cabeçalho. */}
           <div className="min-h-0 overflow-y-auto overscroll-contain">
             <TextoExpansivel key={selecionada.id} texto={selecionada.descricao} linhas={3} className="text-sm leading-snug" />
+            {selecionada.foto_path && (
+              <FotoDenuncia key={selecionada.foto_path} path={selecionada.foto_path} className="mt-2" />
+            )}
           </div>
           <div className="flex shrink-0 items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 text-[13px] font-bold">

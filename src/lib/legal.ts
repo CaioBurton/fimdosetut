@@ -7,8 +7,8 @@
  */
 
 /** Versão dos documentos. Mude quando o texto mudar de forma relevante. */
-export const VERSAO_DOCUMENTOS = '2026-11-01'
-export const DATA_DOCUMENTOS = '01/11/2026'
+export const VERSAO_DOCUMENTOS = '2026-11-06'
+export const DATA_DOCUMENTOS = '06/11/2026'
 
 export const CONTROLADOR = {
   nome: 'Fórum Piauiense de Luta pelo Transporte Público',
