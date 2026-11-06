@@ -1,7 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createSupabaseMock } from '../test/supabaseMock'
+import { createChainable, createSupabaseMock } from '../test/supabaseMock'
 import { supabase } from './supabaseClient'
-import { enviarFoto, removerFotos, removerFotosDoUsuario, urlFoto } from './fotosDenuncias'
+import {
+  aprovarFoto,
+  enviarFoto,
+  excluirDenunciaComFoto,
+  recusarFoto,
+  removerFotoDaDenuncia,
+  removerFotos,
+  removerFotosDoUsuario,
+  urlFoto,
+} from './fotosDenuncias'
 
 vi.mock('./supabaseClient', () => ({ supabase: createSupabaseMock() }))
 
@@ -91,5 +100,61 @@ describe('fotosDenuncias', () => {
     getContext.mockRestore()
     toBlob.mockRestore()
     vi.unstubAllGlobals()
+  })
+})
+
+describe('moderação de fotos', () => {
+  beforeEach(() => {
+    vi.mocked(bucket().remove).mockClear()
+    vi.mocked(supabase.rpc).mockReset()
+    vi.mocked(supabase.from).mockReset()
+  })
+
+  it('ao excluir a denúncia, apaga também a foto que ainda estava na fila', async () => {
+    const fila = createChainable({ data: { foto_path: 'fila.webp' } })
+    const exclusao = createChainable({ data: null })
+    vi.mocked(supabase.from).mockReturnValueOnce(fila as never).mockReturnValueOnce(exclusao as never)
+
+    const { error } = await excluirDenunciaComFoto('d1', 'publicada.webp')
+
+    expect(error).toBeNull()
+    expect(supabase.from).toHaveBeenNthCalledWith(1, 'fotos_pendentes')
+    expect(exclusao.delete).toHaveBeenCalled()
+    expect(bucket().remove).toHaveBeenCalledWith(['publicada.webp', 'fila.webp'])
+  })
+
+  it('não apaga a foto quando a exclusão da denúncia falha', async () => {
+    vi.mocked(supabase.from)
+      .mockReturnValueOnce(createChainable({ data: null }) as never)
+      .mockReturnValueOnce(createChainable({ error: { message: 'negado' } }) as never)
+
+    const { error } = await excluirDenunciaComFoto('d1', 'publicada.webp')
+
+    expect(error).toEqual({ message: 'negado' })
+    expect(bucket().remove).not.toHaveBeenCalled()
+  })
+
+  it('remover só a foto limpa a coluna e apaga o arquivo, mantendo a denúncia', async () => {
+    const atualizacao = createChainable({ data: null })
+    vi.mocked(supabase.from).mockReturnValueOnce(atualizacao as never)
+
+    await removerFotoDaDenuncia('d1', 'a.webp')
+
+    expect(atualizacao.update).toHaveBeenCalledWith({ foto_path: null })
+    expect(atualizacao.delete).not.toHaveBeenCalled()
+    expect(bucket().remove).toHaveBeenCalledWith(['a.webp'])
+  })
+
+  it('recusar tira da fila e apaga o arquivo; aprovar não apaga nada', async () => {
+    vi.mocked(supabase.rpc).mockResolvedValueOnce({ data: 'fila.webp', error: null } as never)
+    await recusarFoto('d1')
+    expect(supabase.rpc).toHaveBeenCalledWith('recusar_foto', { p_denuncia_id: 'd1' })
+    expect(bucket().remove).toHaveBeenCalledWith(['fila.webp'])
+
+    vi.mocked(bucket().remove).mockClear()
+    vi.mocked(supabase.rpc).mockResolvedValueOnce({ data: null, error: null } as never)
+    await aprovarFoto('d2')
+    expect(supabase.rpc).toHaveBeenCalledWith('aprovar_foto', { p_denuncia_id: 'd2' })
+    expect(bucket().remove).not.toHaveBeenCalled()
   })
 })

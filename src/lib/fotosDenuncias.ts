@@ -102,3 +102,47 @@ export async function removerFotosDoUsuario(userId: string, propriaConta: boolea
   }
   return removerFotos([...paths])
 }
+
+/** Caminho da foto de uma denúncia que ainda está na fila de aprovação (só o autor e o admin leem). */
+async function fotoNaFila(denunciaId: string) {
+  const { data } = await supabase
+    .from('fotos_pendentes')
+    .select('foto_path')
+    .eq('denuncia_id', denunciaId)
+    .maybeSingle()
+  return (data as { foto_path: string } | null)?.foto_path ?? null
+}
+
+/**
+ * Exclui a denúncia e apaga a foto dela do Storage, publicada ou ainda na fila. O arquivo não some
+ * junto com a denúncia: o Storage só apaga pela API.
+ */
+export async function excluirDenunciaComFoto(id: string, fotoPath?: string | null) {
+  const pendente = await fotoNaFila(id)
+  const { error } = await supabase.from('denuncias').delete().eq('id', id)
+  if (error) return { error }
+  await removerFotos([fotoPath, pendente])
+  return { error: null }
+}
+
+/** Tira a foto publicada da denúncia (dono ou admin), mantendo a denúncia, e apaga o arquivo. */
+export async function removerFotoDaDenuncia(id: string, fotoPath: string) {
+  const { error } = await supabase.from('denuncias').update({ foto_path: null }).eq('id', id)
+  if (error) return { error }
+  await removerFotos([fotoPath])
+  return { error: null }
+}
+
+/** Admin: publica a foto que estava na fila. */
+export async function aprovarFoto(denunciaId: string) {
+  const { error } = await supabase.rpc('aprovar_foto', { p_denuncia_id: denunciaId })
+  return { error }
+}
+
+/** Admin: recusa a foto da fila e apaga o arquivo. */
+export async function recusarFoto(denunciaId: string) {
+  const { data, error } = await supabase.rpc('recusar_foto', { p_denuncia_id: denunciaId })
+  if (error) return { error }
+  await removerFotos([data as string | null])
+  return { error: null }
+}

@@ -36,6 +36,11 @@ describe('DenunciaCard', () => {
     )
   })
 
+  it('avisa o autor quando a foto ainda está em análise', () => {
+    render(<DenunciaCard denuncia={criarDenuncia()} fotoEmAnalise />)
+    expect(screen.getByText(/foto em análise/i)).toBeInTheDocument()
+  })
+
   it('não mostra o botão de foto em denúncia sem foto', () => {
     render(<DenunciaCard denuncia={criarDenuncia()} />)
     expect(screen.queryByRole('button', { name: 'Ver foto da denúncia' })).not.toBeInTheDocument()

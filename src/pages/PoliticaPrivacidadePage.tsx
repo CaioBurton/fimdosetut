@@ -91,8 +91,8 @@ const SECOES: SecaoLegal[] = [
         <p>
           Por isso, <strong>não escreva dados pessoais de outras pessoas</strong> (nomes, telefones,
           documentos, placas de carros particulares) na descrição da denúncia, e evite fotos em que
-          apareçam rostos de pessoas ou placas de carros particulares. A administração pode remover
-          fotos inadequadas.
+          apareçam rostos de pessoas ou placas de carros particulares. As fotos passam por uma análise
+          da administração antes de aparecer, e fotos inadequadas são recusadas ou removidas.
         </p>
       </>
     ),

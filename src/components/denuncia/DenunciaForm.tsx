@@ -273,8 +273,8 @@ export function DenunciaForm({
             </p>
           )}
           <p className="mt-1.5 text-xs font-semibold text-brand-green-dark/70">
-            A foto fica pública junto da denúncia. Evite mostrar o rosto de pessoas e placas de carros
-            particulares.
+            A foto passa por uma análise antes de aparecer e depois fica pública junto da denúncia.
+            Evite mostrar o rosto de pessoas e placas de carros particulares.
           </p>
         </div>
       </SecaoNumerada>
