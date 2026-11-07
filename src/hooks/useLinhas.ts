@@ -18,10 +18,26 @@ function ordenar(linhas: Linha[]) {
 // As linhas quase nunca mudam: ficam em memória enquanto a aba estiver aberta, para cada página
 // (e o aviso de alertas, presente em todas) não buscá-las de novo. Qualquer edição de admin invalida.
 let cacheLinhas: Linha[] | null = null
+// Busca em andamento: vários componentes montam `useLinhas` ao mesmo tempo (alertas + página); todos
+// esperam a mesma consulta em vez de cada um baixar a tabela.
+let buscaEmAndamento: Promise<{ data: Linha[] | null; error: boolean }> | null = null
+
+function buscarLinhas() {
+  buscaEmAndamento ??= Promise.resolve(
+    supabase.from('linhas').select('id, codigo, nome, zona').order('zona').order('codigo')
+  )
+    .then(({ data, error }) => ({ data: error ? null : (data as Linha[]), error: !!error }))
+    .catch(() => ({ data: null, error: true }))
+    .finally(() => {
+      buscaEmAndamento = null
+    })
+  return buscaEmAndamento
+}
 
 /** Esvazia o cache de linhas (usado nos testes). */
 export function limparCacheLinhas() {
   cacheLinhas = null
+  buscaEmAndamento = null
 }
 registrarLimpezaDeCache(limparCacheLinhas)
 
@@ -34,21 +50,16 @@ export function useLinhas() {
     let active = true
     if (cacheLinhas) return
 
-    supabase
-      .from('linhas')
-      .select('*')
-      .order('zona')
-      .order('codigo')
-      .then(({ data, error }) => {
-        if (!active) return
-        if (error) {
-          setError('Não foi possível carregar as linhas. Verifique sua conexão.')
-        } else {
-          cacheLinhas = data as Linha[]
-          setLinhas(cacheLinhas)
-        }
-        setLoading(false)
-      })
+    buscarLinhas().then(({ data, error }) => {
+      if (!active) return
+      if (error || !data) {
+        setError('Não foi possível carregar as linhas. Verifique sua conexão.')
+      } else {
+        cacheLinhas = data
+        setLinhas(data)
+      }
+      setLoading(false)
+    })
 
     return () => {
       active = false

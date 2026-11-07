@@ -13,7 +13,7 @@ export function useUsuarios() {
 
     supabase
       .from('profiles')
-      .select('*')
+      .select('id, email, role, banido, created_at')
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (!active) return

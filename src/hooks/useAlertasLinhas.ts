@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { aoAlterarLinhasDoPerfil } from '../lib/linhasDoPerfil'
 import { notificarNavegador } from '../lib/notificacaoNavegador'
 import { supabase } from '../lib/supabaseClient'
 import { TIPO_LABELS, type Denuncia, type Linha } from '../types'
@@ -33,6 +34,21 @@ export function useAlertasLinhas(userId: string | undefined, linhas: Linha[]) {
     if (!userId) return
     const ativos = timers.current
 
+    // Linhas do perfil do usuário: baixadas uma vez e atualizadas quando ele as edita (ou volta à aba),
+    // em vez de uma consulta por denúncia nova. `interesses` é a busca em andamento/concluída.
+    let interesses: Promise<Set<string> | null> = Promise.resolve(null)
+    function carregarInteresses() {
+      interesses = Promise.resolve(
+        supabase.from('usuario_linhas').select('linha_id').eq('user_id', userId)
+      ).then(
+        ({ data, error }) =>
+          error ? null : new Set(((data ?? []) as { linha_id: string }[]).map((l) => l.linha_id)),
+        () => null
+      )
+    }
+    carregarInteresses()
+    const parar = aoAlterarLinhasDoPerfil(carregarInteresses)
+
     const channel = supabase
       .channel(`alertas-linhas-${userId}`)
       .on(
@@ -41,24 +57,31 @@ export function useAlertasLinhas(userId: string | undefined, linhas: Linha[]) {
         (payload) => {
           const nova = payload.new as Denuncia
 
-          // Consulta a cada evento para refletir mudanças recentes nas linhas do perfil, e confere
-          // se a denúncia é do próprio usuário (a autoria é privada: só o dono consegue ler a dele).
-          Promise.all([
-            supabase
-              .from('usuario_linhas')
-              .select('linha_id')
-              .eq('user_id', userId)
-              .eq('linha_id', nova.linha_id)
-              .maybeSingle(),
-            supabase
-              .from('denuncia_autores')
-              .select('denuncia_id')
-              .eq('denuncia_id', nova.id)
-              .eq('user_id', userId)
-              .maybeSingle(),
-          ])
-            .then(([interesse, minha]) => {
-              if (!interesse.data || minha.data) return
+          // Só consulta a autoria (privada: só o dono consegue ler a dele) se a linha é de interesse do usuário.
+          // Se a lista de linhas não carregou, cai na consulta individual como antes.
+          interesses
+            .then(async (conjunto) => {
+              const interessa = conjunto
+                ? conjunto.has(nova.linha_id)
+                : !!(
+                    await supabase
+                      .from('usuario_linhas')
+                      .select('linha_id')
+                      .eq('user_id', userId)
+                      .eq('linha_id', nova.linha_id)
+                      .maybeSingle()
+                  ).data
+              if (!interessa) return null
+              const { data } = await supabase
+                .from('denuncia_autores')
+                .select('denuncia_id')
+                .eq('denuncia_id', nova.id)
+                .eq('user_id', userId)
+                .maybeSingle()
+              return data ? null : true
+            })
+            .then((avisar) => {
+              if (!avisar) return
               const alerta: AlertaLinha = {
                 id: nova.id,
                 linhaId: nova.linha_id,
@@ -86,6 +109,7 @@ export function useAlertasLinhas(userId: string | undefined, linhas: Linha[]) {
       .subscribe()
 
     return () => {
+      parar()
       supabase.removeChannel(channel)
       ativos.forEach(clearTimeout)
       ativos.clear()

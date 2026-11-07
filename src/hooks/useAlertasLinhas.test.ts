@@ -29,7 +29,7 @@ const nova = (extra: Record<string, unknown> = {}) => ({
 function mockarTabelas({ interesse, minha }: { interesse: boolean; minha: boolean }) {
   vi.mocked(supabase.from).mockImplementation(((tabela: string) => {
     if (tabela === 'usuario_linhas') {
-      return createChainable({ data: interesse ? { linha_id: 'l1' } : null, error: null })
+      return createChainable({ data: interesse ? [{ linha_id: 'l1' }] : [], error: null })
     }
     return createChainable({ data: minha ? { denuncia_id: 'd1' } : null, error: null })
   }) as never)
@@ -60,7 +60,9 @@ describe('useAlertasLinhas', () => {
     act(() => handlers.INSERT(nova()))
 
     await waitFor(() => expect(supabase.from).toHaveBeenCalledWith('usuario_linhas'))
+    await act(async () => {})
     expect(result.current.alertas).toHaveLength(0)
+    expect(supabase.from).not.toHaveBeenCalledWith('denuncia_autores')
   })
 
   it('não avisa sobre as próprias denúncias (a autoria é consultada na tabela privada)', async () => {

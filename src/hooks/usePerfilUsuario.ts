@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { avisarLinhasDoPerfilAlteradas } from '../lib/linhasDoPerfil'
 import type { PerfilDetalhes } from '../types'
 
 const DETALHES_VAZIOS: PerfilDetalhes = {
@@ -22,7 +23,7 @@ export function usePerfilUsuario(userId: string | undefined) {
     let active = true
 
     Promise.all([
-      supabase.from('perfis_detalhes').select('*').eq('user_id', userId).maybeSingle(),
+      supabase.from('perfis_detalhes').select('nome, bairro_moradia, local_trabalho, local_estudo').eq('user_id', userId).maybeSingle(),
       supabase.from('usuario_linhas').select('linha_id').eq('user_id', userId),
     ]).then(
       ([det, lin]) => {
@@ -74,6 +75,7 @@ export function usePerfilUsuario(userId: string | undefined) {
         .insert({ user_id: userId, linha_id: linhaId })
       if (error) return 'Não foi possível adicionar a linha. Tente novamente.'
       setLinhaIds((atual) => (atual.includes(linhaId) ? atual : [...atual, linhaId]))
+      avisarLinhasDoPerfilAlteradas()
       return null
     },
     [userId]
@@ -89,6 +91,7 @@ export function usePerfilUsuario(userId: string | undefined) {
         .eq('linha_id', linhaId)
       if (error) return 'Não foi possível remover a linha. Tente novamente.'
       setLinhaIds((atual) => atual.filter((id) => id !== linhaId))
+      avisarLinhasDoPerfilAlteradas()
       return null
     },
     [userId]
