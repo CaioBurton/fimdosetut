@@ -5,6 +5,8 @@ export const BUCKET_FOTOS = 'denuncias-fotos'
 
 /** Lado maior da foto depois de reduzida, em pixels. */
 const LADO_MAXIMO = 1280
+/** Lado maior do JPEG de fallback (iPhone/Safari), menor que o do WebP para o arquivo não passar de ~250 KB. */
+const LADO_MAXIMO_JPEG = 1024
 /** Qualidade do WebP: ~100–200 KB por foto, para caber muitas no 1 GB do plano gratuito. */
 const QUALIDADE = 0.7
 /** Qualidade do JPEG, usado onde o navegador não gera WebP (iPhone/Safari): JPEG pesa mais, então vai um pouco menor. */
@@ -25,19 +27,24 @@ function canvasParaBlob(canvas: HTMLCanvasElement, tipo: string, qualidade: numb
  */
 export async function comprimirImagem(arquivo: File): Promise<Blob> {
   const imagem = await createImageBitmap(arquivo, { imageOrientation: 'from-image' })
+  const desenhar = (lado: number) => {
+    const escala = Math.min(1, lado / Math.max(imagem.width, imagem.height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(imagem.width * escala))
+    canvas.height = Math.max(1, Math.round(imagem.height * escala))
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('canvas indisponível')
+    ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height)
+    return canvas
+  }
   try {
     for (const lado of [LADO_MAXIMO, 960, 720]) {
-      const escala = Math.min(1, lado / Math.max(imagem.width, imagem.height))
-      const canvas = document.createElement('canvas')
-      canvas.width = Math.max(1, Math.round(imagem.width * escala))
-      canvas.height = Math.max(1, Math.round(imagem.height * escala))
-      const ctx = canvas.getContext('2d')
-      if (!ctx) throw new Error('canvas indisponível')
-      ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height)
-
-      let blob = await canvasParaBlob(canvas, 'image/webp', QUALIDADE)
-      // Safari antigo ignora o pedido de WebP e devolve PNG: nesse caso usa JPEG.
-      if (!blob || blob.type !== 'image/webp') blob = await canvasParaBlob(canvas, 'image/jpeg', QUALIDADE_JPEG)
+      let blob = await canvasParaBlob(desenhar(lado), 'image/webp', QUALIDADE)
+      // Safari antigo e iOS ignoram o pedido de WebP e devolvem PNG: nesse caso usa JPEG, redesenhado
+      // menor (o JPEG pesa mais que o WebP na mesma resolução).
+      if (!blob || blob.type !== 'image/webp') {
+        blob = await canvasParaBlob(desenhar(Math.min(lado, LADO_MAXIMO_JPEG)), 'image/jpeg', QUALIDADE_JPEG)
+      }
       if (!blob) throw new Error('não foi possível converter a imagem')
       if (blob.size <= TAMANHO_MAXIMO) return blob
     }
