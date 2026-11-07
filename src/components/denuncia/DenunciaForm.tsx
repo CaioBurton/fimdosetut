@@ -231,35 +231,51 @@ export function DenunciaForm({
               (opcional)
             </span>
           </span>
-          {previa ? (
+          {previa && (
             <div className="space-y-2">
               <img
                 src={previa}
                 alt="Prévia da foto escolhida"
                 className="max-h-60 w-full rounded-[2px] border-2 border-brand-green bg-brand-green/5 object-contain"
               />
-              <div className="flex flex-wrap gap-2">
-                <label htmlFor="foto-denuncia" className="chip-brand cursor-pointer">
-                  Trocar foto
-                </label>
-                <button type="button" className="chip-brand" onClick={() => setFoto(null)}>
-                  Remover foto
-                </button>
-              </div>
+              <button type="button" className="chip-brand" onClick={() => setFoto(null)}>
+                Remover foto
+              </button>
             </div>
-          ) : (
+          )}
+          <div className={`grid grid-cols-2 gap-2 ${previa ? 'mt-2' : ''}`}>
             <label
-              htmlFor="foto-denuncia"
-              className="flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[2px] border-2 border-dashed border-brand-green bg-white px-3 text-sm font-bold text-brand-green-dark"
+              htmlFor="foto-camera"
+              className="flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[2px] border-2 border-dashed border-brand-green bg-white px-2 text-center text-sm font-bold text-brand-green-dark"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3" y="6" width="18" height="14" rx="1" />
                 <circle cx="12" cy="13" r="3.5" />
                 <path d="M8 6l1.5-2h5L16 6" />
               </svg>
-              Tirar ou escolher foto
+              Tirar foto
             </label>
-          )}
+            <label
+              htmlFor="foto-denuncia"
+              className="flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[2px] border-2 border-dashed border-brand-green bg-white px-2 text-center text-sm font-bold text-brand-green-dark"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="1" />
+                <circle cx="9" cy="10" r="1.5" />
+                <path d="M21 16l-5-5-8 8" />
+              </svg>
+              Escolher da galeria
+            </label>
+          </div>
+          <input
+            id="foto-camera"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={escolherFoto}
+            className="sr-only"
+            aria-label="Tirar foto com a câmera"
+          />
           <input
             id="foto-denuncia"
             type="file"
