@@ -146,3 +146,20 @@ export async function recusarFoto(denunciaId: string) {
   await removerFotos([data as string | null])
   return { error: null }
 }
+
+/** Admin: caminhos de arquivos do bucket que nenhuma denúncia usa (até 1000, com mais de 1 dia). */
+export async function listarFotosOrfas() {
+  const { data, error } = await supabase.rpc('fotos_orfas')
+  if (error) return { paths: [] as string[], error }
+  return { paths: (data as string[] | null) ?? [], error: null }
+}
+
+/** Admin: apaga do Storage os arquivos órfãos. Devolve quantos foram apagados. */
+export async function limparFotosOrfas() {
+  const { paths, error } = await listarFotosOrfas()
+  if (error) return { apagadas: 0, error }
+  if (paths.length === 0) return { apagadas: 0, error: null }
+  const { error: erroRemocao } = await removerFotos(paths)
+  if (erroRemocao) return { apagadas: 0, error: erroRemocao }
+  return { apagadas: paths.length, error: null }
+}

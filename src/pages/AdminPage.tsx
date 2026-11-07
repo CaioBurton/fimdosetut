@@ -2,6 +2,7 @@ import { Fragment, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { AppLayout } from '../components/layout/AppLayout'
 import { FeedbacksAdmin } from '../components/admin/FeedbacksAdmin'
+import { FotosOrfasAdmin } from '../components/admin/FotosOrfasAdmin'
 import { FotosPendentesAdmin } from '../components/admin/FotosPendentesAdmin'
 import { LinhasAdmin } from '../components/admin/LinhasAdmin'
 import { PainelAdmin } from '../components/admin/PainelAdmin'
@@ -260,7 +261,12 @@ export function AdminPage() {
           </>
         )}
 
-        {aba === 'fotos' && <FotosPendentesAdmin />}
+        {aba === 'fotos' && (
+          <div className="space-y-4">
+            <FotosPendentesAdmin />
+            <FotosOrfasAdmin />
+          </div>
+        )}
 
         {aba === 'feedbacks' && <FeedbacksAdmin />}
 
