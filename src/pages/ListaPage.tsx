@@ -5,6 +5,7 @@ import { Paginacao } from '../components/ui/Paginacao'
 import { RodapeTabela } from '../components/admin/TabelaAdmin'
 import { useDesktop } from '../hooks/useDesktop'
 import { AppLayout } from '../components/layout/AppLayout'
+import { TipoFiltroSelect, type FiltroTipo } from '../components/denuncia/TipoFiltroSelect'
 import { LinhaSelect } from '../components/denuncia/LinhaSelect'
 import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
 import { BotaoCompartilharDenuncia } from '../components/denuncia/BotaoCompartilharDenuncia'
@@ -16,7 +17,6 @@ import { useLinhas } from '../hooks/useLinhas'
 import { ehAcessibilidade, TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Denuncia, type TipoProblema, type Zona } from '../types'
 
 const POR_PAGINA = 12
-const TIPOS = Object.keys(TIPO_LABELS) as TipoProblema[]
 
 const ORDEM_ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'rural', 'outras']
 
@@ -39,7 +39,7 @@ export function ListaPage() {
   } = useConfirmacoes((id, total) => atualizarDenuncia(id, { confirmacoes: total }))
   const desktop = useDesktop()
   const [filtroStatus, setFiltroStatus] = useState<Denuncia['status'] | 'todos'>('todos')
-  const [filtroTipo, setFiltroTipo] = useState<TipoProblema | 'pcd' | 'todos'>('todos')
+  const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('todos')
   const [pagina, setPagina] = useState(1)
   const [filtroZona, setFiltroZona] = useState<Zona | 'todas'>('todas')
 
@@ -52,7 +52,7 @@ export function ListaPage() {
       (!filtroDia || diaLocal(d.created_at) === filtroDia)
   )
   const filtradas = base.filter(
-    (d) => (filtroStatus === 'todos' || d.status === filtroStatus) && (filtroTipo === 'todos' || (filtroTipo === 'pcd' ? ehAcessibilidade(d.tipo) : d.tipo === filtroTipo))
+    (d) => (filtroStatus === 'todos' || d.status === filtroStatus) && (filtroTipo === 'todos' || d.tipo === filtroTipo)
   )
   const pendentes = base.filter((d) => d.status === 'pendente').length
   const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA))
@@ -146,7 +146,7 @@ export function ListaPage() {
           </div>
         </div>
         {desktop && (
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="flex flex-wrap gap-2" aria-label="Filtrar por status">
               {([
                 ['todos', `Todas · ${base.length}`],
@@ -167,33 +167,13 @@ export function ListaPage() {
                 </button>
               ))}
             </div>
-            <div className="flex flex-wrap gap-2" aria-label="Filtrar por tipo de problema">
-              <button
-                type="button"
-                aria-pressed={filtroTipo === 'pcd'}
-                onClick={() => {
-                  setFiltroTipo(filtroTipo === 'pcd' ? 'todos' : 'pcd')
-                  setPagina(1)
-                }}
-                className={`chip-brand ${filtroTipo === 'pcd' ? 'chip-brand-ativo' : ''}`}
-              >
-                Acessibilidade (PcD)
-              </button>
-              {TIPOS.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  aria-pressed={filtroTipo === t}
-                  onClick={() => {
-                    setFiltroTipo(filtroTipo === t ? 'todos' : t)
-                    setPagina(1)
-                  }}
-                  className={`chip-brand ${filtroTipo === t ? 'chip-brand-ativo' : ''}`}
-                >
-                  {TIPO_LABELS[t]}
-                </button>
-              ))}
-            </div>
+            <TipoFiltroSelect
+              value={filtroTipo}
+              onChange={(v) => {
+                setFiltroTipo(v)
+                setPagina(1)
+              }}
+            />
           </div>
         )}
         {(filtroLinha || filtroDia !== hoje()) && (
