@@ -1,3 +1,4 @@
+import { limparCacheDenuncias } from '../hooks/useDenuncias'
 import { supabase } from './supabaseClient'
 
 /** Bucket do Supabase Storage com as fotos das denúncias (ver migration 0029). */
@@ -133,6 +134,7 @@ export async function excluirDenunciaComFoto(id: string, fotoPath?: string | nul
   const pendente = await fotoNaFila(id)
   const { error } = await supabase.from('denuncias').delete().eq('id', id)
   if (error) return { error }
+  limparCacheDenuncias()
   await removerFotos([fotoPath, pendente])
   return { error: null }
 }
@@ -141,6 +143,7 @@ export async function excluirDenunciaComFoto(id: string, fotoPath?: string | nul
 export async function removerFotoDaDenuncia(id: string, fotoPath: string) {
   const { error } = await supabase.from('denuncias').update({ foto_path: null }).eq('id', id)
   if (error) return { error }
+  limparCacheDenuncias()
   await removerFotos([fotoPath])
   return { error: null }
 }
@@ -148,6 +151,9 @@ export async function removerFotoDaDenuncia(id: string, fotoPath: string) {
 /** Admin: publica a foto que estava na fila. */
 export async function aprovarFoto(denunciaId: string) {
   const { error } = await supabase.rpc('aprovar_foto', { p_denuncia_id: denunciaId })
+  // Na tela do admin nenhum mapa/lista está inscrito no tempo real: sem isto, o cache do mapa (2 min)
+  // voltaria sem a foto recém-aprovada.
+  if (!error) limparCacheDenuncias()
   return { error }
 }
 
