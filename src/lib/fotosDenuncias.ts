@@ -7,6 +7,8 @@ export const BUCKET_FOTOS = 'denuncias-fotos'
 const LADO_MAXIMO = 1280
 /** Qualidade do WebP: ~100–200 KB por foto, para caber muitas no 1 GB do plano gratuito. */
 const QUALIDADE = 0.7
+/** Qualidade do JPEG, usado onde o navegador não gera WebP (iPhone/Safari): JPEG pesa mais, então vai um pouco menor. */
+const QUALIDADE_JPEG = 0.6
 /** Limite do bucket (512 KB). Se a foto comprimida passar disso, tenta de novo menor. */
 const TAMANHO_MAXIMO = 512 * 1024
 
@@ -35,7 +37,7 @@ export async function comprimirImagem(arquivo: File): Promise<Blob> {
 
       let blob = await canvasParaBlob(canvas, 'image/webp', QUALIDADE)
       // Safari antigo ignora o pedido de WebP e devolve PNG: nesse caso usa JPEG.
-      if (!blob || blob.type !== 'image/webp') blob = await canvasParaBlob(canvas, 'image/jpeg', QUALIDADE)
+      if (!blob || blob.type !== 'image/webp') blob = await canvasParaBlob(canvas, 'image/jpeg', QUALIDADE_JPEG)
       if (!blob) throw new Error('não foi possível converter a imagem')
       if (blob.size <= TAMANHO_MAXIMO) return blob
     }
