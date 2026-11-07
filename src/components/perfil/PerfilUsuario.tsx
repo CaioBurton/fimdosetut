@@ -6,6 +6,7 @@ import { LinhaSelect } from '../denuncia/LinhaSelect'
 import { Button } from '../ui/Button'
 import { TituloSecao } from '../ui/TituloSecao'
 import { AtivarNotificacoes } from './AtivarNotificacoes'
+import { InstalarApp } from './InstalarApp'
 
 interface PerfilUsuarioProps {
   userId: string
@@ -324,6 +325,7 @@ export function PerfilUsuario({
             <Estatistica valor={totalResolvidas} rotulo="Resolvidas" />
             <Estatistica valor={minhasLinhas.length} rotulo="Minhas linhas" />
           </div>
+          <InstalarApp />
         </div>
       </section>
   )
