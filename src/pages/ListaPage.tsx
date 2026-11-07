@@ -16,7 +16,7 @@ import { diaLocal, diaMinimoMapa, hoje } from '../lib/dia'
 import { useAuth } from '../hooks/useAuth'
 import { useAutoresDenuncias } from '../hooks/useAutoresDenuncias'
 import { useLinhas } from '../hooks/useLinhas'
-import { ehAcessibilidade, TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Denuncia, type TipoProblema, type Zona } from '../types'
+import { ZONA_COLORS, ZONA_LABELS, type Denuncia, type Zona } from '../types'
 
 const POR_PAGINA = 12
 
