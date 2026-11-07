@@ -30,13 +30,16 @@ export function FotosOrfasAdmin() {
     setAviso(null)
     setOcupado(true)
     const { apagadas, error } = await limparFotosOrfas()
-    setOcupado(false)
     setConfirmando(false)
     if (error) {
+      setOcupado(false)
       setErro('Não foi possível limpar as fotos órfãs. Tente novamente.')
       return
     }
-    setTotal(0)
+    // Confere de novo no banco o que sobrou, em vez de supor que tudo foi apagado.
+    const { paths } = await listarFotosOrfas()
+    setOcupado(false)
+    setTotal(paths.length)
     setAviso(`${apagadas} ${apagadas === 1 ? 'arquivo apagado' : 'arquivos apagados'}.`)
   }
 

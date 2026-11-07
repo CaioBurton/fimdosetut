@@ -84,12 +84,15 @@ export function urlFoto(path: string) {
   return supabase.storage.from(BUCKET_FOTOS).getPublicUrl(path).data.publicUrl
 }
 
-/** Apaga fotos do bucket. Lista vazia não chama a API. */
+/**
+ * Apaga fotos do bucket. Lista vazia não chama a API. `removidas` é quantas o Storage realmente apagou:
+ * arquivos que as regras de acesso não deixam apagar não dão erro, só não entram na conta.
+ */
 export async function removerFotos(paths: (string | null | undefined)[]) {
   const validos = paths.filter((p): p is string => !!p)
-  if (validos.length === 0) return { error: null }
-  const { error } = await supabase.storage.from(BUCKET_FOTOS).remove(validos)
-  return { error }
+  if (validos.length === 0) return { error: null, removidas: 0 }
+  const { data, error } = await supabase.storage.from(BUCKET_FOTOS).remove(validos)
+  return { error, removidas: data?.length ?? 0 }
 }
 
 /**
@@ -168,7 +171,9 @@ export async function limparFotosOrfas() {
   const { paths, error } = await listarFotosOrfas()
   if (error) return { apagadas: 0, error }
   if (paths.length === 0) return { apagadas: 0, error: null }
-  const { error: erroRemocao } = await removerFotos(paths)
+  const { error: erroRemocao, removidas } = await removerFotos(paths)
   if (erroRemocao) return { apagadas: 0, error: erroRemocao }
-  return { apagadas: paths.length, error: null }
+  // O Storage responde sucesso mesmo sem apagar (arquivo sem permissão): conta só o que sumiu de fato.
+  if (removidas === 0) return { apagadas: 0, error: new Error('nenhum arquivo foi apagado') }
+  return { apagadas: removidas, error: null }
 }

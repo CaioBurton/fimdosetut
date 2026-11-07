@@ -23,8 +23,11 @@ describe('FotosOrfasAdmin', () => {
   })
 
   it('só apaga depois da confirmação', async () => {
-    vi.mocked(supabase.rpc).mockResolvedValue({ data: ['a.webp', 'b.webp'], error: null } as never)
-    vi.mocked(bucket().remove).mockResolvedValue({ data: [], error: null } as never)
+    vi.mocked(supabase.rpc)
+      .mockResolvedValueOnce({ data: ['a.webp', 'b.webp'], error: null } as never) // ao abrir
+      .mockResolvedValueOnce({ data: ['a.webp', 'b.webp'], error: null } as never) // ao limpar
+      .mockResolvedValue({ data: [], error: null } as never)
+    vi.mocked(bucket().remove).mockResolvedValue({ data: [{ name: 'a.webp' }, { name: 'b.webp' }], error: null } as never)
     const user = userEvent.setup()
     render(<FotosOrfasAdmin />)
 
@@ -35,6 +38,17 @@ describe('FotosOrfasAdmin', () => {
     await user.click(screen.getByRole('button', { name: 'Apagar de vez' }))
     expect(bucket().remove).toHaveBeenCalledWith(['a.webp', 'b.webp'])
     expect(await screen.findByText('2 arquivos apagados.')).toBeInTheDocument()
+  })
+
+  it('avisa quando o Storage não apagou nada (sem permissão)', async () => {
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: ['a.webp'], error: null } as never)
+    vi.mocked(bucket().remove).mockResolvedValue({ data: [], error: null } as never)
+    const user = userEvent.setup()
+    render(<FotosOrfasAdmin />)
+
+    await user.click(await screen.findByRole('button', { name: 'Limpar' }))
+    await user.click(screen.getByRole('button', { name: 'Apagar de vez' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/não foi possível limpar/i)
   })
 
   it('avisa quando a remoção falha', async () => {
