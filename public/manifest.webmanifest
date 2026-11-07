@@ -1,0 +1,19 @@
+{
+  "name": "Deu o Prego!",
+  "short_name": "Deu o Prego",
+  "description": "Plataforma colaborativa para avisar sobre ônibus quebrados nas linhas de Teresina.",
+  "lang": "pt-BR",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#084400",
+  "theme_color": "#084400",
+  "categories": ["transportation", "social"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
