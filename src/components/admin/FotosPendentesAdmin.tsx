@@ -12,8 +12,10 @@ function formatarData(iso: string) {
  * Fila de aprovação das fotos. A denúncia já está no mapa; a foto só aparece depois de aprovada.
  * Recusar apaga o arquivo.
  */
-export function FotosPendentesAdmin() {
-  const { fotos, loading, error, aprovar, recusar } = useFotosPendentes()
+export function FotosPendentesAdmin({ fila }: { fila?: ReturnType<typeof useFotosPendentes> }) {
+  // A página de admin passa a fila de cima (o contador da aba usa a mesma); sozinho, busca a própria.
+  const propria = useFotosPendentes(!fila)
+  const { fotos, loading, error, aprovar, recusar } = fila ?? propria
   const [ocupado, setOcupado] = useState<string | null>(null)
   const [acaoErro, setAcaoErro] = useState<string | null>(null)
 

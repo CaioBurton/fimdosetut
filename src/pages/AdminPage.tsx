@@ -22,6 +22,7 @@ import { useDesktop } from '../hooks/useDesktop'
 import { Button } from '../components/ui/Button'
 import { useAuth } from '../hooks/useAuth'
 import { useDenuncias } from '../hooks/useDenuncias'
+import { useFotosPendentes } from '../hooks/useFotosPendentes'
 import { useDenunciasDoUsuario } from '../hooks/useDenunciasDoUsuario'
 import { useDenunciasPorUsuario } from '../hooks/useDenunciasPorUsuario'
 import { useNomesUsuarios } from '../hooks/useNomesUsuarios'
@@ -64,6 +65,7 @@ export function AdminPage() {
   const [paginaDenuncias, setPaginaDenuncias] = useState(1)
   const { linhas, criar, atualizar, excluir: excluirLinha } = useLinhas()
   const { denuncias, loading, error } = useDenuncias(linhas, null)
+  const filaFotos = useFotosPendentes()
   const [acaoErro, setAcaoErro] = useState<string | null>(null)
   const [confirmando, setConfirmando] = useState<string | null>(null)
 
@@ -109,7 +111,11 @@ export function AdminPage() {
               onClick={() => setAba(a.id)}
               className={`chip-brand ${aba === a.id ? 'chip-brand-ativo' : ''}`}
             >
-              {a.id === 'denuncias' ? `Denúncias (${denuncias.length})` : a.rotulo}
+              {a.id === 'denuncias'
+                ? `Denúncias (${denuncias.length})`
+                : a.id === 'fotos' && !filaFotos.loading && !filaFotos.error
+                  ? `Fotos (${filaFotos.total})`
+                  : a.rotulo}
             </button>
           ))}
         </div>
@@ -125,7 +131,10 @@ export function AdminPage() {
           />
         )}
         {desktop && aba === 'fotos' && (
-          <CabecalhoPagina titulo="Fotos" subtitulo="Fotos esperando aprovação antes de aparecer nas denúncias" />
+          <CabecalhoPagina
+            titulo="Fotos"
+            subtitulo={`${filaFotos.total} ${filaFotos.total === 1 ? 'foto esperando' : 'fotos esperando'} aprovação antes de aparecer nas denúncias`}
+          />
         )}
         {desktop && aba === 'feedbacks' && (
           <CabecalhoPagina titulo="Feedbacks" subtitulo="O que as pessoas mandaram pelo app" />
@@ -263,7 +272,7 @@ export function AdminPage() {
 
         {aba === 'fotos' && (
           <div className="space-y-4">
-            <FotosPendentesAdmin />
+            <FotosPendentesAdmin fila={filaFotos} />
             <FotosOrfasAdmin />
           </div>
         )}
