@@ -14,6 +14,9 @@ export function NovaDenunciaPage() {
   const navigate = useNavigate()
   const inicial = (useLocation().state as { linhaId?: string; tipo?: TipoProblema } | null) ?? undefined
   const [enviadaSemConta, setEnviadaSemConta] = useState(false)
+  const [criadaId, setCriadaId] = useState<string>()
+  // Volta ao mapa já na denúncia recém-criada (ele seleciona e centraliza nela).
+  const irParaMapa = (denunciaId?: string) => navigate('/', { state: denunciaId ? { denunciaId } : undefined })
 
   // Depois da primeira denúncia sem cadastro, convida a criar a conta para acompanhá-la.
   if (enviadaSemConta && isAnonymous) {
@@ -27,7 +30,7 @@ export function NovaDenunciaPage() {
             </p>
           </div>
           <VincularConta />
-          <Button type="button" variant="ghost" onClick={() => navigate('/')}>
+          <Button type="button" variant="ghost" onClick={() => irParaMapa(criadaId)}>
             Agora não, voltar ao mapa
           </Button>
         </div>
@@ -42,7 +45,12 @@ export function NovaDenunciaPage() {
       ) : (
         <DenunciaForm
           linhas={linhas}
-          onSuccess={(info) => (info?.semConta ? setEnviadaSemConta(true) : navigate('/'))}
+          onSuccess={(info) => {
+            if (info?.semConta) {
+              setCriadaId(info.denunciaId)
+              setEnviadaSemConta(true)
+            } else irParaMapa(info?.denunciaId)
+          }}
           inicial={inicial}
         />
       )}

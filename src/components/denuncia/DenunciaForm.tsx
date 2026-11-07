@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useDesktop } from '../../hooks/useDesktop'
 import { CabecalhoPagina } from '../ui/CabecalhoPagina'
 import { supabase } from '../../lib/supabaseClient'
+import { limparCacheDenuncias } from '../../hooks/useDenuncias'
 import { enviarFoto, removerFotos, TAMANHO_MAXIMO_ORIGINAL } from '../../lib/fotosDenuncias'
 import { ehAcessibilidade, TIPO_LABELS, type Linha, type TipoProblema } from '../../types'
 import { LinksLegais } from '../legal/LinksLegais'
@@ -19,7 +20,7 @@ export function DenunciaForm({
 }: {
   linhas: Linha[]
   /** `semConta` é verdadeiro quando a denúncia saiu de uma sessão sem cadastro (convite para criar a conta). */
-  onSuccess: (info?: { semConta: boolean }) => void
+  onSuccess: (info?: { semConta: boolean; denunciaId?: string }) => void
   /** Linha e tipo já escolhidos (ex.: vindos da denúncia rápida quando o GPS falhou). */
   inicial?: { linhaId?: string; tipo?: TipoProblema }
 }) {
@@ -106,7 +107,7 @@ export function DenunciaForm({
     }
 
     // A função do banco grava a denúncia e a autoria (privada) juntas, em nome de quem está logado.
-    const { error } = await supabase.rpc('criar_denuncia', {
+    const { data: novaId, error } = await supabase.rpc('criar_denuncia', {
       p_linha_id: linhaId,
       p_tipo: tipo,
       p_descricao: descricao.trim() || `Denúncia: ${TIPO_LABELS[tipo].toLowerCase()}.`,
@@ -129,7 +130,11 @@ export function DenunciaForm({
       return
     }
 
-    onSuccess({ semConta: !user || isAnonymous })
+    // O mapa e a lista guardam as denúncias em cache por 2 min e o tempo real não os alcança enquanto
+    // esta tela está aberta: descarta o cache para a nova denúncia aparecer ao voltar.
+    limparCacheDenuncias()
+    // A função devolve o id da denúncia: o mapa abre centralizado nela.
+    onSuccess({ semConta: !user || isAnonymous, denunciaId: typeof novaId === 'string' ? novaId : undefined })
   }
 
   const destacarVeiculo = ehAcessibilidade(tipo)

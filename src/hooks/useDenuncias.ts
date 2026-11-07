@@ -61,7 +61,10 @@ export function janelaDoDia(dia: string) {
 const VALIDADE_CACHE_MS = 2 * 60 * 1000
 const cache = new Map<string, { dados: Denuncia[]; em: number }>()
 
-/** Esvazia o cache de denúncias (usado nos testes). */
+/**
+ * Esvazia o cache de denúncias. Usado nos testes e depois de criar uma denúncia: com a tela do formulário
+ * aberta, nenhum hook está inscrito no tempo real, então o cache (mapa/lista) ficaria sem a nova.
+ */
 export function limparCacheDenuncias() {
   cache.clear()
 }

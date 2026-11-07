@@ -97,7 +97,7 @@ describe('DenunciaForm sem cadastro', () => {
     await user.click(screen.getByRole('checkbox'))
     await user.click(screen.getByRole('button', { name: 'Enviar denúncia' }))
 
-    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith({ semConta: true }))
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith({ semConta: true, denunciaId: 'd1' }))
     expect(signInAnonimo).toHaveBeenCalledWith(
       expect.objectContaining({ aceite_documentos: VERSAO_DOCUMENTOS })
     )
@@ -142,7 +142,7 @@ describe('DenunciaForm sem cadastro', () => {
     await preencher(user)
     await user.click(screen.getByRole('button', { name: 'Enviar denúncia' }))
 
-    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith({ semConta: true }))
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith({ semConta: true, denunciaId: 'd1' }))
     expect(signInAnonimo).not.toHaveBeenCalled()
   })
 
@@ -154,6 +154,6 @@ describe('DenunciaForm sem cadastro', () => {
     await preencher(user)
     await user.click(screen.getByRole('button', { name: 'Enviar denúncia' }))
 
-    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith({ semConta: false }))
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith({ semConta: false, denunciaId: 'd1' }))
   })
 })
