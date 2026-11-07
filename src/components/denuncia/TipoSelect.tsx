@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { TIPO_LABELS, type TipoProblema } from '../../types'
 
-const TIPOS: TipoProblema[] = [
+export const TIPOS: TipoProblema[] = [
   'quebrado',
   'acidente',
   'atraso',
@@ -13,7 +13,7 @@ const TIPOS: TipoProblema[] = [
   'outro',
 ]
 
-function IconeTipo({ tipo }: { tipo: TipoProblema }) {
+export function IconeTipo({ tipo }: { tipo: TipoProblema }) {
   const props = {
     width: 22,
     height: 22,

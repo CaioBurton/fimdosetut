@@ -17,11 +17,14 @@ export function DenunciaCard({
   denuncia,
   actions,
   fotoEmAnalise = false,
+  autor,
 }: {
   denuncia: Denuncia
   actions?: ReactNode
   /** Só para o autor: a foto enviada ainda espera a aprovação da moderação. */
   fotoEmAnalise?: boolean
+  /** Só para o admin: quem fez a denúncia (nome, e-mail ou "Anônimo"). */
+  autor?: string
 }) {
   const zona = denuncia.linha?.zona ?? 'outras'
   const cor = ZONA_COLORS[zona]
@@ -33,7 +36,9 @@ export function DenunciaCard({
           <p className="font-bold text-brand-green-dark">
             {denuncia.linha ? `${denuncia.linha.codigo} - ${denuncia.linha.nome}` : 'Linha removida'}
           </p>
-          <p className="text-xs text-brand-green-dark/70">{formatarData(denuncia.created_at)}</p>
+          <p className="text-xs text-brand-green-dark/70">{formatarData(denuncia.created_at)}
+            {autor && <span className="font-bold"> · Autor: {autor}</span>}
+          </p>
         </div>
         <Badge color={denuncia.status === 'resolvido' ? '#6b7280' : '#c23838'}>
           {STATUS_LABELS[denuncia.status]}
@@ -49,6 +54,7 @@ export function DenunciaCard({
             Veículo {denuncia.numero_veiculo}
           </Badge>
         )}
+
       </div>
       <TextoExpansivel texto={denuncia.descricao} className="mt-2 text-sm text-brand-green-dark/90" />
       {fotoEmAnalise && !denuncia.foto_path && (
