@@ -47,7 +47,7 @@ describe('PainelPage (público)', () => {
     expect(within(resumo).getByText('60% resolvidas')).toBeInTheDocument()
     expect(screen.getAllByText('063').length).toBeGreaterThan(0)
     expect(screen.queryByRole('button', { name: /Gerenciar linhas/ })).not.toBeInTheDocument()
-    expect(supabase.rpc).toHaveBeenCalledWith('painel_resumo', { dias: 30, zona_filtro: null })
+    expect(supabase.rpc).toHaveBeenCalledWith('painel_resumo', { dias: 1, zona_filtro: null })
   })
 
   it('refaz a consulta ao escolher outro período', async () => {

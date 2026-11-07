@@ -29,7 +29,7 @@ const dados = [
 ]
 
 describe('PainelAdmin', () => {
-  it('mostra o resumo do período (30 dias por padrão) e muda ao escolher "Tudo"', async () => {
+  it('mostra o resumo do período (hoje por padrão) e muda ao escolher "Tudo"', async () => {
     const user = userEvent.setup()
     render(<PainelAdmin denuncias={dados} onGerenciarLinhas={() => {}} />)
 

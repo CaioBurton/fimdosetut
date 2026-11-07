@@ -12,7 +12,7 @@ import type { Zona } from '../types'
 /** Painel público: números do resumo calculados no banco, sem baixar as denúncias. */
 export function PainelPage() {
   const desktop = useDesktop()
-  const [periodo, setPeriodo] = useState<Periodo>('30d')
+  const [periodo, setPeriodo] = useState<Periodo>('hoje')
   const [zona, setZona] = useState<Zona | 'todas'>('todas')
   const { resumo, loading, error } = usePainelResumo(periodo, zona)
 
