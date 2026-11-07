@@ -10,8 +10,8 @@ import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
 import { BotaoCompartilharDenuncia } from '../components/denuncia/BotaoCompartilharDenuncia'
 import { DenunciaCard } from '../components/denuncia/DenunciaCard'
 import { useConfirmacoes } from '../hooks/useConfirmacoes'
-import { useDenuncias } from '../hooks/useDenuncias'
-import { diaLocal, diaMinimo, hoje } from '../lib/dia'
+import { DIAS_PADRAO, useDenuncias } from '../hooks/useDenuncias'
+import { diaLocal, diaMinimoMapa, hoje } from '../lib/dia'
 import { useLinhas } from '../hooks/useLinhas'
 import { ehAcessibilidade, TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Denuncia, type TipoProblema, type Zona } from '../types'
 
@@ -23,7 +23,14 @@ const ORDEM_ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'rural
 
 export function ListaPage() {
   const { linhas } = useLinhas()
-  const { denuncias, loading, error, atualizarDenuncia } = useDenuncias(linhas)
+  const [filtroDia, setFiltroDia] = useState(hoje)
+  // Com um dia escolhido, baixa SÓ as denúncias dele (como o mapa), em vez das últimas duas semanas.
+  const { denuncias, loading, atualizando, error, atualizarDenuncia } = useDenuncias(
+    linhas,
+    DIAS_PADRAO,
+    false,
+    filtroDia
+  )
   const {
     confirmadas,
     pendentes: confirmando,
@@ -37,7 +44,6 @@ export function ListaPage() {
   const [filtroZona, setFiltroZona] = useState<Zona | 'todas'>('todas')
 
   const [filtroLinha, setFiltroLinha] = useState('')
-  const [filtroDia, setFiltroDia] = useState(hoje)
 
   const base = denuncias.filter(
     (d) =>
@@ -126,12 +132,13 @@ export function ListaPage() {
           <div className="w-[9.5rem] shrink-0">
             <input
               type="date"
-              min={diaMinimo()}
+              min={diaMinimoMapa()}
               max={hoje()}
               aria-label="Filtrar por dia"
               value={filtroDia}
               onChange={(e) => {
-                setFiltroDia(e.target.value)
+                // Campo apagado no seletor: volta para hoje (a lista sempre busca um dia só).
+                setFiltroDia(e.target.value || hoje())
                 setPagina(1)
               }}
               className="input-brand min-w-0"
@@ -189,13 +196,13 @@ export function ListaPage() {
             </div>
           </div>
         )}
-        {(filtroLinha || filtroDia) && (
+        {(filtroLinha || filtroDia !== hoje()) && (
           <button
             type="button"
             className="text-sm font-bold text-brand-green underline"
             onClick={() => {
               setFiltroLinha('')
-              setFiltroDia('')
+              setFiltroDia(hoje())
               setPagina(1)
             }}
           >
@@ -207,9 +214,9 @@ export function ListaPage() {
 
         {erroConfirmacao && <p className="text-center text-sm text-zona-leste">{erroConfirmacao}</p>}
 
-        {loading && <p className="text-center text-brand-green-dark/70">Carregando...</p>}
+        {(loading || atualizando) && <p className="text-center text-brand-green-dark/70">Carregando...</p>}
 
-        {!loading && !error && filtradas.length === 0 && (
+        {!loading && !atualizando && !error && filtradas.length === 0 && (
           <p className="py-10 text-center text-brand-green-dark/70">
             Nenhuma denúncia encontrada.
           </p>
