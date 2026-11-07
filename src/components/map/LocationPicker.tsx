@@ -34,6 +34,28 @@ function Recentralizar({ value, pedido }: { value: { lat: number; lng: number } 
   return null
 }
 
+/** Recalcula o tamanho do mapa quando o contêiner muda (ex.: o layout da página se move ao escolher uma foto); sem isso o Leaflet deixa uma faixa em branco sem tiles. */
+function AjustarTamanho() {
+  const map = useMap()
+  useEffect(() => {
+    if (typeof map.getContainer !== 'function') return
+    const el = map.getContainer()
+    const recalcular = () => map.invalidateSize()
+    const obs = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(recalcular) : null
+    obs?.observe(el)
+    window.addEventListener('resize', recalcular)
+    window.addEventListener('focus', recalcular)
+    const t = window.setTimeout(recalcular, 300)
+    return () => {
+      obs?.disconnect()
+      window.removeEventListener('resize', recalcular)
+      window.removeEventListener('focus', recalcular)
+      window.clearTimeout(t)
+    }
+  }, [map])
+  return null
+}
+
 interface LocationPickerProps {
   value: { lat: number; lng: number } | null
   onChange: (lat: number, lng: number) => void
@@ -92,6 +114,7 @@ export function LocationPicker({ value, onChange, invalido = false }: LocationPi
             attribution='&copy; OpenStreetMap'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          <AjustarTamanho />
           <ClickHandler onPick={onChange} />
           <Recentralizar value={value} pedido={pedidoFoco} />
           {value && <Marker position={[value.lat, value.lng]} icon={pinIcon} />}

@@ -223,7 +223,8 @@ export function DenunciaForm({
             className="input-brand !py-3"
           />
         </div>
-        <div>
+        {/* relative: ancora o input escondido (sr-only é absolute) aqui; sem isso o foco nele rola a página toda e abre uma faixa em branco. */}
+        <div className="relative">
           <span className={rotulo}>
             Foto{' '}
             <span className="font-semibold normal-case tracking-normal text-brand-green-dark/70">
