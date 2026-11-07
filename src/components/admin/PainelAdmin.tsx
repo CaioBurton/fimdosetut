@@ -13,7 +13,7 @@ interface Props {
 
 /** Painel do admin: calcula o resumo no navegador, com as denúncias já carregadas. */
 export function PainelAdmin({ denuncias, onGerenciarLinhas }: Props) {
-  const [periodo, setPeriodo] = useState<Periodo>('hoje')
+  const [periodo, setPeriodo] = useState<Periodo>('30d')
   const [zona, setZona] = useState<Zona | 'todas'>('todas')
   const resumo = useMemo(
     () => resumirDenuncias(denuncias, periodo, zona),
