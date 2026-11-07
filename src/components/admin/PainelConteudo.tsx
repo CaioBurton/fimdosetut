@@ -7,7 +7,7 @@ import { taxaResolucao, type ResumoPainel } from '../../lib/resumoPainel'
 import { TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Zona } from '../../types'
 
 const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'rural', 'outras']
-const PERIODOS: Periodo[] = ['hoje', '7d', '30d', 'todos']
+const PERIODOS: Periodo[] = ['7d', '30d', 'todos']
 
 const atraso = (i: number) => ({ animationDelay: `${Math.min(i, 8) * 60}ms` })
 
@@ -95,7 +95,7 @@ export function PainelConteudo({
         <div
           role="group"
           aria-label="Período"
-          className="grid grid-cols-4 overflow-hidden rounded-[2px] border-2 border-brand-green lg:w-96"
+          className="grid grid-cols-3 overflow-hidden rounded-[2px] border-2 border-brand-green lg:w-80"
         >
           {PERIODOS.map((p, i) => (
             <button
