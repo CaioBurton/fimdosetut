@@ -71,13 +71,27 @@ export async function enviarFoto(arquivo: File): Promise<{ path: string | null; 
 }
 
 /** URL pública da foto (o bucket é público; a imagem é servida com cache de CDN). */
+/**
+ * Prefixo das fotos antigas que o script `scripts/arquivar-fotos.mjs` moveu para o Cloudflare R2.
+ * O arquivo continua com o mesmo nome, só muda o lugar.
+ */
+export const PREFIXO_R2 = 'r2:'
+
+/** URL pública da foto: no Supabase (com cache de CDN) ou, se já foi arquivada, no R2. */
 export function urlFoto(path: string) {
+  if (path.startsWith(PREFIXO_R2)) {
+    // Endereço público do bucket do R2 (ex.: https://fotos.deuoprego.com.br).
+    const base = (import.meta.env.VITE_FOTOS_ARQUIVO_URL ?? '').replace(/\/$/, '')
+    return `${base}/${path.slice(PREFIXO_R2.length)}`
+  }
   return supabase.storage.from(BUCKET_FOTOS).getPublicUrl(path).data.publicUrl
 }
 
-/** Apaga fotos do bucket. Lista vazia não chama a API. */
+/** Apaga fotos do bucket do Supabase. Lista vazia não chama a API. */
 export async function removerFotos(paths: (string | null | undefined)[]) {
-  const validos = paths.filter((p): p is string => !!p)
+  // Fotos já arquivadas no R2 não podem ser apagadas daqui (o app não tem a chave do R2): ao
+  // perderem a denúncia, o script semanal de arquivamento apaga o arquivo de lá.
+  const validos = paths.filter((p): p is string => !!p && !p.startsWith(PREFIXO_R2))
   if (validos.length === 0) return { error: null }
   const { error } = await supabase.storage.from(BUCKET_FOTOS).remove(validos)
   return { error }

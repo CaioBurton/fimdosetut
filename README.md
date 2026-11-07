@@ -103,6 +103,31 @@ O template do e-mail de confirmação, no estilo do app, está em `supabase/temp
 
 O e-mail padrão do Supabase tem limite baixo de envios por hora. Para uso real, configure um SMTP próprio em **Project Settings → Authentication → SMTP**.
 
+## Arquivamento das fotos no Cloudflare R2
+
+O Supabase gratuito tem 1 GB de arquivos. Para não chegar no limite sem perder fotos, o script `scripts/arquivar-fotos.mjs` move para o **Cloudflare R2** (plano gratuito com ~10 GB e sem cobrança de tráfego de saída; confira os valores atuais) as fotos de denúncias com mais de 30 dias. A denúncia passa a apontar para o R2 (`foto_path = 'r2:<arquivo>'`) e o app monta a URL de lá. O script roda toda segunda-feira pelo GitHub Actions (`.github/workflows/arquivar-fotos.yml`) e vem **desligado**.
+
+Para cada foto, ele baixa do Supabase, envia ao R2, confere o tamanho da cópia, marca a denúncia e só então apaga do Supabase. Se algo falhar no meio, a foto continua no Supabase e o script tenta de novo na semana seguinte. Na mesma execução, apaga do R2 os arquivos que nenhuma denúncia usa mais (denúncia ou conta excluída, foto removida), porque o app não tem a chave do R2 para apagar na hora. Se a limpeza fosse apagar mais da metade do R2, ela para sem apagar nada.
+
+### Como ligar
+
+1. **Cloudflare:** crie a conta e ative o R2 (o Cloudflare pode pedir um cartão mesmo no plano gratuito). Crie um bucket, por exemplo `deuoprego-fotos`.
+2. **Acesso público ao bucket:** em *Settings* do bucket, conecte um domínio próprio (ex.: `fotos.deuoprego.com.br`; o domínio precisa usar o DNS da Cloudflare) ou ative o endereço `r2.dev`, que tem limite de requisições e é indicado só para testes.
+3. **Token do R2:** em *R2 → Manage API tokens*, crie um token com permissão **Object Read & Write** só para esse bucket. Guarde o *Access Key ID* e o *Secret Access Key*.
+4. **Banco:** rode a migration `0033_fotos_arquivadas_r2.sql` no SQL Editor.
+5. **App (Vercel), antes de ligar o script:** crie a variável `VITE_FOTOS_ARQUIVO_URL` com o endereço público do passo 2 e faça um novo deploy. Sem isso, as fotos arquivadas aparecem quebradas.
+6. **GitHub:** em *Settings → Secrets and variables → Actions*, crie os **secrets** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` e `R2_BUCKET`. Opcionalmente, as **variables** `ARQUIVAR_APOS_DIAS` (padrão 30) e `ARQUIVAR_LIMITE` (fotos por execução, padrão 300).
+7. **Teste:** em *Actions → Arquivar fotos no R2 → Run workflow*, rode com "simular" marcado e confira o log. Depois rode sem simular e abra uma foto antiga no app.
+8. **Ligue o agendamento:** crie a **variable** `ARQUIVAR_FOTOS_ATIVO` com o valor `true`.
+9. **Política de Privacidade:** inclua a Cloudflare na lista de serviços que guardam dados (seção "Com quem compartilhamos") e atualize `VERSAO_DOCUMENTOS`.
+
+Para rodar no computador, coloque as mesmas variáveis num arquivo `.env.r2` (ignorado pelo Git) e use `npm run arquivar-fotos -- --simular` ou `npm run arquivar-fotos`.
+
+Observações:
+- Uma foto arquivada que perde a denúncia (exclusão de denúncia ou de conta) continua no R2 até a próxima execução, no máximo uma semana.
+- O R2 também funciona como cópia de segurança das fotos antigas, que o `npm run backup` não cobre.
+- Em repositórios públicos, o GitHub desliga agendamentos depois de 60 dias sem atividade no repositório; se isso acontecer, reative em *Actions*.
+
 ## Selos e ranking de linhas
 
 Pequenos incentivos, sem competição entre pessoas:
