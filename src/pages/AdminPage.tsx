@@ -2,6 +2,8 @@ import { Fragment, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { AppLayout } from '../components/layout/AppLayout'
 import { FeedbacksAdmin } from '../components/admin/FeedbacksAdmin'
+import { FotosOrfasAdmin } from '../components/admin/FotosOrfasAdmin'
+import { FotosPendentesAdmin } from '../components/admin/FotosPendentesAdmin'
 import { LinhasAdmin } from '../components/admin/LinhasAdmin'
 import { PainelAdmin } from '../components/admin/PainelAdmin'
 import { DashboardDenuncias } from '../components/admin/DashboardDenuncias'
@@ -25,6 +27,7 @@ import { useDenunciasPorUsuario } from '../hooks/useDenunciasPorUsuario'
 import { useNomesUsuarios } from '../hooks/useNomesUsuarios'
 import { useLinhas } from '../hooks/useLinhas'
 import { useUsuarios } from '../hooks/useUsuarios'
+import { excluirDenunciaComFoto, removerFotoDaDenuncia, urlFoto } from '../lib/fotosDenuncias'
 import { supabase } from '../lib/supabaseClient'
 import {
   STATUS_LABELS,
@@ -35,11 +38,12 @@ import {
   type Perfil,
 } from '../types'
 
-type Aba = 'painel' | 'denuncias' | 'linhas' | 'usuarios' | 'feedbacks'
+type Aba = 'painel' | 'denuncias' | 'fotos' | 'linhas' | 'usuarios' | 'feedbacks'
 
 const ABAS: { id: Aba; rotulo: string }[] = [
   { id: 'painel', rotulo: 'Painel' },
   { id: 'denuncias', rotulo: 'Denúncias' },
+  { id: 'fotos', rotulo: 'Fotos' },
   { id: 'linhas', rotulo: 'Linhas' },
   { id: 'usuarios', rotulo: 'Usuários' },
   { id: 'feedbacks', rotulo: 'Feedbacks' },
@@ -72,11 +76,19 @@ export function AdminPage() {
     if (error) setAcaoErro('Não foi possível atualizar a denúncia. Tente novamente.')
   }
 
-  async function excluirDenuncia(id: string) {
+  async function excluirDenuncia(id: string, fotoPath?: string | null) {
     setAcaoErro(null)
-    const { error } = await supabase.from('denuncias').delete().eq('id', id)
+    const { error } = await excluirDenunciaComFoto(id, fotoPath)
     setConfirmando(null)
     if (error) setAcaoErro('Não foi possível excluir a denúncia. Tente novamente.')
+  }
+
+  // A denúncia continua; só a foto sai (e o arquivo é apagado do Storage).
+  async function removerFoto(id: string, fotoPath: string) {
+    setAcaoErro(null)
+    const { error } = await removerFotoDaDenuncia(id, fotoPath)
+    setConfirmando(null)
+    if (error) setAcaoErro('Não foi possível remover a foto. Tente novamente.')
   }
 
   return (
@@ -111,6 +123,9 @@ export function AdminPage() {
             titulo="Denúncias"
             subtitulo={`${denuncias.length} ${denuncias.length === 1 ? 'denúncia' : 'denúncias'}. Altere o status ou remova conteúdo indevido.`}
           />
+        )}
+        {desktop && aba === 'fotos' && (
+          <CabecalhoPagina titulo="Fotos" subtitulo="Fotos esperando aprovação antes de aparecer nas denúncias" />
         )}
         {desktop && aba === 'feedbacks' && (
           <CabecalhoPagina titulo="Feedbacks" subtitulo="O que as pessoas mandaram pelo app" />
@@ -160,6 +175,7 @@ export function AdminPage() {
                     onConfirmar={setConfirmando}
                     onAlternar={alternarStatus}
                     onExcluir={excluirDenuncia}
+                    onRemoverFoto={removerFoto}
                   />
                 ) : (
                 <div className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:space-y-0">
@@ -173,12 +189,29 @@ export function AdminPage() {
               <DenunciaCard
                 denuncia={denuncia}
                 actions={
-                  confirmando === denuncia.id ? (
+                  confirmando === `foto:${denuncia.id}` && denuncia.foto_path ? (
                     <>
                       <Button
                         variant="ghost"
                         className="anim-abre w-auto flex-1 py-2 text-sm text-zona-leste"
-                        onClick={() => excluirDenuncia(denuncia.id)}
+                        onClick={() => removerFoto(denuncia.id, denuncia.foto_path!)}
+                      >
+                        Confirmar remoção da foto
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        className="w-auto flex-1 py-2 text-sm"
+                        onClick={() => setConfirmando(null)}
+                      >
+                        Cancelar
+                      </Button>
+                    </>
+                  ) : confirmando === denuncia.id ? (
+                    <>
+                      <Button
+                        variant="ghost"
+                        className="anim-abre w-auto flex-1 py-2 text-sm text-zona-leste"
+                        onClick={() => excluirDenuncia(denuncia.id, denuncia.foto_path)}
                       >
                         Confirmar exclusão
                       </Button>
@@ -206,6 +239,15 @@ export function AdminPage() {
                       >
                         Excluir
                       </Button>
+                      {denuncia.foto_path && (
+                        <Button
+                          variant="ghost"
+                          className="w-full py-2 text-sm text-zona-leste"
+                          onClick={() => setConfirmando(`foto:${denuncia.id}`)}
+                        >
+                          Remover foto
+                        </Button>
+                      )}
                     </>
                   )
                 }
@@ -217,6 +259,13 @@ export function AdminPage() {
               }
             </DashboardDenuncias>
           </>
+        )}
+
+        {aba === 'fotos' && (
+          <div className="space-y-4">
+            <FotosPendentesAdmin />
+            <FotosOrfasAdmin />
+          </div>
         )}
 
         {aba === 'feedbacks' && <FeedbacksAdmin />}
@@ -501,10 +550,11 @@ interface TabelaDenunciasProps {
   confirmando: string | null
   onConfirmar: (id: string | null) => void
   onAlternar: (id: string, statusAtual: string) => void
-  onExcluir: (id: string) => void
+  onExcluir: (id: string, fotoPath?: string | null) => void
+  onRemoverFoto: (id: string, fotoPath: string) => void
 }
 
-function TabelaDenuncias({ denuncias, pagina, onPagina, confirmando, onConfirmar, onAlternar, onExcluir }: TabelaDenunciasProps) {
+function TabelaDenuncias({ denuncias, pagina, onPagina, confirmando, onConfirmar, onAlternar, onExcluir, onRemoverFoto }: TabelaDenunciasProps) {
   const totalPaginas = Math.max(1, Math.ceil(denuncias.length / POR_PAGINA_TABELA))
   const atual = Math.min(pagina, totalPaginas)
   const inicio = (atual - 1) * POR_PAGINA_TABELA
@@ -536,7 +586,19 @@ function TabelaDenuncias({ denuncias, pagina, onPagina, confirmando, onConfirmar
                     {d.linha?.codigo ?? '—'}
                   </span>
                 </td>
-                <td className={`${celula} font-bold`}>{TIPO_LABELS[d.tipo]}</td>
+                <td className={`${celula} font-bold`}>
+                  {TIPO_LABELS[d.tipo]}
+                  {d.foto_path && (
+                    <a
+                      href={urlFoto(d.foto_path)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-2 text-xs font-bold underline"
+                    >
+                      Ver foto
+                    </a>
+                  )}
+                </td>
                 <td className={celula}>
                   <span className="inline-flex items-center gap-1.5">
                     <i className="block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: ZONA_COLORS[zona] }} />
@@ -550,9 +612,18 @@ function TabelaDenuncias({ denuncias, pagina, onPagina, confirmando, onConfirmar
                   </span>
                 </td>
                 <td className={`${celula} whitespace-nowrap text-right`}>
-                  {confirmando === d.id ? (
+                  {confirmando === `foto:${d.id}` && d.foto_path ? (
                     <span className="anim-abre inline-flex gap-2">
-                      <button type="button" className={botaoPerigoTabela} onClick={() => onExcluir(d.id)}>
+                      <button type="button" className={botaoPerigoTabela} onClick={() => onRemoverFoto(d.id, d.foto_path!)}>
+                        Confirmar remoção da foto
+                      </button>
+                      <button type="button" className={botaoTabela} onClick={() => onConfirmar(null)}>
+                        Cancelar
+                      </button>
+                    </span>
+                  ) : confirmando === d.id ? (
+                    <span className="anim-abre inline-flex gap-2">
+                      <button type="button" className={botaoPerigoTabela} onClick={() => onExcluir(d.id, d.foto_path)}>
                         Confirmar exclusão
                       </button>
                       <button type="button" className={botaoTabela} onClick={() => onConfirmar(null)}>
@@ -564,6 +635,11 @@ function TabelaDenuncias({ denuncias, pagina, onPagina, confirmando, onConfirmar
                       <button type="button" className={botaoTabela} onClick={() => onAlternar(d.id, d.status)}>
                         {d.status === 'pendente' ? 'Resolver' : 'Reabrir'}
                       </button>
+                      {d.foto_path && (
+                        <button type="button" className={botaoPerigoTabela} onClick={() => onConfirmar(`foto:${d.id}`)}>
+                          Remover foto
+                        </button>
+                      )}
                       <button type="button" className={botaoPerigoTabela} onClick={() => onConfirmar(d.id)}>
                         Excluir
                       </button>

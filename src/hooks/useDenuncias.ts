@@ -6,7 +6,7 @@ import type { Denuncia, Linha } from '../types'
 // Só as colunas usadas pelo app (sem o join com `linhas`: as linhas já são carregadas à parte
 // e anexadas no cliente), para gastar menos tráfego de saída do Supabase.
 const COLUNAS =
-  'id, linha_id, tipo, status, descricao, numero_veiculo, latitude, longitude, created_at, updated_at, confirmacoes'
+  'id, linha_id, tipo, status, descricao, numero_veiculo, foto_path, latitude, longitude, created_at, updated_at, confirmacoes'
 
 // O Supabase devolve no máximo 1000 linhas por consulta; busca página a página
 // para não cortar as denúncias mais antigas sem avisar.

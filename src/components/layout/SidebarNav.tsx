@@ -23,6 +23,7 @@ const ic = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 
 const SECOES_ADMIN = [
   { id: 'painel', rotulo: 'Painel' },
   { id: 'denuncias', rotulo: 'Denúncias' },
+  { id: 'fotos', rotulo: 'Fotos' },
   { id: 'linhas', rotulo: 'Linhas' },
   { id: 'usuarios', rotulo: 'Usuários' },
   { id: 'feedbacks', rotulo: 'Feedbacks' },

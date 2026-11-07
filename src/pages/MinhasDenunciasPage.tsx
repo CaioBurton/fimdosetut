@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { VincularConta } from '../components/auth/VincularConta'
 import { AppLayout } from '../components/layout/AppLayout'
 import { EnviarFeedback } from '../components/perfil/EnviarFeedback'
@@ -16,6 +16,7 @@ import { useDesktop } from '../hooks/useDesktop'
 import { useAuth } from '../hooks/useAuth'
 import { useDenuncias } from '../hooks/useDenuncias'
 import { useLinhas } from '../hooks/useLinhas'
+import { excluirDenunciaComFoto, removerFotoDaDenuncia } from '../lib/fotosDenuncias'
 import { supabase } from '../lib/supabaseClient'
 
 const POR_PAGINA = 5
@@ -27,6 +28,23 @@ export function MinhasDenunciasPage() {
   const { denuncias, loading, error } = useDenuncias(linhas, null, true)
   const [acaoErro, setAcaoErro] = useState<string | null>(null)
   const [pagina, setPagina] = useState(1)
+  // Denúncias cuja foto ainda espera aprovação (a pessoa vê "Foto em análise" no cartão).
+  const [fotosEmAnalise, setFotosEmAnalise] = useState<Set<string>>(new Set())
+  const userId = user?.id
+
+  useEffect(() => {
+    if (!userId) return
+    let ativo = true
+    supabase
+      .from('fotos_pendentes')
+      .select('denuncia_id')
+      .then(({ data }) => {
+        if (ativo && data) setFotosEmAnalise(new Set((data as { denuncia_id: string }[]).map((f) => f.denuncia_id)))
+      })
+    return () => {
+      ativo = false
+    }
+  }, [userId])
 
   // A visão `minhas_denuncias` já traz só as do usuário logado.
   const minhas = denuncias
@@ -44,10 +62,16 @@ export function MinhasDenunciasPage() {
     if (error) setAcaoErro('Não foi possível atualizar a denúncia. Tente novamente.')
   }
 
-  async function excluir(id: string) {
+  async function excluir(id: string, fotoPath?: string | null) {
     setAcaoErro(null)
-    const { error } = await supabase.from('denuncias').delete().eq('id', id)
+    const { error } = await excluirDenunciaComFoto(id, fotoPath)
     if (error) setAcaoErro('Não foi possível excluir a denúncia. Tente novamente.')
+  }
+
+  async function removerFoto(id: string, fotoPath: string) {
+    setAcaoErro(null)
+    const { error } = await removerFotoDaDenuncia(id, fotoPath)
+    if (error) setAcaoErro('Não foi possível remover a foto. Tente novamente.')
   }
 
   return (
@@ -89,6 +113,7 @@ export function MinhasDenunciasPage() {
                   <DenunciaCard
                     key={denuncia.id}
                     denuncia={denuncia}
+                    fotoEmAnalise={fotosEmAnalise.has(denuncia.id)}
                     actions={
                       <>
                         <Button
@@ -101,10 +126,19 @@ export function MinhasDenunciasPage() {
                         <Button
                           variant="ghost"
                           className="w-auto flex-1 py-2 text-sm text-zona-leste"
-                          onClick={() => excluir(denuncia.id)}
+                          onClick={() => excluir(denuncia.id, denuncia.foto_path)}
                         >
                           Excluir
                         </Button>
+                        {denuncia.foto_path && (
+                          <Button
+                            variant="ghost"
+                            className="w-full py-2 text-sm text-zona-leste"
+                            onClick={() => removerFoto(denuncia.id, denuncia.foto_path!)}
+                          >
+                            Remover foto
+                          </Button>
+                        )}
                       </>
                     }
                   />
