@@ -15,12 +15,12 @@ describe('BotaoCompartilharTudo', () => {
     expect(screen.getByRole('button', { name: /Diário/ })).toBeEnabled()
   })
 
-  it('o Diário deixa escolher entre post e story', async () => {
+  it.each(['Semanal', 'Diário'])('o %s deixa escolher entre post e story', async (nome) => {
     const user = userEvent.setup()
     render(<BotaoCompartilharTudo resumo={RESUMO_VAZIO} periodo="7d" zona="todas" />)
     expect(screen.queryByRole('menuitem')).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /Diário/ }))
+    await user.click(screen.getByRole('button', { name: new RegExp(nome) }))
     expect(screen.getByRole('menuitem', { name: 'Post (4:5)' })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: 'Story (9:16)' })).toBeInTheDocument()
   })

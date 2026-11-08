@@ -761,6 +761,9 @@ export async function compartilharImagens(
   return 'baixado'
 }
 
+/** Formato das imagens: post do feed (4:5) ou story (9:16). */
+export type FormatoDiario = 'post' | 'story'
+
 type CartaoDoConjunto = { nome: string; gerar: (() => Promise<Blob>) | null }
 
 /** Gera as imagens do conjunto, na ordem, numeradas; entradas sem `gerar` (seção vazia) ficam de fora. */
@@ -781,22 +784,24 @@ export async function gerarCarrossel(
   resumo: ResumoPainel,
   periodo: Periodo,
   zona: Zona | 'todas',
-  linhaDaSemana: LinhaEmAlta | null = null
+  linhaDaSemana: LinhaEmAlta | null = null,
+  formato: FormatoDiario = 'post'
 ) {
+  const story = formato === 'story'
   return gerarConjunto(
     [
-      { nome: 'resumo', gerar: () => gerarCartaoPainel(dadosDoResumo(resumo, periodo, zona)) },
-      { nome: 'linha-da-semana', gerar: linhaDaSemana ? () => gerarCartaoSemana(linhaDaSemana) : null },
-      { nome: 'por-dia', gerar: () => gerarCartaoPainel(dadosPorDia(resumo, zona)) },
-      { nome: 'por-zona', gerar: () => gerarCartaoPainel(dadosPorZona(resumo, periodo, zona)) },
-      { nome: 'por-tipo', gerar: () => gerarCartaoPainel(dadosPorTipo(resumo, periodo, zona)) },
+      { nome: 'resumo', gerar: () => gerarCartaoPainel(dadosDoResumo(resumo, periodo, zona), story) },
+      { nome: 'linha-da-semana', gerar: linhaDaSemana ? () => gerarCartaoSemana(linhaDaSemana, false, story) : null },
+      { nome: 'por-dia', gerar: () => gerarCartaoPainel(dadosPorDia(resumo, zona), story) },
+      { nome: 'por-zona', gerar: () => gerarCartaoPainel(dadosPorZona(resumo, periodo, zona), story) },
+      { nome: 'por-tipo', gerar: () => gerarCartaoPainel(dadosPorTipo(resumo, periodo, zona), story) },
       {
         nome: 'acessibilidade',
-        gerar: resumo.acessibilidade.total > 0 ? () => gerarCartaoPainel(dadosDaAcessibilidade(resumo, periodo, zona)) : null,
+        gerar: resumo.acessibilidade.total > 0 ? () => gerarCartaoPainel(dadosDaAcessibilidade(resumo, periodo, zona), story) : null,
       },
-      { nome: 'ranking', gerar: resumo.topLinhas.length > 0 ? () => gerarCartaoRanking(resumo, periodo, zona) : null },
+      { nome: 'ranking', gerar: resumo.topLinhas.length > 0 ? () => gerarCartaoRanking(resumo, periodo, zona, story) : null },
     ],
-    ''
+    `${formato}-`
   )
 }
 
@@ -816,8 +821,6 @@ export function linhaDoDia(denuncias: Denuncia[], resumo: ResumoPainel): LinhaEm
     pendentes: dela.filter((d) => d.status !== 'resolvido').length,
   }
 }
-
-export type FormatoDiario = 'post' | 'story'
 
 /**
  * Cartões do dia: as mesmas seções do carrossel semanal, só com as denúncias de hoje (a série "por dia"

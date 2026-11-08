@@ -116,15 +116,21 @@ function BotaoGerar<O extends string = never>({
   )
 }
 
+const OPCOES_FORMATO: { valor: FormatoDiario; rotulo: string }[] = [
+  { valor: 'post', rotulo: 'Post (4:5)' },
+  { valor: 'story', rotulo: 'Story (9:16)' },
+]
+
 /** Gera um cartão por seção do painel (e a linha mais problemática da semana) e compartilha todos juntos. */
 function CarrosselAdmin({ resumo, periodo, zona }: Props) {
   const { linhas, loading } = useRankingSemana(1)
   return (
-    <BotaoGerar
+    <BotaoGerar<FormatoDiario>
       rotulo="Semanal"
       desabilitado={loading}
-      aoCompartilhar={async () => {
-        const imagens = await gerarCarrossel(resumo, periodo, zona, linhas[0] ?? null)
+      opcoes={OPCOES_FORMATO}
+      aoCompartilhar={async (formato) => {
+        const imagens = await gerarCarrossel(resumo, periodo, zona, linhas[0] ?? null, formato)
         await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoCarrossel(periodo, zona) })
       }}
     />
@@ -141,10 +147,7 @@ function DiarioDoDia() {
     <BotaoGerar<FormatoDiario>
       rotulo="Diário"
       desabilitado={loading}
-      opcoes={[
-        { valor: 'post', rotulo: 'Post (4:5)' },
-        { valor: 'story', rotulo: 'Story (9:16)' },
-      ]}
+      opcoes={OPCOES_FORMATO}
       aoCompartilhar={async (formato) => {
         const data = dataPorExtenso()
         const imagens = await gerarCartoesDoDia(denuncias, data, formato)
