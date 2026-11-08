@@ -715,7 +715,13 @@ export const gerarCartaoSemana = (linha: LinhaEmAlta, diario = false, story = fa
 export const gerarCartaoPainel = (dados: DadosCartaoPainel, story = false) =>
   gerarPng((ctx, logo) => desenharCartaoPainel(ctx, dados, logo, story), story ? ALTURA_STORY : ALTURA)
 
-export type ResultadoCompartilhamento = 'compartilhado' | 'baixado' | 'cancelado'
+/**
+ * Computador (ponteiro principal é mouse). Lá o compartilhamento nativo do Windows só oferece
+ * contatos e apps e não deixa acessar os arquivos; é melhor baixar as imagens direto.
+ */
+const ehComputador = () => typeof window.matchMedia === 'function' && !window.matchMedia('(pointer: coarse)').matches
+
+export type ResultadoCompartilhamento ='compartilhado' | 'baixado' | 'cancelado'
 
 /**
  * Abre o compartilhamento do celular (Instagram, WhatsApp etc.) com a imagem; onde isso não existe
@@ -738,7 +744,7 @@ export async function compartilharImagens(
   { titulo: tituloCompartilhamento, texto: textoCompartilhamento }: { titulo: string; texto: string }
 ): Promise<ResultadoCompartilhamento> {
   const arquivos = imagens.map((i) => new File([i.blob], i.nome, { type: i.blob.type || 'image/png' }))
-  if (typeof navigator.share === 'function' && navigator.canShare?.({ files: arquivos })) {
+  if (!ehComputador() && typeof navigator.share === 'function' && navigator.canShare?.({ files: arquivos })) {
     try {
       await navigator.share({ files: arquivos, title: tituloCompartilhamento, text: textoCompartilhamento })
       return 'compartilhado'

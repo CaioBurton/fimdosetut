@@ -314,6 +314,23 @@ describe('carrossel', () => {
   })
 })
 
+describe('compartilhar no computador', () => {
+  it('baixa as imagens em vez de abrir o compartilhamento do sistema', async () => {
+    const share = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { share, canShare: () => true })
+    vi.stubGlobal('matchMedia', () => ({ matches: false }))
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:x'), revokeObjectURL: vi.fn() }))
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+    const r = await compartilharImagens([{ blob: new Blob(['a'], { type: 'image/png' }), nome: 'a.png' }], { titulo: 't', texto: 'x' })
+
+    expect(r).toBe('baixado')
+    expect(share).not.toHaveBeenCalled()
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+})
+
 describe('stories do dia', () => {
   const hojeIso = (h: number, extra: Partial<Denuncia> = {}): Denuncia => ({ ...denuncia, created_at: `2026-11-08T${String(h).padStart(2, '0')}:10:00`, confirmacoes: 0, ...extra })
 
