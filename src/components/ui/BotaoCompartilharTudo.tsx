@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useRankingSemana } from '../../hooks/useRankingSemana'
 import { compartilharImagens, gerarCarrossel, textoCarrossel } from '../../lib/cartaoCompartilhavel'
@@ -24,6 +24,12 @@ function CarrosselAdmin({ resumo, periodo, zona }: Props) {
   const [gerando, setGerando] = useState(false)
   const [aviso, setAviso] = useState<{ texto: string; erro: boolean } | null>(null)
 
+  useEffect(() => {
+    if (!aviso) return
+    const t = setTimeout(() => setAviso(null), 5000)
+    return () => clearTimeout(t)
+  }, [aviso])
+
   async function compartilhar() {
     setGerando(true)
     setAviso(null)
@@ -39,7 +45,7 @@ function CarrosselAdmin({ resumo, periodo, zona }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 lg:ml-auto">
+    <div className="relative flex items-center lg:ml-auto">
       <button
         type="button"
         onClick={compartilhar}
@@ -52,7 +58,11 @@ function CarrosselAdmin({ resumo, periodo, zona }: Props) {
         {gerando ? 'Gerando...' : 'Compartilhar tudo (carrossel)'}
       </button>
       {aviso && (
-        <span role={aviso.erro ? 'alert' : 'status'} className={`text-xs font-bold ${aviso.erro ? 'text-zona-leste' : 'text-brand-green'}`}>
+        // Flutua (absoluto) para a mensagem não empurrar o botão de lugar.
+        <span
+          role={aviso.erro ? 'alert' : 'status'}
+          className={`absolute right-0 top-full z-10 mt-1 whitespace-nowrap rounded-[2px] border-2 border-brand-green bg-brand-cream px-2 py-1 text-xs font-bold shadow-[2px_2px_0_#084400] ${aviso.erro ? 'text-zona-leste' : 'text-brand-green'}`}
+        >
           {aviso.texto}
         </span>
       )}
