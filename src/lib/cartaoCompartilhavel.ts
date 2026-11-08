@@ -697,28 +697,68 @@ export type ResultadoCompartilhamento = 'compartilhado' | 'baixado' | 'cancelado
 export async function compartilharImagem(
   blob: Blob,
   nomeArquivo: string,
+  textos: { titulo: string; texto: string }
+): Promise<ResultadoCompartilhamento> {
+  return compartilharImagens([{ blob, nome: nomeArquivo }], textos)
+}
+
+/**
+ * Como `compartilharImagem`, mas com várias imagens de uma vez (o carrossel do Instagram). Onde não
+ * há compartilhamento nativo, baixa uma por uma.
+ */
+export async function compartilharImagens(
+  imagens: { blob: Blob; nome: string }[],
   { titulo: tituloCompartilhamento, texto: textoCompartilhamento }: { titulo: string; texto: string }
 ): Promise<ResultadoCompartilhamento> {
-  const arquivo = new File([blob], nomeArquivo, { type: blob.type || 'image/png' })
-  if (typeof navigator.share === 'function' && navigator.canShare?.({ files: [arquivo] })) {
+  const arquivos = imagens.map((i) => new File([i.blob], i.nome, { type: i.blob.type || 'image/png' }))
+  if (typeof navigator.share === 'function' && navigator.canShare?.({ files: arquivos })) {
     try {
-      await navigator.share({ files: [arquivo], title: tituloCompartilhamento, text: textoCompartilhamento })
+      await navigator.share({ files: arquivos, title: tituloCompartilhamento, text: textoCompartilhamento })
       return 'compartilhado'
     } catch (erro) {
       if (erro instanceof DOMException && erro.name === 'AbortError') return 'cancelado'
       // qualquer outra falha do compartilhamento nativo cai no download
     }
   }
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = nomeArquivo
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
+  for (const [i, imagem] of imagens.entries()) {
+    if (i > 0) await new Promise((r) => setTimeout(r, 350)) // o navegador bloqueia downloads em rajada
+    const url = URL.createObjectURL(imagem.blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = imagem.nome
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
   return 'baixado'
 }
+
+/**
+ * Gera o carrossel do resumo semanal: um cartão por seção do painel, na ordem em que aparecem.
+ * Seções sem dados (acessibilidade e ranking vazios) ficam de fora.
+ */
+export async function gerarCarrossel(resumo: ResumoPainel, periodo: Periodo, zona: Zona | 'todas') {
+  const cartoes: { nome: string; dados: DadosCartaoPainel | null; ranking?: boolean }[] = [
+    { nome: 'resumo', dados: dadosDoResumo(resumo, periodo, zona) },
+    { nome: 'por-dia', dados: dadosPorDia(resumo, zona) },
+    { nome: 'por-zona', dados: dadosPorZona(resumo, periodo, zona) },
+    { nome: 'por-tipo', dados: dadosPorTipo(resumo, periodo, zona) },
+    { nome: 'acessibilidade', dados: resumo.acessibilidade.total > 0 ? dadosDaAcessibilidade(resumo, periodo, zona) : null },
+    { nome: 'ranking', dados: null, ranking: resumo.topLinhas.length > 0 },
+  ]
+  const imagens: { blob: Blob; nome: string }[] = []
+  for (const [i, c] of cartoes.entries()) {
+    let blob: Blob | null = null
+    if (c.dados) blob = await gerarCartaoPainel(c.dados)
+    else if (c.ranking) blob = await gerarCartaoRanking(resumo, periodo, zona)
+    if (blob) imagens.push({ blob, nome: `deu-o-prego-${String(i + 1).padStart(2, '0')}-${c.nome}.png` })
+  }
+  return imagens
+}
+
+export const textoCarrossel = (periodo: Periodo, zona: Zona | 'todas') =>
+  `Resumo do Deu o Prego! em Teresina (${recorteDoPainel(periodo, zona).toLowerCase()}). Veja no app: ${SITE_URL}`
 
 /** Texto que acompanha a imagem ao compartilhar. */
 export const textoDenuncia = (d: DadosCartaoDenuncia) =>

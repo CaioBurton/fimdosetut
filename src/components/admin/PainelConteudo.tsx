@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useDesktop } from '../../hooks/useDesktop'
 import { BotaoCompartilhar } from '../ui/BotaoCompartilhar'
 import { BotaoCompartilharPainel } from '../ui/BotaoCompartilharPainel'
+import { BotaoCompartilharTudo } from '../ui/BotaoCompartilharTudo'
 import {
   dadosDaAcessibilidade,
   dadosDoRanking,
@@ -156,6 +157,8 @@ export function PainelConteudo({
             </button>
           ))}
         </div>
+
+        <BotaoCompartilharTudo resumo={resumo} periodo={periodo} zona={zona} />
       </div>
 
       {!desktop && (

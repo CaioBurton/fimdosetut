@@ -3,6 +3,7 @@ import type { Denuncia } from '../types'
 import {
   ajustarTexto,
   compartilharImagem,
+  compartilharImagens,
   dadosDaAcessibilidade,
   dadosDoCartao,
   dadosDoResumo,
@@ -292,5 +293,19 @@ describe('compartilharImagem', () => {
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
     expect(await compartilharImagem(blob, 'a.png', mensagem)).toBe('baixado')
+  })
+})
+
+describe('carrossel', () => {
+  it('compartilha todas as imagens num só envio nativo', async () => {
+    const share = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { share, canShare: () => true })
+    const r = await compartilharImagens(
+      [{ blob: new Blob(['a'], { type: 'image/png' }), nome: 'a.png' }, { blob: new Blob(['b'], { type: 'image/png' }), nome: 'b.png' }],
+      { titulo: 't', texto: 'x' }
+    )
+    expect(r).toBe('compartilhado')
+    expect(share.mock.calls[0][0].files).toHaveLength(2)
+    vi.unstubAllGlobals()
   })
 })
