@@ -3,7 +3,19 @@ import type { Denuncia } from '../types'
 import {
   ajustarTexto,
   compartilharImagem,
+  compartilharImagens,
+  dadosDaAcessibilidade,
   dadosDoCartao,
+  dadosDoDia,
+  desenharCartaoDia,
+  textoDia,
+  dadosDoResumo,
+  dadosPorDia,
+  dadosPorHora,
+  dadosPorTipo,
+  dadosPorZona,
+  desenharCartaoPainel,
+  textoPainel,
   dadosDoRanking,
   desenharCartaoDenuncia,
   desenharCartaoRanking,
@@ -178,6 +190,59 @@ describe('desenho dos cartões', () => {
   })
 })
 
+describe('cartões das seções do painel', () => {
+  const resumo = {
+    ...RESUMO_VAZIO,
+    total: 10,
+    pendentes: 4,
+    resolvidas: 6,
+    hoje: 2,
+    porZona: [{ chave: 'norte' as const, total: 7 }, { chave: 'sul' as const, total: 3 }],
+    porTipo: [{ chave: 'quebrado' as const, total: 10 }],
+    porDia: [{ data: new Date(2026, 10, 7), total: 3 }, { data: new Date(2026, 10, 8), total: 5 }],
+    acessibilidade: {
+      total: 2,
+      pendentes: 1,
+      topLinhas: [{ linhaId: 'l1', codigo: '103', nome: 'MOCAMBINHO', total: 2 }],
+      topVeiculos: [{ numero: '12345', total: 2 }],
+    },
+  }
+
+  const desenhar = (dados: ReturnType<typeof dadosDoResumo>) => {
+    const { ctx, textos } = contextoFalso()
+    desenharCartaoPainel(ctx, dados, null)
+    return textos.join(' | ')
+  }
+
+  it('resumo mostra pendentes, taxa e KPIs', () => {
+    const t = desenhar(dadosDoResumo(resumo, '7d', 'todas'))
+    expect(t).toContain('RESUMO')
+    expect(t).toContain('PENDENTES AGORA')
+    expect(t).toContain('60% resolvidas')
+    expect(t).toContain('10 denúncias no período')
+  })
+
+  it('por dia, por hora, zona e tipo desenham os rótulos e totais', () => {
+    expect(desenhar(dadosPorDia(resumo, 'norte'))).toContain('Zona Norte')
+    expect(desenhar(dadosPorHora(new Array(24).fill(1), 'Hoje'))).toContain('0h')
+    const zona = desenhar(dadosPorZona(resumo, '30d', 'todas'))
+    expect(zona).toContain('POR ZONA')
+    expect(zona).toContain('Norte')
+    expect(desenhar(dadosPorTipo(resumo, '30d', 'todas'))).toContain('POR TIPO DE PROBLEMA')
+  })
+
+  it('acessibilidade lista linhas e veículos; vazia avisa', () => {
+    const t = desenhar(dadosDaAcessibilidade(resumo, '7d', 'todas'))
+    expect(t).toContain('103 · MOCAMBINHO')
+    expect(t).toContain('Veículo 12345')
+    expect(desenhar(dadosDaAcessibilidade(RESUMO_VAZIO, '7d', 'todas'))).toContain('Nenhum problema de acessibilidade')
+  })
+
+  it('texto do compartilhamento leva título, recorte e o site', () => {
+    expect(textoPainel(dadosPorZona(resumo, '7d', 'todas'))).toMatch(/^Por zona em Teresina \(.*\)\. Veja no Deu o Prego!: https?:\/\//)
+  })
+})
+
 describe('compartilharImagem', () => {
   const blob = new Blob(['x'], { type: 'image/png' })
   const mensagem = { titulo: 'Deu o Prego!', texto: 'texto' }
@@ -231,5 +296,51 @@ describe('compartilharImagem', () => {
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
 
     expect(await compartilharImagem(blob, 'a.png', mensagem)).toBe('baixado')
+  })
+})
+
+describe('carrossel', () => {
+  it('compartilha todas as imagens num só envio nativo', async () => {
+    const share = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { share, canShare: () => true })
+    const r = await compartilharImagens(
+      [{ blob: new Blob(['a'], { type: 'image/png' }), nome: 'a.png' }, { blob: new Blob(['b'], { type: 'image/png' }), nome: 'b.png' }],
+      { titulo: 't', texto: 'x' }
+    )
+    expect(r).toBe('compartilhado')
+    expect(share.mock.calls[0][0].files).toHaveLength(2)
+    vi.unstubAllGlobals()
+  })
+})
+
+describe('story do dia', () => {
+  const hojeIso = (h: number, extra: Partial<Denuncia> = {}): Denuncia => ({ ...denuncia, created_at: `2026-11-08T${String(h).padStart(2, '0')}:10:00`, confirmacoes: 0, ...extra })
+
+  it('soma o dia: pendentes, resolvidas, horas e linhas mais denunciadas', () => {
+    const d = dadosDoDia(
+      [hojeIso(7), hojeIso(7), hojeIso(18, { status: 'resolvido' }), hojeIso(9, { linha_id: 'l2', linha: { id: 'l2', codigo: '200', nome: 'CENTRO', zona: 'sul' } })],
+      'domingo, 8 de novembro'
+    )
+    expect(d).toMatchObject({ total: 4, pendentes: 3, resolvidas: 1 })
+    expect(d.horas[7]).toBe(2)
+    expect(d.linhas[0]).toEqual({ codigo: '103', nome: 'MOCAMBINHO-ALTO ALEGRE', total: 3 })
+  })
+
+  it('desenha título, total, linhas e o site; sem denúncias avisa', () => {
+    const { ctx, textos } = contextoFalso()
+    desenharCartaoDia(ctx, dadosDoDia([hojeIso(7), hojeIso(8)], 'domingo, 8 de novembro'), null)
+    const t = textos.join(' | ')
+    expect(t).toContain('ESTATÍSTICAS')
+    expect(t).toContain('DENÚNCIAS HOJE')
+    expect(t).toContain('103 · MOCAMBINHO-ALTO ALEGRE')
+    expect(t).toContain('deuoprego.com.br')
+
+    const vazio = contextoFalso()
+    desenharCartaoDia(vazio.ctx, dadosDoDia([], 'hoje'), null)
+    expect(vazio.textos).toContain('Sem denúncias hoje.')
+  })
+
+  it('texto do compartilhamento leva o total e o site', () => {
+    expect(textoDia(dadosDoDia([hojeIso(7)], 'domingo'))).toMatch(/^1 denúncia em Teresina hoje/)
   })
 })

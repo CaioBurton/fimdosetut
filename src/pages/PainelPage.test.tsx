@@ -47,7 +47,7 @@ describe('PainelPage (público)', () => {
     expect(within(resumo).getByText('60% resolvidas')).toBeInTheDocument()
     expect(screen.getAllByText('063').length).toBeGreaterThan(0)
     expect(screen.queryByRole('button', { name: /Gerenciar linhas/ })).not.toBeInTheDocument()
-    expect(supabase.rpc).toHaveBeenCalledWith('painel_resumo', { dias: 30, zona_filtro: null })
+    expect(supabase.rpc).toHaveBeenCalledWith('painel_resumo', { dias: 7, zona_filtro: null })
   })
 
   it('refaz a consulta ao escolher outro período', async () => {
@@ -59,9 +59,9 @@ describe('PainelPage (público)', () => {
     )
     await screen.findByText('de 10 denúncias no período')
 
-    await user.click(screen.getByRole('button', { name: '7 dias' }))
+    await user.click(screen.getByRole('button', { name: '30 dias' }))
 
-    expect(supabase.rpc).toHaveBeenLastCalledWith('painel_resumo', { dias: 7, zona_filtro: null })
+    expect(supabase.rpc).toHaveBeenLastCalledWith('painel_resumo', { dias: 30, zona_filtro: null })
   })
 
   it('avisa quando não consegue carregar', async () => {

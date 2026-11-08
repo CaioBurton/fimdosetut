@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Denuncia } from '../../types'
 import { PainelAdmin } from './PainelAdmin'
 
+vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAdmin: false }) }))
+
 const hoje = new Date().toISOString()
 const antigo = new Date(Date.now() - 100 * 24 * 3600 * 1000).toISOString()
 

@@ -37,7 +37,9 @@ export function DenunciasPorHora() {
             {ehHoje ? 'Hoje' : `${d}/${mes}/${ano}`} · {total} {total === 1 ? 'denúncia' : 'denúncias'}
           </p>
         </div>
-        <BotaoCalendario dia={dia} onChange={setDia} min={diaMinimoMapa()} max={hoje()} />
+        <div className="flex items-center gap-2">
+          <BotaoCalendario dia={dia} onChange={setDia} min={diaMinimoMapa()} max={hoje()} />
+        </div>
       </div>
 
       {error ? (
