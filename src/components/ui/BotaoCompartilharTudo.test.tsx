@@ -1,26 +1,14 @@
 import { render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { RESUMO_VAZIO } from '../../lib/resumoPainel'
 import { BotaoCompartilharTudo } from './BotaoCompartilharTudo'
 
-const auth = vi.hoisted(() => ({ isAdmin: false }))
-vi.mock('../../hooks/useAuth', () => ({ useAuth: () => auth }))
 vi.mock('../../hooks/useRankingSemana', () => ({ useRankingSemana: () => ({ linhas: [], loading: false, error: false }) }))
 vi.mock('../../hooks/useLinhas', () => ({ useLinhas: () => ({ linhas: [] }) }))
 vi.mock('../../hooks/useDenuncias', () => ({ useDenuncias: () => ({ denuncias: [], loading: false }) }))
 
 describe('BotaoCompartilharTudo', () => {
-  beforeEach(() => {
-    auth.isAdmin = false
-  })
-
-  it('não aparece para quem não é admin', () => {
-    render(<BotaoCompartilharTudo resumo={RESUMO_VAZIO} periodo="7d" zona="todas" />)
-    expect(screen.queryByRole('button', { name: /Semanal/ })).not.toBeInTheDocument()
-  })
-
-  it('aparece para admin', () => {
-    auth.isAdmin = true
+  it('aparece para qualquer visitante', () => {
     render(<BotaoCompartilharTudo resumo={RESUMO_VAZIO} periodo="7d" zona="todas" />)
     expect(screen.getByRole('button', { name: /Semanal/ })).toBeEnabled()
     expect(screen.getByRole('button', { name: /Diário/ })).toBeEnabled()

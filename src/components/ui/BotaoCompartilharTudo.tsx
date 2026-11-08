@@ -1,5 +1,4 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { useAuth } from '../../hooks/useAuth'
 import { useDenuncias } from '../../hooks/useDenuncias'
 import { useLinhas } from '../../hooks/useLinhas'
 import { useRankingSemana } from '../../hooks/useRankingSemana'
@@ -23,10 +22,8 @@ interface Props {
   zona: Zona | 'todas'
 }
 
-/** Só admin vê: o carrossel e o story são feitos por quem administra a página no Instagram. */
+/** Botões Semanal (carrossel) e Diário (story), abertos a todos. */
 export function BotaoCompartilharTudo(props: Props) {
-  const { isAdmin } = useAuth()
-  if (!isAdmin) return null
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 lg:ml-auto">
       <CarrosselAdmin {...props} />
