@@ -3,13 +3,11 @@ import { useDenuncias } from '../../hooks/useDenuncias'
 import { useLinhas } from '../../hooks/useLinhas'
 import { useRankingSemana } from '../../hooks/useRankingSemana'
 import {
-  compartilharImagem,
   compartilharImagens,
-  dadosDoDia,
   gerarCarrossel,
-  gerarCartaoDia,
+  gerarStoriesDoDia,
   textoCarrossel,
-  textoDia,
+  textoStoryDoDia,
 } from '../../lib/cartaoCompartilhavel'
 import type { Periodo } from '../../lib/dashboardDenuncias'
 import { hoje } from '../../lib/dia'
@@ -109,7 +107,7 @@ function CarrosselAdmin({ resumo, periodo, zona }: Props) {
 
 const dataPorExtenso = () => new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
 
-/** Story (9:16) com as estatísticas de hoje. */
+/** Stories (9:16) com as mesmas seções do carrossel semanal, só com os dados de hoje. */
 function StoryDoDia() {
   const { linhas } = useLinhas()
   const { denuncias, loading } = useDenuncias(linhas, null, false, hoje())
@@ -118,9 +116,9 @@ function StoryDoDia() {
       rotulo="Diário"
       desabilitado={loading}
       aoCompartilhar={async () => {
-        const dados = dadosDoDia(denuncias, dataPorExtenso())
-        const imagem = await gerarCartaoDia(dados)
-        await compartilharImagem(imagem, `deu-o-prego-story-${hoje()}.png`, { titulo: 'Deu o Prego!', texto: textoDia(dados) })
+        const data = dataPorExtenso()
+        const imagens = await gerarStoriesDoDia(denuncias, data)
+        await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoStoryDoDia(data) })
       }}
     />
   )

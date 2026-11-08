@@ -11,7 +11,7 @@ import {
 import { PERIODO_LABELS, type Periodo } from './dashboardDenuncias'
 import { EXPLOSAO_PATH, SITE_HOST, SITE_URL } from './marca'
 import type { LinhaEmAlta } from './rankingSemana'
-import { taxaResolucao, type ResumoPainel } from './resumoPainel'
+import { resumirDenuncias, taxaResolucao, type ResumoPainel } from './resumoPainel'
 
 /**
  * Cartões compartilháveis: imagens PNG 1080×1350 (4:5, o formato do feed do Instagram, que também
@@ -100,6 +100,8 @@ export interface DadosCartaoSemana {
   denuncias: number
   pessoas: number
   confirmacoes: number
+  /** Cartão da linha mais problemática de hoje (e não dos últimos 7 dias). */
+  diario?: boolean
 }
 
 /** Só totais: quem denunciou nunca entra no cartão. */
@@ -215,48 +217,17 @@ export function dadosDaAcessibilidade(resumo: ResumoPainel, periodo: Periodo, zo
   }
 }
 
-// ---------- Story: estatísticas do dia ----------
+// ---------- Story (9:16) ----------
 
-/** Story do Instagram: 9:16. O app cobre ~250 px no topo e embaixo, então o conteúdo fica entre eles. */
+/** Story do Instagram: 9:16. O app cobre ~250 px no topo e embaixo, então o cartão 4:5 fica centralizado. */
 export const ALTURA_STORY = 1920
+const DESLOC_STORY = (ALTURA_STORY - ALTURA) / 2
 
-export interface DadosCartaoDia {
-  /** Ex.: "domingo, 8 de novembro". */
-  data: string
-  total: number
-  pendentes: number
-  resolvidas: number
-  /** Denúncias por hora do dia (0–23). */
-  horas: number[]
-  linhas: { codigo: string; nome: string; total: number }[]
-}
-
-const MAX_LINHAS_DIA = 3
-
-/** Só totais do dia: quem denunciou nunca entra no cartão. */
-export function dadosDoDia(denuncias: Denuncia[], data: string): DadosCartaoDia {
+/** Denúncias por hora do dia (0–23), no horário local. */
+export function horasDoDia(denuncias: Denuncia[]) {
   const horas = new Array<number>(24).fill(0)
-  const porLinha = new Map<string, { codigo: string; nome: string; total: number }>()
-  let pendentes = 0
-  for (const d of denuncias) {
-    horas[new Date(d.created_at).getHours()]++
-    if (d.status === 'resolvido') continue
-    pendentes++
-  }
-  for (const d of denuncias) {
-    if (!d.linha) continue
-    const atual = porLinha.get(d.linha_id) ?? { codigo: d.linha.codigo, nome: d.linha.nome, total: 0 }
-    atual.total++
-    porLinha.set(d.linha_id, atual)
-  }
-  return {
-    data,
-    total: denuncias.length,
-    pendentes,
-    resolvidas: denuncias.length - pendentes,
-    horas,
-    linhas: [...porLinha.values()].sort((a, b) => b.total - a.total).slice(0, MAX_LINHAS_DIA),
-  }
+  for (const d of denuncias) horas[new Date(d.created_at).getHours()]++
+  return horas
 }
 
 // ---------- Texto ----------
@@ -311,6 +282,12 @@ function fundoComExplosao(ctx: Contexto, altura = ALTURA) {
   ctx.fillStyle = VERDE_MEDIO
   ctx.fill(new Path2D(EXPLOSAO_PATH))
   ctx.restore()
+}
+
+/** Fundo do cartão; no story, o fundo cobre os 1920 px e o conteúdo (4:5) desce para o centro. */
+function abrirCartao(ctx: Contexto, story: boolean) {
+  fundoComExplosao(ctx, story ? ALTURA_STORY : ALTURA)
+  if (story) ctx.translate(0, DESLOC_STORY)
 }
 
 function cabecalho(ctx: Contexto) {
@@ -419,8 +396,8 @@ export function desenharCartaoDenuncia(ctx: Contexto, d: DadosCartaoDenuncia, lo
   rodape(ctx, logo, 'Viu isso também? Confirme no app:')
 }
 
-export function desenharCartaoRanking(ctx: Contexto, d: DadosCartaoRanking, logo: CanvasImageSource | null) {
-  fundoComExplosao(ctx)
+export function desenharCartaoRanking(ctx: Contexto, d: DadosCartaoRanking, logo: CanvasImageSource | null, story = false) {
+  abrirCartao(ctx, story)
   cabecalho(ctx)
 
   ctx.fillStyle = CREME
@@ -471,17 +448,17 @@ export function desenharCartaoRanking(ctx: Contexto, d: DadosCartaoRanking, logo
   rodape(ctx, logo, 'Acompanhe e denuncie:')
 }
 
-export function desenharCartaoSemana(ctx: Contexto, d: DadosCartaoSemana, logo: CanvasImageSource | null) {
-  fundoComExplosao(ctx)
+export function desenharCartaoSemana(ctx: Contexto, d: DadosCartaoSemana, logo: CanvasImageSource | null, story = false) {
+  abrirCartao(ctx, story)
   cabecalho(ctx)
 
   ctx.fillStyle = CREME
   ctx.font = texto(36, 700)
-  ctx.fillText('ÚLTIMOS 7 DIAS', MARGEM, 290)
+  ctx.fillText(d.diario ? 'HOJE' : 'ÚLTIMOS 7 DIAS', MARGEM, 290)
   ctx.font = titulo(104)
   ctx.fillText('LINHA MAIS', MARGEM, 400)
   ctx.fillText('PROBLEMÁTICA', MARGEM, 504)
-  ctx.fillText('DA SEMANA', MARGEM, 608)
+  ctx.fillText(d.diario ? 'DO DIA' : 'DA SEMANA', MARGEM, 608)
 
   const yCartao = 680
   const altCartao = 300
@@ -511,7 +488,7 @@ export function desenharCartaoSemana(ctx: Contexto, d: DadosCartaoSemana, logo: 
   ctx.fillStyle = CREME
   ctx.font = titulo(46)
   ctx.fillText(
-    ajustarTexto(ctx, `${plural(d.denuncias, 'DENÚNCIA', 'DENÚNCIAS')} DE ${plural(d.pessoas, 'PESSOA', 'PESSOAS')}`.toUpperCase(), LARGURA - MARGEM * 2),
+    ajustarTexto(ctx, (d.diario ? plural(d.denuncias, 'DENÚNCIA', 'DENÚNCIAS') : `${plural(d.denuncias, 'DENÚNCIA', 'DENÚNCIAS')} DE ${plural(d.pessoas, 'PESSOA', 'PESSOAS')}`).toUpperCase(), LARGURA - MARGEM * 2),
     MARGEM,
     yCartao + altCartao + 100
   )
@@ -675,8 +652,8 @@ function conteudoAcessibilidade(ctx: Contexto, d: Extract<DadosCartaoPainel, { t
   )
 }
 
-export function desenharCartaoPainel(ctx: Contexto, d: DadosCartaoPainel, logo: CanvasImageSource | null) {
-  fundoComExplosao(ctx)
+export function desenharCartaoPainel(ctx: Contexto, d: DadosCartaoPainel, logo: CanvasImageSource | null, story = false) {
+  abrirCartao(ctx, story)
   cabecalho(ctx)
   const y0 = tituloDoCartaoPainel(ctx, d)
   ctx.fillStyle = CREME
@@ -690,99 +667,6 @@ export function desenharCartaoPainel(ctx: Contexto, d: DadosCartaoPainel, logo: 
   ctx.font = texto(34, 700)
   ctx.fillText(ajustarTexto(ctx, d.fecho, LARGURA - MARGEM * 2), MARGEM, ALTURA - 250)
   rodape(ctx, logo, 'Acompanhe e denuncie:')
-}
-
-export function desenharCartaoDia(ctx: Contexto, d: DadosCartaoDia, logo: CanvasImageSource | null) {
-  const largura = LARGURA - MARGEM * 2
-  fundoComExplosao(ctx, ALTURA_STORY)
-  ctx.textBaseline = 'alphabetic'
-  ctx.textAlign = 'left'
-  ctx.fillStyle = CREME
-
-  // Cabeçalho, abaixo da faixa que o Instagram cobre.
-  ctx.font = titulo(52)
-  ctx.fillText('DEU O PREGO!', MARGEM, 310)
-  ctx.font = texto(30)
-  ctx.globalAlpha = 0.85
-  ctx.fillText('Feito por quem pega ônibus em Teresina', MARGEM, 358)
-  ctx.globalAlpha = 1
-  if (logo) {
-    const l = 230
-    ctx.drawImage(logo, LARGURA - MARGEM - l, 290, l, (l * 184.5) / 486)
-  }
-
-  ctx.font = titulo(100)
-  ctx.fillText('ESTATÍSTICAS', MARGEM, 500)
-  ctx.fillText('DO DIA', MARGEM, 606)
-  ctx.font = texto(36, 700)
-  ctx.fillText(ajustarTexto(ctx, d.data, largura), MARGEM, 670)
-
-  // Número grande.
-  ctx.font = texto(32, 700)
-  ctx.fillText(d.total === 1 ? 'DENÚNCIA HOJE' : 'DENÚNCIAS HOJE', MARGEM, 750)
-  ctx.font = titulo(240)
-  ctx.fillText(String(d.total), MARGEM, 940)
-
-  // Pendentes e resolvidas.
-  const folga = 28
-  const w = (largura - 14 - folga) / 2
-  const kpis: [string, number][] = [
-    ['PENDENTES', d.pendentes],
-    ['RESOLVIDAS', d.resolvidas],
-  ]
-  kpis.forEach(([rotulo, valor], i) => {
-    const x = MARGEM + i * (w + folga)
-    cartaoCreme(ctx, x, 990, w, 130)
-    ctx.fillStyle = VERDE_ESCURO
-    ctx.font = texto(26, 700)
-    ctx.fillText(rotulo, x + 28, 990 + 44)
-    ctx.fillStyle = i === 0 ? VERMELHO : VERDE
-    ctx.font = titulo(66)
-    ctx.fillText(String(valor), x + 28, 990 + 108)
-  })
-
-  // Denúncias por hora.
-  ctx.fillStyle = CREME
-  ctx.font = texto(28, 700)
-  ctx.globalAlpha = 0.8
-  ctx.fillText('POR HORA', MARGEM, 1170)
-  ctx.globalAlpha = 1
-  const base = 1325
-  const slot = largura / 24
-  const max = Math.max(1, ...d.horas)
-  d.horas.forEach((n, h) => {
-    const altura = (n / max) * 120
-    ctx.fillRect(MARGEM + h * slot + slot * 0.15, base - altura, slot * 0.7, Math.max(altura, n > 0 ? 5 : 2))
-    if (h % 6 === 0) {
-      ctx.textAlign = 'left'
-      ctx.font = texto(22, 600)
-      ctx.fillText(`${h}h`, MARGEM + h * slot, base + 34)
-    }
-  })
-  ctx.fillRect(MARGEM, base, largura, 3)
-
-  // Linhas mais denunciadas do dia.
-  ctx.font = texto(28, 700)
-  ctx.globalAlpha = 0.8
-  ctx.fillText('LINHAS MAIS DENUNCIADAS', MARGEM, 1415)
-  ctx.globalAlpha = 1
-  if (d.linhas.length === 0) {
-    ctx.font = texto(36, 700)
-    ctx.fillText('Sem denúncias hoje.', MARGEM, 1480)
-  }
-  d.linhas.forEach((l, i) => {
-    const y = 1480 + i * 54
-    ctx.textAlign = 'left'
-    ctx.font = texto(34, 700)
-    ctx.fillText(ajustarTexto(ctx, `${l.codigo} · ${l.nome}`, largura - 100), MARGEM, y)
-    ctx.textAlign = 'right'
-    ctx.font = titulo(44)
-    ctx.fillText(String(l.total), LARGURA - MARGEM, y + 2)
-  })
-  ctx.textAlign = 'left'
-
-  ctx.font = titulo(46)
-  ctx.fillText(SITE_HOST, MARGEM, 1665)
 }
 
 // ---------- Geração e compartilhamento ----------
@@ -822,17 +706,14 @@ async function gerarPng(desenhar: (ctx: Contexto, logo: CanvasImageSource | null
 export const gerarCartaoDenuncia = (denuncia: Denuncia) =>
   gerarPng((ctx, logo) => desenharCartaoDenuncia(ctx, dadosDoCartao(denuncia), logo))
 
-export const gerarCartaoRanking = (resumo: ResumoPainel, periodo: Periodo, zona: Zona | 'todas') =>
-  gerarPng((ctx, logo) => desenharCartaoRanking(ctx, dadosDoRanking(resumo, periodo, zona), logo))
+export const gerarCartaoRanking = (resumo: ResumoPainel, periodo: Periodo, zona: Zona | 'todas', story = false) =>
+  gerarPng((ctx, logo) => desenharCartaoRanking(ctx, dadosDoRanking(resumo, periodo, zona), logo, story), story ? ALTURA_STORY : ALTURA)
 
-export const gerarCartaoSemana = (linha: LinhaEmAlta) =>
-  gerarPng((ctx, logo) => desenharCartaoSemana(ctx, dadosDaLinhaSemana(linha), logo))
+export const gerarCartaoSemana = (linha: LinhaEmAlta, diario = false, story = false) =>
+  gerarPng((ctx, logo) => desenharCartaoSemana(ctx, { ...dadosDaLinhaSemana(linha), diario }, logo, story), story ? ALTURA_STORY : ALTURA)
 
-export const gerarCartaoPainel = (dados: DadosCartaoPainel) =>
-  gerarPng((ctx, logo) => desenharCartaoPainel(ctx, dados, logo))
-
-export const gerarCartaoDia = (dados: DadosCartaoDia) =>
-  gerarPng((ctx, logo) => desenharCartaoDia(ctx, dados, logo), ALTURA_STORY)
+export const gerarCartaoPainel = (dados: DadosCartaoPainel, story = false) =>
+  gerarPng((ctx, logo) => desenharCartaoPainel(ctx, dados, logo, story), story ? ALTURA_STORY : ALTURA)
 
 export type ResultadoCompartilhamento = 'compartilhado' | 'baixado' | 'cancelado'
 
@@ -880,6 +761,18 @@ export async function compartilharImagens(
   return 'baixado'
 }
 
+type CartaoDoConjunto = { nome: string; gerar: (() => Promise<Blob>) | null }
+
+/** Gera as imagens do conjunto, na ordem, numeradas; entradas sem `gerar` (seção vazia) ficam de fora. */
+async function gerarConjunto(cartoes: CartaoDoConjunto[], prefixo: string) {
+  const imagens: { blob: Blob; nome: string }[] = []
+  for (const [i, c] of cartoes.entries()) {
+    if (!c.gerar) continue
+    imagens.push({ blob: await c.gerar(), nome: `deu-o-prego-${prefixo}${String(i + 1).padStart(2, '0')}-${c.nome}.png` })
+  }
+  return imagens
+}
+
 /**
  * Gera o carrossel do resumo semanal: um cartão por seção do painel, na ordem em que aparecem.
  * Seções sem dados (linha da semana, acessibilidade e ranking vazios) ficam de fora.
@@ -890,24 +783,62 @@ export async function gerarCarrossel(
   zona: Zona | 'todas',
   linhaDaSemana: LinhaEmAlta | null = null
 ) {
-  const cartoes: { nome: string; dados: DadosCartaoPainel | null; ranking?: boolean; semana?: boolean }[] = [
-    { nome: 'resumo', dados: dadosDoResumo(resumo, periodo, zona) },
-    { nome: 'linha-da-semana', dados: null, semana: linhaDaSemana !== null },
-    { nome: 'por-dia', dados: dadosPorDia(resumo, zona) },
-    { nome: 'por-zona', dados: dadosPorZona(resumo, periodo, zona) },
-    { nome: 'por-tipo', dados: dadosPorTipo(resumo, periodo, zona) },
-    { nome: 'acessibilidade', dados: resumo.acessibilidade.total > 0 ? dadosDaAcessibilidade(resumo, periodo, zona) : null },
-    { nome: 'ranking', dados: null, ranking: resumo.topLinhas.length > 0 },
-  ]
-  const imagens: { blob: Blob; nome: string }[] = []
-  for (const [i, c] of cartoes.entries()) {
-    let blob: Blob | null = null
-    if (c.dados) blob = await gerarCartaoPainel(c.dados)
-    else if (c.semana && linhaDaSemana) blob = await gerarCartaoSemana(linhaDaSemana)
-    else if (c.ranking) blob = await gerarCartaoRanking(resumo, periodo, zona)
-    if (blob) imagens.push({ blob, nome: `deu-o-prego-${String(i + 1).padStart(2, '0')}-${c.nome}.png` })
+  return gerarConjunto(
+    [
+      { nome: 'resumo', gerar: () => gerarCartaoPainel(dadosDoResumo(resumo, periodo, zona)) },
+      { nome: 'linha-da-semana', gerar: linhaDaSemana ? () => gerarCartaoSemana(linhaDaSemana) : null },
+      { nome: 'por-dia', gerar: () => gerarCartaoPainel(dadosPorDia(resumo, zona)) },
+      { nome: 'por-zona', gerar: () => gerarCartaoPainel(dadosPorZona(resumo, periodo, zona)) },
+      { nome: 'por-tipo', gerar: () => gerarCartaoPainel(dadosPorTipo(resumo, periodo, zona)) },
+      {
+        nome: 'acessibilidade',
+        gerar: resumo.acessibilidade.total > 0 ? () => gerarCartaoPainel(dadosDaAcessibilidade(resumo, periodo, zona)) : null,
+      },
+      { nome: 'ranking', gerar: resumo.topLinhas.length > 0 ? () => gerarCartaoRanking(resumo, periodo, zona) : null },
+    ],
+    ''
+  )
+}
+
+/** A linha com mais denúncias de hoje (nunca pessoas), com a zona e as confirmações vindas das próprias denúncias. */
+export function linhaDoDia(denuncias: Denuncia[], resumo: ResumoPainel): LinhaEmAlta | null {
+  const topo = resumo.topLinhas[0]
+  if (!topo) return null
+  const dela = denuncias.filter((d) => d.linha_id === topo.linhaId)
+  return {
+    linhaId: topo.linhaId,
+    codigo: topo.codigo,
+    nome: topo.nome,
+    zona: dela.find((d) => d.linha)?.linha?.zona ?? 'outras',
+    denuncias: topo.total,
+    pessoas: 0,
+    confirmacoes: dela.reduce((soma, d) => soma + (d.confirmacoes ?? 0), 0),
+    pendentes: dela.filter((d) => d.status !== 'resolvido').length,
   }
-  return imagens
+}
+
+/**
+ * Story do dia: as mesmas seções do carrossel semanal, só com as denúncias de hoje (a série "por dia"
+ * vira "por hora"), em 9:16. `denuncias` são as de hoje; `dataTexto` é a data por extenso.
+ */
+export async function gerarStoriesDoDia(denuncias: Denuncia[], dataTexto: string) {
+  const resumo = resumirDenuncias(denuncias, 'hoje', 'todas')
+  const linha = linhaDoDia(denuncias, resumo)
+  return gerarConjunto(
+    [
+      { nome: 'resumo', gerar: () => gerarCartaoPainel(dadosDoResumo(resumo, 'hoje', 'todas'), true) },
+      { nome: 'linha-do-dia', gerar: linha ? () => gerarCartaoSemana(linha, true, true) : null },
+      { nome: 'por-hora', gerar: () => gerarCartaoPainel(dadosPorHora(horasDoDia(denuncias), `Hoje · ${dataTexto}`), true) },
+      { nome: 'por-zona', gerar: () => gerarCartaoPainel(dadosPorZona(resumo, 'hoje', 'todas'), true) },
+      { nome: 'por-tipo', gerar: () => gerarCartaoPainel(dadosPorTipo(resumo, 'hoje', 'todas'), true) },
+      {
+        nome: 'acessibilidade',
+        gerar: resumo.acessibilidade.total > 0 ? () => gerarCartaoPainel(dadosDaAcessibilidade(resumo, 'hoje', 'todas'), true) : null,
+      },
+      { nome: 'ranking', gerar: resumo.topLinhas.length > 0 ? () => gerarCartaoRanking(resumo, 'hoje', 'todas', true) : null },
+    ],
+    'story-'
+  )
 }
 
 export const textoCarrossel = (periodo: Periodo, zona: Zona | 'todas') =>
@@ -926,5 +857,6 @@ export const textoSemana = (d: DadosCartaoSemana) =>
 export const textoPainel = (d: DadosCartaoPainel) =>
   `${d.titulo} em Teresina (${d.recorte.toLowerCase()}). Veja no Deu o Prego!: ${SITE_URL}`
 
-export const textoDia = (d: DadosCartaoDia) =>
-  `${pluralizar(d.total, 'denúncia', 'denúncias')} em Teresina hoje (${d.data}). Veja no Deu o Prego!: ${SITE_URL}`
+
+export const textoStoryDoDia = (dataTexto: string) =>
+  `Estatísticas do dia em Teresina (${dataTexto}). Veja no Deu o Prego!: ${SITE_URL}`
