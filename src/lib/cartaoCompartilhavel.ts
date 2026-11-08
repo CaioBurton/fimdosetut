@@ -140,6 +140,8 @@ export type DadosCartaoPainel = {
 )
 
 const MAX_BARRAS = 7
+/** Último y que o conteúdo de um cartão do painel pode usar (acima do fecho e do rodapé). */
+const LIMITE_CONTEUDO = ALTURA - 320
 const MAX_ITENS_ACESSIBILIDADE = 3
 
 export function dadosDoResumo(resumo: ResumoPainel, periodo: Periodo, zona: Zona | 'todas'): DadosCartaoPainel {
@@ -560,22 +562,26 @@ function conteudoBarras(ctx: Contexto, d: Extract<DadosCartaoPainel, { tipo: 'ba
     ctx.fillText('Sem denúncias no período.', MARGEM, y0 + 60)
     return
   }
-  const alturaLinha = d.itens.length <= 5 ? 104 : 80
+  // A lista ocupa o espaço entre o título e o fecho; com título de 2 linhas e 7 itens fica apertado.
+  const alturaLinha = Math.min(104, Math.floor((LIMITE_CONTEUDO - y0) / d.itens.length))
+  const compacto = alturaLinha < 80
   const larguraBarraMax = LARGURA - MARGEM * 2
   const max = Math.max(1, ...d.itens.map((i) => i.total))
   d.itens.forEach((item, i) => {
     const y = y0 + i * alturaLinha
     ctx.textAlign = 'left'
-    ctx.font = texto(36, 700)
-    ctx.fillText(ajustarTexto(ctx, item.rotulo, larguraBarraMax - 140), MARGEM, y + 34)
+    ctx.font = texto(compacto ? 32 : 36, 700)
+    ctx.fillText(ajustarTexto(ctx, item.rotulo, larguraBarraMax - 140), MARGEM, y + (compacto ? 28 : 34))
+    const yBarra = y + (compacto ? 40 : 50)
+    const alturaBarra = compacto ? 18 : 22
     ctx.globalAlpha = 0.25
-    ctx.fillRect(MARGEM, y + 50, larguraBarraMax, 22)
+    ctx.fillRect(MARGEM, yBarra, larguraBarraMax, alturaBarra)
     ctx.globalAlpha = i === 0 ? 1 : 0.8
-    ctx.fillRect(MARGEM, y + 50, Math.max(10, (item.total / max) * larguraBarraMax), 22)
+    ctx.fillRect(MARGEM, yBarra, Math.max(10, (item.total / max) * larguraBarraMax), alturaBarra)
     ctx.globalAlpha = 1
     ctx.textAlign = 'right'
-    ctx.font = titulo(52)
-    ctx.fillText(String(item.total), LARGURA - MARGEM, y + 40)
+    ctx.font = titulo(compacto ? 46 : 52)
+    ctx.fillText(String(item.total), LARGURA - MARGEM, y + (compacto ? 32 : 40))
   })
   ctx.textAlign = 'left'
 }
@@ -621,7 +627,7 @@ function conteudoAcessibilidade(ctx: Contexto, d: Extract<DadosCartaoPainel, { t
     'Veículos com mais ocorrências',
     d.veiculos.map((v) => [`Veículo ${v.numero}`, v.total]),
     'Nenhuma denúncia informou o veículo.',
-    y0 + 20 + 64 + Math.max(1, d.linhas.length) * 66 + 50
+    y0 + 20 + 64 + Math.max(1, d.linhas.length) * 66 + 40
   )
 }
 
