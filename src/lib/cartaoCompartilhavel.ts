@@ -215,6 +215,50 @@ export function dadosDaAcessibilidade(resumo: ResumoPainel, periodo: Periodo, zo
   }
 }
 
+// ---------- Story: estatísticas do dia ----------
+
+/** Story do Instagram: 9:16. O app cobre ~250 px no topo e embaixo, então o conteúdo fica entre eles. */
+export const ALTURA_STORY = 1920
+
+export interface DadosCartaoDia {
+  /** Ex.: "domingo, 8 de novembro". */
+  data: string
+  total: number
+  pendentes: number
+  resolvidas: number
+  /** Denúncias por hora do dia (0–23). */
+  horas: number[]
+  linhas: { codigo: string; nome: string; total: number }[]
+}
+
+const MAX_LINHAS_DIA = 3
+
+/** Só totais do dia: quem denunciou nunca entra no cartão. */
+export function dadosDoDia(denuncias: Denuncia[], data: string): DadosCartaoDia {
+  const horas = new Array<number>(24).fill(0)
+  const porLinha = new Map<string, { codigo: string; nome: string; total: number }>()
+  let pendentes = 0
+  for (const d of denuncias) {
+    horas[new Date(d.created_at).getHours()]++
+    if (d.status === 'resolvido') continue
+    pendentes++
+  }
+  for (const d of denuncias) {
+    if (!d.linha) continue
+    const atual = porLinha.get(d.linha_id) ?? { codigo: d.linha.codigo, nome: d.linha.nome, total: 0 }
+    atual.total++
+    porLinha.set(d.linha_id, atual)
+  }
+  return {
+    data,
+    total: denuncias.length,
+    pendentes,
+    resolvidas: denuncias.length - pendentes,
+    horas,
+    linhas: [...porLinha.values()].sort((a, b) => b.total - a.total).slice(0, MAX_LINHAS_DIA),
+  }
+}
+
 // ---------- Texto ----------
 
 /** Corta o texto com reticências até caber em `larguraMax` (na fonte atual do contexto). */
@@ -248,9 +292,9 @@ export function quebrarTexto(ctx: Contexto, valor: string, larguraMax: number, m
 
 // ---------- Desenho ----------
 
-function fundoComExplosao(ctx: Contexto) {
+function fundoComExplosao(ctx: Contexto, altura = ALTURA) {
   ctx.fillStyle = VERDE
-  ctx.fillRect(0, 0, LARGURA, ALTURA)
+  ctx.fillRect(0, 0, LARGURA, altura)
   if (typeof Path2D === 'undefined') return
   // Explosão em tom sobre tom, como nas peças da identidade visual.
   ctx.save()
@@ -261,7 +305,7 @@ function fundoComExplosao(ctx: Contexto) {
   ctx.fill(new Path2D(EXPLOSAO_PATH))
   ctx.restore()
   ctx.save()
-  ctx.translate(-120, ALTURA - 330)
+  ctx.translate(-120, altura - 330)
   ctx.scale(1.6, 1.6)
   ctx.globalAlpha = 0.35
   ctx.fillStyle = VERDE_MEDIO
@@ -648,6 +692,99 @@ export function desenharCartaoPainel(ctx: Contexto, d: DadosCartaoPainel, logo: 
   rodape(ctx, logo, 'Acompanhe e denuncie:')
 }
 
+export function desenharCartaoDia(ctx: Contexto, d: DadosCartaoDia, logo: CanvasImageSource | null) {
+  const largura = LARGURA - MARGEM * 2
+  fundoComExplosao(ctx, ALTURA_STORY)
+  ctx.textBaseline = 'alphabetic'
+  ctx.textAlign = 'left'
+  ctx.fillStyle = CREME
+
+  // Cabeçalho, abaixo da faixa que o Instagram cobre.
+  ctx.font = titulo(52)
+  ctx.fillText('DEU O PREGO!', MARGEM, 310)
+  ctx.font = texto(30)
+  ctx.globalAlpha = 0.85
+  ctx.fillText('Feito por quem pega ônibus em Teresina', MARGEM, 358)
+  ctx.globalAlpha = 1
+  if (logo) {
+    const l = 230
+    ctx.drawImage(logo, LARGURA - MARGEM - l, 290, l, (l * 184.5) / 486)
+  }
+
+  ctx.font = titulo(100)
+  ctx.fillText('ESTATÍSTICAS', MARGEM, 500)
+  ctx.fillText('DO DIA', MARGEM, 606)
+  ctx.font = texto(36, 700)
+  ctx.fillText(ajustarTexto(ctx, d.data, largura), MARGEM, 670)
+
+  // Número grande.
+  ctx.font = texto(32, 700)
+  ctx.fillText(d.total === 1 ? 'DENÚNCIA HOJE' : 'DENÚNCIAS HOJE', MARGEM, 750)
+  ctx.font = titulo(240)
+  ctx.fillText(String(d.total), MARGEM, 940)
+
+  // Pendentes e resolvidas.
+  const folga = 28
+  const w = (largura - 14 - folga) / 2
+  const kpis: [string, number][] = [
+    ['PENDENTES', d.pendentes],
+    ['RESOLVIDAS', d.resolvidas],
+  ]
+  kpis.forEach(([rotulo, valor], i) => {
+    const x = MARGEM + i * (w + folga)
+    cartaoCreme(ctx, x, 990, w, 130)
+    ctx.fillStyle = VERDE_ESCURO
+    ctx.font = texto(26, 700)
+    ctx.fillText(rotulo, x + 28, 990 + 44)
+    ctx.fillStyle = i === 0 ? VERMELHO : VERDE
+    ctx.font = titulo(66)
+    ctx.fillText(String(valor), x + 28, 990 + 108)
+  })
+
+  // Denúncias por hora.
+  ctx.fillStyle = CREME
+  ctx.font = texto(28, 700)
+  ctx.globalAlpha = 0.8
+  ctx.fillText('POR HORA', MARGEM, 1170)
+  ctx.globalAlpha = 1
+  const base = 1325
+  const slot = largura / 24
+  const max = Math.max(1, ...d.horas)
+  d.horas.forEach((n, h) => {
+    const altura = (n / max) * 120
+    ctx.fillRect(MARGEM + h * slot + slot * 0.15, base - altura, slot * 0.7, Math.max(altura, n > 0 ? 5 : 2))
+    if (h % 6 === 0) {
+      ctx.textAlign = 'left'
+      ctx.font = texto(22, 600)
+      ctx.fillText(`${h}h`, MARGEM + h * slot, base + 34)
+    }
+  })
+  ctx.fillRect(MARGEM, base, largura, 3)
+
+  // Linhas mais denunciadas do dia.
+  ctx.font = texto(28, 700)
+  ctx.globalAlpha = 0.8
+  ctx.fillText('LINHAS MAIS DENUNCIADAS', MARGEM, 1415)
+  ctx.globalAlpha = 1
+  if (d.linhas.length === 0) {
+    ctx.font = texto(36, 700)
+    ctx.fillText('Sem denúncias hoje.', MARGEM, 1480)
+  }
+  d.linhas.forEach((l, i) => {
+    const y = 1480 + i * 54
+    ctx.textAlign = 'left'
+    ctx.font = texto(34, 700)
+    ctx.fillText(ajustarTexto(ctx, `${l.codigo} · ${l.nome}`, largura - 100), MARGEM, y)
+    ctx.textAlign = 'right'
+    ctx.font = titulo(44)
+    ctx.fillText(String(l.total), LARGURA - MARGEM, y + 2)
+  })
+  ctx.textAlign = 'left'
+
+  ctx.font = titulo(46)
+  ctx.fillText(SITE_HOST, MARGEM, 1665)
+}
+
 // ---------- Geração e compartilhamento ----------
 
 async function prepararFontes() {
@@ -669,11 +806,11 @@ function carregarImagem(src: string): Promise<HTMLImageElement | null> {
   })
 }
 
-async function gerarPng(desenhar: (ctx: Contexto, logo: CanvasImageSource | null) => void): Promise<Blob> {
+async function gerarPng(desenhar: (ctx: Contexto, logo: CanvasImageSource | null) => void, altura = ALTURA): Promise<Blob> {
   const [logo] = await Promise.all([carregarImagem('/brand/logo-horizontal-claro.svg'), prepararFontes()])
   const canvas = document.createElement('canvas')
   canvas.width = LARGURA
-  canvas.height = ALTURA
+  canvas.height = altura
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('canvas indisponível')
   desenhar(ctx, logo)
@@ -693,6 +830,9 @@ export const gerarCartaoSemana = (linha: LinhaEmAlta) =>
 
 export const gerarCartaoPainel = (dados: DadosCartaoPainel) =>
   gerarPng((ctx, logo) => desenharCartaoPainel(ctx, dados, logo))
+
+export const gerarCartaoDia = (dados: DadosCartaoDia) =>
+  gerarPng((ctx, logo) => desenharCartaoDia(ctx, dados, logo), ALTURA_STORY)
 
 export type ResultadoCompartilhamento = 'compartilhado' | 'baixado' | 'cancelado'
 
@@ -785,3 +925,6 @@ export const textoSemana = (d: DadosCartaoSemana) =>
 
 export const textoPainel = (d: DadosCartaoPainel) =>
   `${d.titulo} em Teresina (${d.recorte.toLowerCase()}). Veja no Deu o Prego!: ${SITE_URL}`
+
+export const textoDia = (d: DadosCartaoDia) =>
+  `${pluralizar(d.total, 'denúncia', 'denúncias')} em Teresina hoje (${d.data}). Veja no Deu o Prego!: ${SITE_URL}`

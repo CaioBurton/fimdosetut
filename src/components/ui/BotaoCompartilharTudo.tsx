@@ -1,8 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useAuth } from '../../hooks/useAuth'
+import { useDenuncias } from '../../hooks/useDenuncias'
+import { useLinhas } from '../../hooks/useLinhas'
 import { useRankingSemana } from '../../hooks/useRankingSemana'
-import { compartilharImagens, gerarCarrossel, textoCarrossel } from '../../lib/cartaoCompartilhavel'
+import {
+  compartilharImagem,
+  compartilharImagens,
+  dadosDoDia,
+  gerarCarrossel,
+  gerarCartaoDia,
+  textoCarrossel,
+  textoDia,
+} from '../../lib/cartaoCompartilhavel'
 import type { Periodo } from '../../lib/dashboardDenuncias'
+import { hoje } from '../../lib/dia'
 import type { ResumoPainel } from '../../lib/resumoPainel'
 import type { Zona } from '../../types'
 
@@ -12,17 +23,33 @@ interface Props {
   zona: Zona | 'todas'
 }
 
-/** Só admin vê: o carrossel do resumo semanal é feito por quem administra a página no Instagram. */
+/** Só admin vê: o carrossel e o story são feitos por quem administra a página no Instagram. */
 export function BotaoCompartilharTudo(props: Props) {
   const { isAdmin } = useAuth()
-  return isAdmin ? <CarrosselAdmin {...props} /> : null
+  if (!isAdmin) return null
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-2 lg:ml-auto">
+      <CarrosselAdmin {...props} />
+      <StoryDoDia />
+    </div>
+  )
 }
 
-/** Gera um cartão por seção do painel (e a linha mais problemática da semana) e compartilha todos juntos. */
-function CarrosselAdmin({ resumo, periodo, zona }: Props) {
-  const { linhas, loading: carregandoSemana } = useRankingSemana(1)
+type Aviso = { texto: string; erro: boolean }
+
+/** Botão que gera e compartilha imagens, com aviso flutuante (não desloca o botão) que some sozinho. */
+function BotaoGerar({
+  rotulo,
+  desabilitado,
+  aoCompartilhar,
+}: {
+  rotulo: ReactNode
+  desabilitado: boolean
+  /** Gera e compartilha; devolve o aviso a mostrar, se houver. Lançar erro mostra a mensagem de falha. */
+  aoCompartilhar: () => Promise<string | null>
+}) {
   const [gerando, setGerando] = useState(false)
-  const [aviso, setAviso] = useState<{ texto: string; erro: boolean } | null>(null)
+  const [aviso, setAviso] = useState<Aviso | null>(null)
 
   useEffect(() => {
     if (!aviso) return
@@ -30,32 +57,31 @@ function CarrosselAdmin({ resumo, periodo, zona }: Props) {
     return () => clearTimeout(t)
   }, [aviso])
 
-  async function compartilhar() {
+  async function clicar() {
     setGerando(true)
     setAviso(null)
     try {
-      const imagens = await gerarCarrossel(resumo, periodo, zona, linhas[0] ?? null)
-      const resultado = await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoCarrossel(periodo, zona) })
-      if (resultado === 'baixado') setAviso({ texto: `${imagens.length} imagens salvas, na ordem. É só montar o carrossel!`, erro: false })
+      const texto = await aoCompartilhar()
+      if (texto) setAviso({ texto, erro: false })
     } catch {
-      setAviso({ texto: 'Não foi possível gerar as imagens.', erro: true })
+      setAviso({ texto: 'Não foi possível gerar a imagem.', erro: true })
     } finally {
       setGerando(false)
     }
   }
 
   return (
-    <div className="relative flex items-center justify-end lg:ml-auto">
+    <div className="relative flex items-center justify-end">
       <button
         type="button"
-        onClick={compartilhar}
-        disabled={gerando || carregandoSemana}
+        onClick={clicar}
+        disabled={gerando || desabilitado}
         className={`chip-brand disabled:opacity-50 ${gerando ? 'animate-pulse' : ''}`}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M12 15V3M7 8l5-5 5 5M5 14v5a2 2 0 002 2h10a2 2 0 002-2v-5" />
         </svg>
-        {gerando ? 'Gerando...' : 'Tudo'}
+        {gerando ? 'Gerando...' : rotulo}
       </button>
       {aviso && (
         // Flutua (absoluto) para a mensagem não empurrar o botão de lugar.
@@ -67,5 +93,41 @@ function CarrosselAdmin({ resumo, periodo, zona }: Props) {
         </span>
       )}
     </div>
+  )
+}
+
+/** Gera um cartão por seção do painel (e a linha mais problemática da semana) e compartilha todos juntos. */
+function CarrosselAdmin({ resumo, periodo, zona }: Props) {
+  const { linhas, loading } = useRankingSemana(1)
+  return (
+    <BotaoGerar
+      rotulo="Tudo"
+      desabilitado={loading}
+      aoCompartilhar={async () => {
+        const imagens = await gerarCarrossel(resumo, periodo, zona, linhas[0] ?? null)
+        const resultado = await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoCarrossel(periodo, zona) })
+        return resultado === 'baixado' ? `${imagens.length} imagens salvas, na ordem. É só montar o carrossel!` : null
+      }}
+    />
+  )
+}
+
+const dataPorExtenso = () => new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+
+/** Story (9:16) com as estatísticas de hoje. */
+function StoryDoDia() {
+  const { linhas } = useLinhas()
+  const { denuncias, loading } = useDenuncias(linhas, null, false, hoje())
+  return (
+    <BotaoGerar
+      rotulo="Story"
+      desabilitado={loading}
+      aoCompartilhar={async () => {
+        const dados = dadosDoDia(denuncias, dataPorExtenso())
+        const imagem = await gerarCartaoDia(dados)
+        const resultado = await compartilharImagem(imagem, `deu-o-prego-story-${hoje()}.png`, { titulo: 'Deu o Prego!', texto: textoDia(dados) })
+        return resultado === 'baixado' ? 'Story salvo. É só postar!' : null
+      }}
+    />
   )
 }

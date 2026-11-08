@@ -6,6 +6,9 @@ import {
   compartilharImagens,
   dadosDaAcessibilidade,
   dadosDoCartao,
+  dadosDoDia,
+  desenharCartaoDia,
+  textoDia,
   dadosDoResumo,
   dadosPorDia,
   dadosPorHora,
@@ -307,5 +310,37 @@ describe('carrossel', () => {
     expect(r).toBe('compartilhado')
     expect(share.mock.calls[0][0].files).toHaveLength(2)
     vi.unstubAllGlobals()
+  })
+})
+
+describe('story do dia', () => {
+  const hojeIso = (h: number, extra: Partial<Denuncia> = {}): Denuncia => ({ ...denuncia, created_at: `2026-11-08T${String(h).padStart(2, '0')}:10:00`, confirmacoes: 0, ...extra })
+
+  it('soma o dia: pendentes, resolvidas, horas e linhas mais denunciadas', () => {
+    const d = dadosDoDia(
+      [hojeIso(7), hojeIso(7), hojeIso(18, { status: 'resolvido' }), hojeIso(9, { linha_id: 'l2', linha: { id: 'l2', codigo: '200', nome: 'CENTRO', zona: 'sul' } })],
+      'domingo, 8 de novembro'
+    )
+    expect(d).toMatchObject({ total: 4, pendentes: 3, resolvidas: 1 })
+    expect(d.horas[7]).toBe(2)
+    expect(d.linhas[0]).toEqual({ codigo: '103', nome: 'MOCAMBINHO-ALTO ALEGRE', total: 3 })
+  })
+
+  it('desenha título, total, linhas e o site; sem denúncias avisa', () => {
+    const { ctx, textos } = contextoFalso()
+    desenharCartaoDia(ctx, dadosDoDia([hojeIso(7), hojeIso(8)], 'domingo, 8 de novembro'), null)
+    const t = textos.join(' | ')
+    expect(t).toContain('ESTATÍSTICAS')
+    expect(t).toContain('DENÚNCIAS HOJE')
+    expect(t).toContain('103 · MOCAMBINHO-ALTO ALEGRE')
+    expect(t).toContain('deuoprego.com.br')
+
+    const vazio = contextoFalso()
+    desenharCartaoDia(vazio.ctx, dadosDoDia([], 'hoje'), null)
+    expect(vazio.textos).toContain('Sem denúncias hoje.')
+  })
+
+  it('texto do compartilhamento leva o total e o site', () => {
+    expect(textoDia(dadosDoDia([hojeIso(7)], 'domingo'))).toMatch(/^1 denúncia em Teresina hoje/)
   })
 })

@@ -6,6 +6,8 @@ import { BotaoCompartilharTudo } from './BotaoCompartilharTudo'
 const auth = vi.hoisted(() => ({ isAdmin: false }))
 vi.mock('../../hooks/useAuth', () => ({ useAuth: () => auth }))
 vi.mock('../../hooks/useRankingSemana', () => ({ useRankingSemana: () => ({ linhas: [], loading: false, error: false }) }))
+vi.mock('../../hooks/useLinhas', () => ({ useLinhas: () => ({ linhas: [] }) }))
+vi.mock('../../hooks/useDenuncias', () => ({ useDenuncias: () => ({ denuncias: [], loading: false }) }))
 
 describe('BotaoCompartilharTudo', () => {
   beforeEach(() => {
@@ -21,5 +23,6 @@ describe('BotaoCompartilharTudo', () => {
     auth.isAdmin = true
     render(<BotaoCompartilharTudo resumo={RESUMO_VAZIO} periodo="7d" zona="todas" />)
     expect(screen.getByRole('button', { name: /Tudo/ })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /Story/ })).toBeEnabled()
   })
 })
