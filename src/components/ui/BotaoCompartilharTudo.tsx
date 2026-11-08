@@ -23,12 +23,19 @@ interface Props {
 
 /** Botões Semanal (carrossel) e Diário (story), abertos a todos. */
 export function BotaoCompartilharTudo(props: Props) {
+  // Só um seletor de formato aberto por vez: abrir um fecha o outro.
+  const [menuAberto, setMenuAberto] = useState<'semanal' | 'diario' | null>(null)
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 lg:ml-auto">
-      <CarrosselAdmin {...props} />
-      <DiarioDoDia />
+      <CarrosselAdmin {...props} menuAberto={menuAberto === 'semanal'} onMenuAberto={(aberto) => setMenuAberto(aberto ? 'semanal' : null)} />
+      <DiarioDoDia menuAberto={menuAberto === 'diario'} onMenuAberto={(aberto) => setMenuAberto(aberto ? 'diario' : null)} />
     </div>
   )
+}
+
+interface ControleMenu {
+  menuAberto: boolean
+  onMenuAberto: (aberto: boolean) => void
 }
 
 type Aviso = { texto: string; erro: boolean }
@@ -39,7 +46,9 @@ function BotaoGerar<O extends string = never>({
   desabilitado,
   aoCompartilhar,
   opcoes,
-}: {
+  menuAberto,
+  onMenuAberto,
+}: ControleMenu & {
   rotulo: ReactNode
   desabilitado: boolean
   /** Gera e compartilha (com a opção escolhida, se houver `opcoes`). Lançar erro mostra a mensagem de falha. */
@@ -48,7 +57,6 @@ function BotaoGerar<O extends string = never>({
   opcoes?: { valor: O; rotulo: string }[]
 }) {
   const [gerando, setGerando] = useState(false)
-  const [menuAberto, setMenuAberto] = useState(false)
   const [aviso, setAviso] = useState<Aviso | null>(null)
 
   useEffect(() => {
@@ -58,7 +66,7 @@ function BotaoGerar<O extends string = never>({
   }, [aviso])
 
   async function gerar(opcao: O) {
-    setMenuAberto(false)
+    onMenuAberto(false)
     setGerando(true)
     setAviso(null)
     try {
@@ -74,7 +82,7 @@ function BotaoGerar<O extends string = never>({
     <div className="relative flex items-center justify-end">
       <button
         type="button"
-        onClick={() => (opcoes ? setMenuAberto((aberto) => !aberto) : gerar(undefined as unknown as O))}
+        onClick={() => (opcoes ? onMenuAberto(!menuAberto) : gerar(undefined as unknown as O))}
         aria-haspopup={opcoes ? 'menu' : undefined}
         aria-expanded={opcoes ? menuAberto : undefined}
         disabled={gerando || desabilitado}
@@ -122,10 +130,12 @@ const OPCOES_FORMATO: { valor: FormatoDiario; rotulo: string }[] = [
 ]
 
 /** Gera um cartão por seção do painel (e a linha mais problemática da semana) e compartilha todos juntos. */
-function CarrosselAdmin({ resumo, periodo, zona }: Props) {
+function CarrosselAdmin({ resumo, periodo, zona, menuAberto, onMenuAberto }: Props & ControleMenu) {
   const { linhas, loading } = useRankingSemana(1)
   return (
     <BotaoGerar<FormatoDiario>
+      menuAberto={menuAberto}
+      onMenuAberto={onMenuAberto}
       rotulo="Semanal"
       desabilitado={loading}
       opcoes={OPCOES_FORMATO}
@@ -140,11 +150,13 @@ function CarrosselAdmin({ resumo, periodo, zona }: Props) {
 const dataPorExtenso = () => new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
 
 /** Cartões com as mesmas seções do carrossel semanal, só com os dados de hoje, em post (4:5) ou story (9:16). */
-function DiarioDoDia() {
+function DiarioDoDia({ menuAberto, onMenuAberto }: ControleMenu) {
   const { linhas } = useLinhas()
   const { denuncias, loading } = useDenuncias(linhas, null, false, hoje())
   return (
     <BotaoGerar<FormatoDiario>
+      menuAberto={menuAberto}
+      onMenuAberto={onMenuAberto}
       rotulo="Diário"
       desabilitado={loading}
       opcoes={OPCOES_FORMATO}
