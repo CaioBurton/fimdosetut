@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useDenuncias } from '../../hooks/useDenuncias'
 import { useLinhas } from '../../hooks/useLinhas'
 import { useRankingSemana } from '../../hooks/useRankingSemana'
@@ -56,6 +56,7 @@ function BotaoGerar<O extends string = never>({
   /** Se informadas, o botão abre um menu para escolher antes de gerar. */
   opcoes?: { valor: O; rotulo: string }[]
 }) {
+  const raiz = useRef<HTMLDivElement>(null)
   const [gerando, setGerando] = useState(false)
   const [aviso, setAviso] = useState<Aviso | null>(null)
 
@@ -64,6 +65,23 @@ function BotaoGerar<O extends string = never>({
     const t = setTimeout(() => setAviso(null), 5000)
     return () => clearTimeout(t)
   }, [aviso])
+
+  // Menu aberto: um toque/clique fora do botão (ou Esc) fecha.
+  useEffect(() => {
+    if (!menuAberto) return
+    const fora = (e: PointerEvent) => {
+      if (!raiz.current?.contains(e.target as Node)) onMenuAberto(false)
+    }
+    const esc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onMenuAberto(false)
+    }
+    document.addEventListener('pointerdown', fora)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('pointerdown', fora)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [menuAberto, onMenuAberto])
 
   async function gerar(opcao: O) {
     onMenuAberto(false)
@@ -79,7 +97,7 @@ function BotaoGerar<O extends string = never>({
   }
 
   return (
-    <div className="relative flex items-center justify-end">
+    <div ref={raiz} className="relative flex items-center justify-end">
       <button
         type="button"
         onClick={() => (opcoes ? onMenuAberto(!menuAberto) : gerar(undefined as unknown as O))}

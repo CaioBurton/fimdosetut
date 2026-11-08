@@ -24,4 +24,35 @@ describe('BotaoCompartilharTudo', () => {
     expect(screen.getByRole('menuitem', { name: 'Post (4:5)' })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: 'Story (9:16)' })).toBeInTheDocument()
   })
+
+  it('fecha o seletor ao clicar em outro lugar da tela', async () => {
+    const user = userEvent.setup()
+    render(
+      <div>
+        <p>fora</p>
+        <BotaoCompartilharTudo resumo={RESUMO_VAZIO} periodo="7d" zona="todas" />
+      </div>
+    )
+    await user.click(screen.getByRole('button', { name: /Semanal/ }))
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+
+    await user.click(screen.getByText('fora'))
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('fecha o seletor com Esc', async () => {
+    const user = userEvent.setup()
+    render(<BotaoCompartilharTudo resumo={RESUMO_VAZIO} periodo="7d" zona="todas" />)
+    await user.click(screen.getByRole('button', { name: /Diário/ }))
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('abrir o seletor de um botão fecha o do outro', async () => {
+    const user = userEvent.setup()
+    render(<BotaoCompartilharTudo resumo={RESUMO_VAZIO} periodo="7d" zona="todas" />)
+    await user.click(screen.getByRole('button', { name: /Semanal/ }))
+    await user.click(screen.getByRole('button', { name: /Diário/ }))
+    expect(screen.getAllByRole('menu')).toHaveLength(1)
+  })
 })
