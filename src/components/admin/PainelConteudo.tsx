@@ -1,7 +1,18 @@
 import type { ReactNode } from 'react'
 import { useDesktop } from '../../hooks/useDesktop'
 import { BotaoCompartilhar } from '../ui/BotaoCompartilhar'
-import { dadosDoRanking, gerarCartaoRanking, textoRanking } from '../../lib/cartaoCompartilhavel'
+import { BotaoCompartilharPainel } from '../ui/BotaoCompartilharPainel'
+import {
+  dadosDaAcessibilidade,
+  dadosDoRanking,
+  dadosDoResumo,
+  dadosPorDia,
+  dadosPorTipo,
+  dadosPorZona,
+  gerarCartaoRanking,
+  textoRanking,
+  type DadosCartaoPainel,
+} from '../../lib/cartaoCompartilhavel'
 import { PERIODO_LABELS, type Periodo } from '../../lib/dashboardDenuncias'
 import { taxaResolucao, type ResumoPainel } from '../../lib/resumoPainel'
 import { TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Zona } from '../../types'
@@ -26,15 +37,22 @@ function Barras({
   titulo,
   itens,
   ordem = 0,
+  compartilhar,
+  arquivo,
 }: {
   titulo: string
   itens: { rotulo: string; total: number; cor: string }[]
   ordem?: number
+  compartilhar: DadosCartaoPainel
+  arquivo: string
 }) {
   const max = Math.max(1, ...itens.map((i) => i.total))
   return (
     <section className="card-brand anim-entra p-3.5" style={atraso(ordem)} aria-label={titulo}>
-      <h3 className="ttl mb-3 text-lg">{titulo}</h3>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h3 className="ttl text-lg">{titulo}</h3>
+        <BotaoCompartilharPainel dados={compartilhar} arquivo={arquivo} />
+      </div>
       {itens.length === 0 ? (
         <p className="text-sm text-brand-green-dark/70">Sem dados.</p>
       ) : (
@@ -89,6 +107,9 @@ export function PainelConteudo({
   const maxLinha = Math.max(1, ...resumo.topLinhas.map((l) => l.total))
   const taxa = taxaResolucao(resumo)
   const acess = resumo.acessibilidade
+  const dadosResumo = dadosDoResumo(resumo, periodo, zona)
+  const dadosZona = dadosPorZona(resumo, periodo, zona)
+  const dadosTipo = dadosPorTipo(resumo, periodo, zona)
 
   return (
     <div className={`space-y-4 transition-opacity lg:grid lg:grid-cols-2 lg:items-start lg:gap-5 lg:space-y-0 ${carregando ? 'opacity-60' : ''}`} aria-busy={carregando}>
@@ -148,6 +169,9 @@ export function PainelConteudo({
           aria-hidden="true"
           className="pointer-events-none absolute -right-10 -top-1.5 w-[230px] max-w-none opacity-35 brightness-[2.2]"
         />
+        <div className="absolute right-3 top-3 z-10">
+          <BotaoCompartilharPainel dados={dadosResumo} arquivo="resumo" />
+        </div>
         <div className="relative">
           <p className="text-xs font-bold uppercase tracking-wider">Pendentes agora</p>
           <p key={resumo.pendentes} className="ttl anim-contador mt-1 text-7xl">{resumo.pendentes}</p>
@@ -163,11 +187,17 @@ export function PainelConteudo({
       )}
 
       {desktop ? (
-        <section aria-label="Resumo" className="grid grid-cols-4 gap-5 lg:col-span-2">
-          <Kpi rotulo="Total" valor={resumo.total} ordem={0} />
-          <Kpi rotulo="Pendentes" valor={resumo.pendentes} cor="#c23838" ordem={1} />
-          <Kpi rotulo="Resolvidas" valor={resumo.resolvidas} ordem={2} />
-          <Kpi rotulo="Hoje" valor={resumo.hoje} ordem={3} />
+        <section aria-label="Resumo" className="lg:col-span-2">
+          <div className="mb-2.5 flex items-center justify-between gap-2">
+            <h3 className="ttl text-lg">Resumo</h3>
+            <BotaoCompartilharPainel dados={dadosResumo} arquivo="resumo" />
+          </div>
+          <div className="grid grid-cols-4 gap-5">
+            <Kpi rotulo="Total" valor={resumo.total} ordem={0} />
+            <Kpi rotulo="Pendentes" valor={resumo.pendentes} cor="#c23838" ordem={1} />
+            <Kpi rotulo="Resolvidas" valor={resumo.resolvidas} ordem={2} />
+            <Kpi rotulo="Hoje" valor={resumo.hoje} ordem={3} />
+          </div>
         </section>
       ) : (
         <section className="grid grid-cols-3 gap-2.5">
@@ -180,7 +210,10 @@ export function PainelConteudo({
       <section className="card-brand anim-entra p-3.5 lg:self-stretch lg:p-5" style={atraso(4)} aria-label="Denúncias por dia">
         <div className="flex items-baseline justify-between">
           <h3 className="ttl text-lg">Por dia</h3>
-          <span className="text-xs font-bold text-brand-green-dark/70">últimos {porDia.length} dias</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-brand-green-dark/70">últimos {porDia.length} dias</span>
+            <BotaoCompartilharPainel dados={dadosPorDia(resumo, zona)} arquivo="por-dia" />
+          </div>
         </div>
         <div className="mt-3.5 flex h-[130px] items-end gap-1 border-b-2 border-brand-green lg:h-[170px]">
           {porDia.map((d, i) => (
@@ -211,6 +244,8 @@ export function PainelConteudo({
       <Barras
         titulo="Por zona"
         ordem={5}
+        compartilhar={dadosZona}
+        arquivo="por-zona"
         itens={resumo.porZona.map((i) => ({
           rotulo: ZONA_LABELS[i.chave],
           total: i.total,
@@ -220,6 +255,8 @@ export function PainelConteudo({
       <Barras
         titulo="Por tipo de problema"
         ordem={6}
+        compartilhar={dadosTipo}
+        arquivo="por-tipo"
         itens={resumo.porTipo.map((i) => ({ rotulo: TIPO_LABELS[i.chave], total: i.total, cor: '#084400' }))}
       />
 
@@ -230,10 +267,13 @@ export function PainelConteudo({
       >
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="ttl text-lg">Acessibilidade (PcD)</h3>
-          <span className="text-xs font-bold text-brand-green-dark/70">
-            {acess.total} {acess.total === 1 ? 'ocorrência' : 'ocorrências'} · {acess.pendentes}{' '}
-            {acess.pendentes === 1 ? 'pendente' : 'pendentes'}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-brand-green-dark/70">
+              {acess.total} {acess.total === 1 ? 'ocorrência' : 'ocorrências'} · {acess.pendentes}{' '}
+              {acess.pendentes === 1 ? 'pendente' : 'pendentes'}
+            </span>
+            <BotaoCompartilharPainel dados={dadosDaAcessibilidade(resumo, periodo, zona)} arquivo="acessibilidade" />
+          </div>
         </div>
         {acess.total === 0 ? (
           <p className="mt-2 text-sm text-brand-green-dark/70">

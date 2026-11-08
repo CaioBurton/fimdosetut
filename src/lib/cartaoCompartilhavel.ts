@@ -11,7 +11,7 @@ import {
 import { PERIODO_LABELS, type Periodo } from './dashboardDenuncias'
 import { EXPLOSAO_PATH, SITE_HOST, SITE_URL } from './marca'
 import type { LinhaEmAlta } from './rankingSemana'
-import type { ResumoPainel } from './resumoPainel'
+import { taxaResolucao, type ResumoPainel } from './resumoPainel'
 
 /**
  * Cartões compartilháveis: imagens PNG 1080×1350 (4:5, o formato do feed do Instagram, que também
@@ -111,6 +111,107 @@ export const dadosDaLinhaSemana = (l: LinhaEmAlta): DadosCartaoSemana => ({
   pessoas: l.pessoas,
   confirmacoes: l.confirmacoes,
 })
+
+// ---------- Cartões das seções do painel ----------
+
+const pluralizar = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`
+
+const textoZona = (zona: Zona | 'todas') => (zona === 'todas' ? 'Todas as zonas' : `Zona ${ZONA_LABELS[zona]}`)
+
+/** Ex.: "Últimos 30 dias · Todas as zonas". */
+export const recorteDoPainel = (periodo: Periodo, zona: Zona | 'todas') => `${PERIODO_LABELS[periodo]} · ${textoZona(zona)}`
+
+/** Cartão de uma seção do painel (a base do resumo semanal para o Instagram). */
+export type DadosCartaoPainel = {
+  titulo: string
+  recorte: string
+  /** Linha de fechamento, logo acima do rodapé. */
+  fecho: string
+} & (
+  | { tipo: 'resumo'; total: number; pendentes: number; resolvidas: number; hoje: number; taxa: number }
+  | { tipo: 'serie'; itens: { rotulo: string; total: number }[]; rotuloACada: number }
+  | { tipo: 'barras'; itens: { rotulo: string; total: number }[] }
+  | {
+      tipo: 'acessibilidade'
+      total: number
+      linhas: { codigo: string; nome: string; total: number }[]
+      veiculos: { numero: string; total: number }[]
+    }
+)
+
+const MAX_BARRAS = 7
+const MAX_ITENS_ACESSIBILIDADE = 3
+
+export function dadosDoResumo(resumo: ResumoPainel, periodo: Periodo, zona: Zona | 'todas'): DadosCartaoPainel {
+  return {
+    tipo: 'resumo',
+    titulo: 'Resumo',
+    recorte: recorteDoPainel(periodo, zona),
+    fecho: `${pluralizar(resumo.total, 'denúncia', 'denúncias')} no período`,
+    total: resumo.total,
+    pendentes: resumo.pendentes,
+    resolvidas: resumo.resolvidas,
+    hoje: resumo.hoje,
+    taxa: taxaResolucao(resumo),
+  }
+}
+
+export function dadosPorDia(resumo: ResumoPainel, zona: Zona | 'todas'): DadosCartaoPainel {
+  const soma = resumo.porDia.reduce((a, d) => a + d.total, 0)
+  return {
+    tipo: 'serie',
+    titulo: 'Denúncias por dia',
+    recorte: `Últimos ${resumo.porDia.length} dias · ${textoZona(zona)}`,
+    fecho: `${pluralizar(soma, 'denúncia', 'denúncias')} em ${resumo.porDia.length} dias`,
+    itens: resumo.porDia.map((d) => ({ rotulo: String(d.data.getDate()), total: d.total })),
+    rotuloACada: 1,
+  }
+}
+
+export function dadosPorHora(horas: number[], diaTexto: string): DadosCartaoPainel {
+  const total = horas.reduce((a, b) => a + b, 0)
+  return {
+    tipo: 'serie',
+    titulo: 'Denúncias ao longo do dia',
+    recorte: diaTexto,
+    fecho: pluralizar(total, 'denúncia', 'denúncias'),
+    itens: horas.map((total, h) => ({ rotulo: `${h}h`, total })),
+    rotuloACada: 3,
+  }
+}
+
+export function dadosPorZona(resumo: ResumoPainel, periodo: Periodo, zona: Zona | 'todas'): DadosCartaoPainel {
+  return {
+    tipo: 'barras',
+    titulo: 'Por zona',
+    recorte: recorteDoPainel(periodo, zona),
+    fecho: `${pluralizar(resumo.total, 'denúncia', 'denúncias')} no período`,
+    itens: resumo.porZona.slice(0, MAX_BARRAS).map((i) => ({ rotulo: ZONA_LABELS[i.chave], total: i.total })),
+  }
+}
+
+export function dadosPorTipo(resumo: ResumoPainel, periodo: Periodo, zona: Zona | 'todas'): DadosCartaoPainel {
+  return {
+    tipo: 'barras',
+    titulo: 'Por tipo de problema',
+    recorte: recorteDoPainel(periodo, zona),
+    fecho: `${pluralizar(resumo.total, 'denúncia', 'denúncias')} no período`,
+    itens: resumo.porTipo.slice(0, MAX_BARRAS).map((i) => ({ rotulo: TIPO_LABELS[i.chave], total: i.total })),
+  }
+}
+
+export function dadosDaAcessibilidade(resumo: ResumoPainel, periodo: Periodo, zona: Zona | 'todas'): DadosCartaoPainel {
+  const a = resumo.acessibilidade
+  return {
+    tipo: 'acessibilidade',
+    titulo: 'Acessibilidade (PcD)',
+    recorte: recorteDoPainel(periodo, zona),
+    fecho: `${pluralizar(a.total, 'ocorrência', 'ocorrências')} · ${pluralizar(a.pendentes, 'pendente', 'pendentes')}`,
+    total: a.total,
+    linhas: a.topLinhas.slice(0, MAX_ITENS_ACESSIBILIDADE).map((l) => ({ codigo: l.codigo, nome: l.nome, total: l.total })),
+    veiculos: a.topVeiculos.slice(0, MAX_ITENS_ACESSIBILIDADE).map((v) => ({ numero: v.numero, total: v.total })),
+  }
+}
 
 // ---------- Texto ----------
 
@@ -376,6 +477,171 @@ export function desenharCartaoSemana(ctx: Contexto, d: DadosCartaoSemana, logo: 
   rodape(ctx, logo, 'Pega essa linha? Confirme no app:')
 }
 
+/** Desenha título e recorte; devolve o y onde começa o conteúdo do cartão. */
+function tituloDoCartaoPainel(ctx: Contexto, d: DadosCartaoPainel) {
+  ctx.fillStyle = CREME
+  ctx.textAlign = 'left'
+  ctx.font = titulo(100)
+  const linhas = quebrarTexto(ctx, d.titulo.toUpperCase(), LARGURA - MARGEM * 2, 2)
+  linhas.forEach((linha, i) => ctx.fillText(linha, MARGEM, 290 + i * 106))
+  const yRecorte = 290 + (linhas.length - 1) * 106 + 64
+  ctx.font = texto(36, 700)
+  ctx.fillText(ajustarTexto(ctx, d.recorte, LARGURA - MARGEM * 2), MARGEM, yRecorte)
+  return yRecorte + 70
+}
+
+function conteudoResumo(ctx: Contexto, d: Extract<DadosCartaoPainel, { tipo: 'resumo' }>, y0: number) {
+  const largura = LARGURA - MARGEM * 2
+  ctx.font = texto(32, 700)
+  ctx.fillText('PENDENTES AGORA', MARGEM, y0 + 10)
+  ctx.font = titulo(230)
+  ctx.fillText(String(d.pendentes), MARGEM, y0 + 230)
+
+  ctx.globalAlpha = 0.25
+  ctx.fillRect(MARGEM, y0 + 270, largura, 28)
+  ctx.globalAlpha = 1
+  ctx.fillRect(MARGEM, y0 + 270, (largura * d.taxa) / 100, 28)
+  ctx.font = texto(32, 700)
+  ctx.fillText(`${d.taxa}% resolvidas`, MARGEM, y0 + 345)
+
+  const folga = 28
+  const w = (largura - 14 - 2 * folga) / 3
+  const kpis: [string, number][] = [
+    ['TOTAL', d.total],
+    ['RESOLVIDAS', d.resolvidas],
+    ['HOJE', d.hoje],
+  ]
+  kpis.forEach(([rotulo, valor], i) => {
+    const x = MARGEM + i * (w + folga)
+    cartaoCreme(ctx, x, y0 + 390, w, 150)
+    ctx.fillStyle = VERDE_ESCURO
+    ctx.font = texto(24, 700)
+    ctx.fillText(rotulo, x + 24, y0 + 390 + 48)
+    ctx.fillStyle = VERDE
+    ctx.font = titulo(72)
+    ctx.fillText(String(valor), x + 24, y0 + 390 + 122)
+  })
+  ctx.fillStyle = CREME
+}
+
+function conteudoSerie(ctx: Contexto, d: Extract<DadosCartaoPainel, { tipo: 'serie' }>, y0: number) {
+  const largura = LARGURA - MARGEM * 2
+  const n = Math.max(1, d.itens.length)
+  const slot = largura / n
+  const larguraBarra = slot * 0.7
+  const base = y0 + 470
+  const alturaMax = 400
+  const max = Math.max(1, ...d.itens.map((i) => i.total))
+  ctx.textAlign = 'center'
+  d.itens.forEach((item, i) => {
+    const h = (item.total / max) * alturaMax
+    const cx = MARGEM + i * slot + slot / 2
+    ctx.globalAlpha = i === d.itens.length - 1 ? 1 : 0.6
+    ctx.fillRect(cx - larguraBarra / 2, base - h, larguraBarra, Math.max(h, item.total > 0 ? 6 : 2))
+    ctx.globalAlpha = 1
+    if (item.total > 0) {
+      ctx.font = texto(n > 16 ? 22 : 28, 700)
+      ctx.fillText(String(item.total), cx, base - h - 12)
+    }
+    if (i % d.rotuloACada === 0) {
+      ctx.font = texto(24, 600)
+      ctx.globalAlpha = 0.85
+      ctx.fillText(item.rotulo, cx, base + 40)
+      ctx.globalAlpha = 1
+    }
+  })
+  ctx.fillRect(MARGEM, base, largura, 4)
+  ctx.textAlign = 'left'
+}
+
+function conteudoBarras(ctx: Contexto, d: Extract<DadosCartaoPainel, { tipo: 'barras' }>, y0: number) {
+  if (d.itens.length === 0) {
+    ctx.font = texto(44, 700)
+    ctx.fillText('Sem denúncias no período.', MARGEM, y0 + 60)
+    return
+  }
+  const alturaLinha = d.itens.length <= 5 ? 104 : 80
+  const larguraBarraMax = LARGURA - MARGEM * 2
+  const max = Math.max(1, ...d.itens.map((i) => i.total))
+  d.itens.forEach((item, i) => {
+    const y = y0 + i * alturaLinha
+    ctx.textAlign = 'left'
+    ctx.font = texto(36, 700)
+    ctx.fillText(ajustarTexto(ctx, item.rotulo, larguraBarraMax - 140), MARGEM, y + 34)
+    ctx.globalAlpha = 0.25
+    ctx.fillRect(MARGEM, y + 50, larguraBarraMax, 22)
+    ctx.globalAlpha = i === 0 ? 1 : 0.8
+    ctx.fillRect(MARGEM, y + 50, Math.max(10, (item.total / max) * larguraBarraMax), 22)
+    ctx.globalAlpha = 1
+    ctx.textAlign = 'right'
+    ctx.font = titulo(52)
+    ctx.fillText(String(item.total), LARGURA - MARGEM, y + 40)
+  })
+  ctx.textAlign = 'left'
+}
+
+function conteudoAcessibilidade(ctx: Contexto, d: Extract<DadosCartaoPainel, { tipo: 'acessibilidade' }>, y0: number) {
+  if (d.total === 0) {
+    ctx.font = texto(44, 700)
+    quebrarTexto(ctx, 'Nenhum problema de acessibilidade registrado no período.', LARGURA - MARGEM * 2, 3).forEach((linha, i) =>
+      ctx.fillText(linha, MARGEM, y0 + 60 + i * 60)
+    )
+    return
+  }
+  const largura = LARGURA - MARGEM * 2
+  const secao = (cabecalhoSecao: string, itens: [string, number][], vazio: string, y: number) => {
+    ctx.textAlign = 'left'
+    ctx.font = texto(28, 700)
+    ctx.globalAlpha = 0.8
+    ctx.fillText(cabecalhoSecao.toUpperCase(), MARGEM, y)
+    ctx.globalAlpha = 1
+    if (itens.length === 0) {
+      ctx.font = texto(34, 600)
+      ctx.fillText(vazio, MARGEM, y + 64)
+      return
+    }
+    itens.forEach(([rotulo, total], i) => {
+      const yy = y + 64 + i * 66
+      ctx.textAlign = 'left'
+      ctx.font = texto(36, 700)
+      ctx.fillText(ajustarTexto(ctx, rotulo, largura - 120), MARGEM, yy)
+      ctx.textAlign = 'right'
+      ctx.font = titulo(50)
+      ctx.fillText(String(total), LARGURA - MARGEM, yy + 2)
+    })
+    ctx.textAlign = 'left'
+  }
+  secao(
+    'Linhas com mais ocorrências',
+    d.linhas.map((l) => [`${l.codigo} · ${l.nome}`, l.total]),
+    'Sem dados.',
+    y0 + 20
+  )
+  secao(
+    'Veículos com mais ocorrências',
+    d.veiculos.map((v) => [`Veículo ${v.numero}`, v.total]),
+    'Nenhuma denúncia informou o veículo.',
+    y0 + 20 + 64 + Math.max(1, d.linhas.length) * 66 + 50
+  )
+}
+
+export function desenharCartaoPainel(ctx: Contexto, d: DadosCartaoPainel, logo: CanvasImageSource | null) {
+  fundoComExplosao(ctx)
+  cabecalho(ctx)
+  const y0 = tituloDoCartaoPainel(ctx, d)
+  ctx.fillStyle = CREME
+  if (d.tipo === 'resumo') conteudoResumo(ctx, d, y0)
+  else if (d.tipo === 'serie') conteudoSerie(ctx, d, y0)
+  else if (d.tipo === 'barras') conteudoBarras(ctx, d, y0)
+  else conteudoAcessibilidade(ctx, d, y0)
+
+  ctx.fillStyle = CREME
+  ctx.textAlign = 'left'
+  ctx.font = texto(34, 700)
+  ctx.fillText(ajustarTexto(ctx, d.fecho, LARGURA - MARGEM * 2), MARGEM, ALTURA - 250)
+  rodape(ctx, logo, 'Acompanhe e denuncie:')
+}
+
 // ---------- Geração e compartilhamento ----------
 
 async function prepararFontes() {
@@ -419,6 +685,9 @@ export const gerarCartaoRanking = (resumo: ResumoPainel, periodo: Periodo, zona:
 export const gerarCartaoSemana = (linha: LinhaEmAlta) =>
   gerarPng((ctx, logo) => desenharCartaoSemana(ctx, dadosDaLinhaSemana(linha), logo))
 
+export const gerarCartaoPainel = (dados: DadosCartaoPainel) =>
+  gerarPng((ctx, logo) => desenharCartaoPainel(ctx, dados, logo))
+
 export type ResultadoCompartilhamento = 'compartilhado' | 'baixado' | 'cancelado'
 
 /**
@@ -460,3 +729,6 @@ export const textoRanking = (d: DadosCartaoRanking) =>
 
 export const textoSemana = (d: DadosCartaoSemana) =>
   `A linha ${d.codigo} (${d.nomeLinha}) é a mais problemática da semana em Teresina. Veja e confirme no Deu o Prego!: ${SITE_URL}`
+
+export const textoPainel = (d: DadosCartaoPainel) =>
+  `${d.titulo} em Teresina (${d.recorte.toLowerCase()}). Veja no Deu o Prego!: ${SITE_URL}`

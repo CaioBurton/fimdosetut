@@ -3,7 +3,15 @@ import type { Denuncia } from '../types'
 import {
   ajustarTexto,
   compartilharImagem,
+  dadosDaAcessibilidade,
   dadosDoCartao,
+  dadosDoResumo,
+  dadosPorDia,
+  dadosPorHora,
+  dadosPorTipo,
+  dadosPorZona,
+  desenharCartaoPainel,
+  textoPainel,
   dadosDoRanking,
   desenharCartaoDenuncia,
   desenharCartaoRanking,
@@ -175,6 +183,59 @@ describe('desenho dos cartões', () => {
     desenharCartaoRanking(ctx, { recorte: 'Hoje · Todas as zonas', total: 0, pendentes: 0, linhas: [] }, null)
 
     expect(textos).toContain('Sem denúncias no período.')
+  })
+})
+
+describe('cartões das seções do painel', () => {
+  const resumo = {
+    ...RESUMO_VAZIO,
+    total: 10,
+    pendentes: 4,
+    resolvidas: 6,
+    hoje: 2,
+    porZona: [{ chave: 'norte' as const, total: 7 }, { chave: 'sul' as const, total: 3 }],
+    porTipo: [{ chave: 'quebrado' as const, total: 10 }],
+    porDia: [{ data: new Date(2026, 10, 7), total: 3 }, { data: new Date(2026, 10, 8), total: 5 }],
+    acessibilidade: {
+      total: 2,
+      pendentes: 1,
+      topLinhas: [{ linhaId: 'l1', codigo: '103', nome: 'MOCAMBINHO', total: 2 }],
+      topVeiculos: [{ numero: '12345', total: 2 }],
+    },
+  }
+
+  const desenhar = (dados: ReturnType<typeof dadosDoResumo>) => {
+    const { ctx, textos } = contextoFalso()
+    desenharCartaoPainel(ctx, dados, null)
+    return textos.join(' | ')
+  }
+
+  it('resumo mostra pendentes, taxa e KPIs', () => {
+    const t = desenhar(dadosDoResumo(resumo, '7d', 'todas'))
+    expect(t).toContain('RESUMO')
+    expect(t).toContain('PENDENTES AGORA')
+    expect(t).toContain('60% resolvidas')
+    expect(t).toContain('10 denúncias no período')
+  })
+
+  it('por dia, por hora, zona e tipo desenham os rótulos e totais', () => {
+    expect(desenhar(dadosPorDia(resumo, 'norte'))).toContain('Zona Norte')
+    expect(desenhar(dadosPorHora(new Array(24).fill(1), 'Hoje'))).toContain('0h')
+    const zona = desenhar(dadosPorZona(resumo, '30d', 'todas'))
+    expect(zona).toContain('POR ZONA')
+    expect(zona).toContain('Norte')
+    expect(desenhar(dadosPorTipo(resumo, '30d', 'todas'))).toContain('POR TIPO DE PROBLEMA')
+  })
+
+  it('acessibilidade lista linhas e veículos; vazia avisa', () => {
+    const t = desenhar(dadosDaAcessibilidade(resumo, '7d', 'todas'))
+    expect(t).toContain('103 · MOCAMBINHO')
+    expect(t).toContain('Veículo 12345')
+    expect(desenhar(dadosDaAcessibilidade(RESUMO_VAZIO, '7d', 'todas'))).toContain('Nenhum problema de acessibilidade')
+  })
+
+  it('texto do compartilhamento leva título, recorte e o site', () => {
+    expect(textoPainel(dadosPorZona(resumo, '7d', 'todas'))).toMatch(/^Por zona em Teresina \(.*\)\. Veja no Deu o Prego!: https?:\/\//)
   })
 })
 

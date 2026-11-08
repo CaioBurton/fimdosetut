@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { BotaoCalendario } from '../map/BotaoCalendario'
+import { BotaoCompartilharPainel } from '../ui/BotaoCompartilharPainel'
+import { dadosPorHora } from '../../lib/cartaoCompartilhavel'
 import { useDenuncias } from '../../hooks/useDenuncias'
 import { diaMinimoMapa, hoje } from '../../lib/dia'
 import type { Linha } from '../../types'
@@ -37,7 +39,10 @@ export function DenunciasPorHora() {
             {ehHoje ? 'Hoje' : `${d}/${mes}/${ano}`} · {total} {total === 1 ? 'denúncia' : 'denúncias'}
           </p>
         </div>
-        <BotaoCalendario dia={dia} onChange={setDia} min={diaMinimoMapa()} max={hoje()} />
+        <div className="flex items-center gap-2">
+          <BotaoCompartilharPainel dados={dadosPorHora(horas, ehHoje ? `Hoje · ${d}/${mes}/${ano}` : `${d}/${mes}/${ano}`)} arquivo="por-hora" />
+          <BotaoCalendario dia={dia} onChange={setDia} min={diaMinimoMapa()} max={hoje()} />
+        </div>
       </div>
 
       {error ? (
