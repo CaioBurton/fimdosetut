@@ -21,7 +21,7 @@ export function PainelAdmin({ denuncias, onGerenciarLinhas }: Props) {
   )
 
   return (
-    <div className="space-y-5">
+    <div className="-mb-6 space-y-5 lg:mb-0">
       <LinhaDaSemana />
       <PainelConteudo
         resumo={resumo}
