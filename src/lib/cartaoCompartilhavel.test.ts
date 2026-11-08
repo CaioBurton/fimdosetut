@@ -9,7 +9,7 @@ import {
   desenharCartaoSemana,
   horasDoDia,
   linhaDoDia,
-  textoStoryDoDia,
+  textoDoDia,
   dadosDoResumo,
   dadosPorDia,
   dadosPorHora,
@@ -349,6 +349,6 @@ describe('stories do dia', () => {
   })
 
   it('texto do compartilhamento leva a data e o site', () => {
-    expect(textoStoryDoDia('domingo, 8 de novembro')).toMatch(/domingo, 8 de novembro.*Deu o Prego!: https?:\/\//)
+    expect(textoDoDia('domingo, 8 de novembro')).toMatch(/domingo, 8 de novembro.*Deu o Prego!: https?:\/\//)
   })
 })

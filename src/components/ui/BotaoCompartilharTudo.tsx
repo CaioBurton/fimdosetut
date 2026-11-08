@@ -5,9 +5,10 @@ import { useRankingSemana } from '../../hooks/useRankingSemana'
 import {
   compartilharImagens,
   gerarCarrossel,
-  gerarStoriesDoDia,
+  gerarCartoesDoDia,
   textoCarrossel,
-  textoStoryDoDia,
+  textoDoDia,
+  type FormatoDiario,
 } from '../../lib/cartaoCompartilhavel'
 import type { Periodo } from '../../lib/dashboardDenuncias'
 import { hoje } from '../../lib/dia'
@@ -25,7 +26,7 @@ export function BotaoCompartilharTudo(props: Props) {
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 lg:ml-auto">
       <CarrosselAdmin {...props} />
-      <StoryDoDia />
+      <DiarioDoDia />
     </div>
   )
 }
@@ -33,17 +34,21 @@ export function BotaoCompartilharTudo(props: Props) {
 type Aviso = { texto: string; erro: boolean }
 
 /** Botão que gera e compartilha imagens; só avisa (flutuando, sem deslocar o botão) quando dá erro. */
-function BotaoGerar({
+function BotaoGerar<O extends string = never>({
   rotulo,
   desabilitado,
   aoCompartilhar,
+  opcoes,
 }: {
   rotulo: ReactNode
   desabilitado: boolean
-  /** Gera e compartilha. Lançar erro mostra a mensagem de falha. */
-  aoCompartilhar: () => Promise<void>
+  /** Gera e compartilha (com a opção escolhida, se houver `opcoes`). Lançar erro mostra a mensagem de falha. */
+  aoCompartilhar: (opcao: O) => Promise<void>
+  /** Se informadas, o botão abre um menu para escolher antes de gerar. */
+  opcoes?: { valor: O; rotulo: string }[]
 }) {
   const [gerando, setGerando] = useState(false)
+  const [menuAberto, setMenuAberto] = useState(false)
   const [aviso, setAviso] = useState<Aviso | null>(null)
 
   useEffect(() => {
@@ -52,11 +57,12 @@ function BotaoGerar({
     return () => clearTimeout(t)
   }, [aviso])
 
-  async function clicar() {
+  async function gerar(opcao: O) {
+    setMenuAberto(false)
     setGerando(true)
     setAviso(null)
     try {
-      await aoCompartilhar()
+      await aoCompartilhar(opcao)
     } catch {
       setAviso({ texto: 'Não foi possível gerar a imagem.', erro: true })
     } finally {
@@ -68,7 +74,9 @@ function BotaoGerar({
     <div className="relative flex items-center justify-end">
       <button
         type="button"
-        onClick={clicar}
+        onClick={() => (opcoes ? setMenuAberto((aberto) => !aberto) : gerar(undefined as unknown as O))}
+        aria-haspopup={opcoes ? 'menu' : undefined}
+        aria-expanded={opcoes ? menuAberto : undefined}
         disabled={gerando || desabilitado}
         className={`chip-brand disabled:opacity-50 ${gerando ? 'animate-pulse' : ''}`}
       >
@@ -77,6 +85,24 @@ function BotaoGerar({
         </svg>
         {gerando ? 'Gerando...' : rotulo}
       </button>
+      {menuAberto && opcoes && (
+        <div
+          role="menu"
+          className="absolute bottom-full right-0 z-10 mb-1 flex flex-col overflow-hidden rounded-[2px] border-2 border-brand-green bg-brand-cream text-sm font-bold shadow-[2px_2px_0_#084400]"
+        >
+          {opcoes.map((o) => (
+            <button
+              key={o.valor}
+              type="button"
+              role="menuitem"
+              onClick={() => gerar(o.valor)}
+              className="min-h-11 whitespace-nowrap px-4 text-left text-brand-green hover:bg-brand-green hover:text-brand-cream"
+            >
+              {o.rotulo}
+            </button>
+          ))}
+        </div>
+      )}
       {aviso && (
         // Flutua (absoluto) acima do botão: não o empurra de lugar e não fica sob a barra de navegação.
         <span
@@ -107,18 +133,22 @@ function CarrosselAdmin({ resumo, periodo, zona }: Props) {
 
 const dataPorExtenso = () => new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
 
-/** Stories (9:16) com as mesmas seções do carrossel semanal, só com os dados de hoje. */
-function StoryDoDia() {
+/** Cartões com as mesmas seções do carrossel semanal, só com os dados de hoje, em post (4:5) ou story (9:16). */
+function DiarioDoDia() {
   const { linhas } = useLinhas()
   const { denuncias, loading } = useDenuncias(linhas, null, false, hoje())
   return (
-    <BotaoGerar
+    <BotaoGerar<FormatoDiario>
       rotulo="Diário"
       desabilitado={loading}
-      aoCompartilhar={async () => {
+      opcoes={[
+        { valor: 'post', rotulo: 'Post (4:5)' },
+        { valor: 'story', rotulo: 'Story (9:16)' },
+      ]}
+      aoCompartilhar={async (formato) => {
         const data = dataPorExtenso()
-        const imagens = await gerarStoriesDoDia(denuncias, data)
-        await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoStoryDoDia(data) })
+        const imagens = await gerarCartoesDoDia(denuncias, data, formato)
+        await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoDoDia(data) })
       }}
     />
   )

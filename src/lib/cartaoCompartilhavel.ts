@@ -817,27 +817,31 @@ export function linhaDoDia(denuncias: Denuncia[], resumo: ResumoPainel): LinhaEm
   }
 }
 
+export type FormatoDiario = 'post' | 'story'
+
 /**
- * Story do dia: as mesmas seções do carrossel semanal, só com as denúncias de hoje (a série "por dia"
- * vira "por hora"), em 9:16. `denuncias` são as de hoje; `dataTexto` é a data por extenso.
+ * Cartões do dia: as mesmas seções do carrossel semanal, só com as denúncias de hoje (a série "por dia"
+ * vira "por hora"). `formato`: "post" (4:5, feed) ou "story" (9:16). `denuncias` são as de hoje;
+ * `dataTexto` é a data por extenso.
  */
-export async function gerarStoriesDoDia(denuncias: Denuncia[], dataTexto: string) {
+export async function gerarCartoesDoDia(denuncias: Denuncia[], dataTexto: string, formato: FormatoDiario = 'story') {
+  const story = formato === 'story'
   const resumo = resumirDenuncias(denuncias, 'hoje', 'todas')
   const linha = linhaDoDia(denuncias, resumo)
   return gerarConjunto(
     [
-      { nome: 'resumo', gerar: () => gerarCartaoPainel(dadosDoResumo(resumo, 'hoje', 'todas'), true) },
-      { nome: 'linha-do-dia', gerar: linha ? () => gerarCartaoSemana(linha, true, true) : null },
-      { nome: 'por-hora', gerar: () => gerarCartaoPainel(dadosPorHora(horasDoDia(denuncias), `Hoje · ${dataTexto}`), true) },
-      { nome: 'por-zona', gerar: () => gerarCartaoPainel(dadosPorZona(resumo, 'hoje', 'todas'), true) },
-      { nome: 'por-tipo', gerar: () => gerarCartaoPainel(dadosPorTipo(resumo, 'hoje', 'todas'), true) },
+      { nome: 'resumo', gerar: () => gerarCartaoPainel(dadosDoResumo(resumo, 'hoje', 'todas'), story) },
+      { nome: 'linha-do-dia', gerar: linha ? () => gerarCartaoSemana(linha, true, story) : null },
+      { nome: 'por-hora', gerar: () => gerarCartaoPainel(dadosPorHora(horasDoDia(denuncias), `Hoje · ${dataTexto}`), story) },
+      { nome: 'por-zona', gerar: () => gerarCartaoPainel(dadosPorZona(resumo, 'hoje', 'todas'), story) },
+      { nome: 'por-tipo', gerar: () => gerarCartaoPainel(dadosPorTipo(resumo, 'hoje', 'todas'), story) },
       {
         nome: 'acessibilidade',
-        gerar: resumo.acessibilidade.total > 0 ? () => gerarCartaoPainel(dadosDaAcessibilidade(resumo, 'hoje', 'todas'), true) : null,
+        gerar: resumo.acessibilidade.total > 0 ? () => gerarCartaoPainel(dadosDaAcessibilidade(resumo, 'hoje', 'todas'), story) : null,
       },
-      { nome: 'ranking', gerar: resumo.topLinhas.length > 0 ? () => gerarCartaoRanking(resumo, 'hoje', 'todas', true) : null },
+      { nome: 'ranking', gerar: resumo.topLinhas.length > 0 ? () => gerarCartaoRanking(resumo, 'hoje', 'todas', story) : null },
     ],
-    'story-'
+    `${formato}-`
   )
 }
 
@@ -858,5 +862,5 @@ export const textoPainel = (d: DadosCartaoPainel) =>
   `${d.titulo} em Teresina (${d.recorte.toLowerCase()}). Veja no Deu o Prego!: ${SITE_URL}`
 
 
-export const textoStoryDoDia = (dataTexto: string) =>
+export const textoDoDia = (dataTexto: string) =>
   `Estatísticas do dia em Teresina (${dataTexto}). Veja no Deu o Prego!: ${SITE_URL}`
