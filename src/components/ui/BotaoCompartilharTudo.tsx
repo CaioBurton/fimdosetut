@@ -37,7 +37,7 @@ export function BotaoCompartilharTudo(props: Props) {
 
 type Aviso = { texto: string; erro: boolean }
 
-/** Botão que gera e compartilha imagens, com aviso flutuante (não desloca o botão) que some sozinho. */
+/** Botão que gera e compartilha imagens; só avisa (flutuando, sem deslocar o botão) quando dá erro. */
 function BotaoGerar({
   rotulo,
   desabilitado,
@@ -45,8 +45,8 @@ function BotaoGerar({
 }: {
   rotulo: ReactNode
   desabilitado: boolean
-  /** Gera e compartilha; devolve o aviso a mostrar, se houver. Lançar erro mostra a mensagem de falha. */
-  aoCompartilhar: () => Promise<string | null>
+  /** Gera e compartilha. Lançar erro mostra a mensagem de falha. */
+  aoCompartilhar: () => Promise<void>
 }) {
   const [gerando, setGerando] = useState(false)
   const [aviso, setAviso] = useState<Aviso | null>(null)
@@ -61,8 +61,7 @@ function BotaoGerar({
     setGerando(true)
     setAviso(null)
     try {
-      const texto = await aoCompartilhar()
-      if (texto) setAviso({ texto, erro: false })
+      await aoCompartilhar()
     } catch {
       setAviso({ texto: 'Não foi possível gerar a imagem.', erro: true })
     } finally {
@@ -84,10 +83,10 @@ function BotaoGerar({
         {gerando ? 'Gerando...' : rotulo}
       </button>
       {aviso && (
-        // Flutua (absoluto) para a mensagem não empurrar o botão de lugar.
+        // Flutua (absoluto) acima do botão: não o empurra de lugar e não fica sob a barra de navegação.
         <span
           role={aviso.erro ? 'alert' : 'status'}
-          className={`absolute right-0 top-full z-10 mt-1 whitespace-nowrap rounded-[2px] border-2 border-brand-green bg-brand-cream px-2 py-1 text-xs font-bold shadow-[2px_2px_0_#084400] ${aviso.erro ? 'text-zona-leste' : 'text-brand-green'}`}
+          className={`absolute bottom-full right-0 z-10 mb-1 whitespace-nowrap rounded-[2px] border-2 border-brand-green bg-brand-cream px-2 py-1 text-xs font-bold shadow-[2px_2px_0_#084400] ${aviso.erro ? 'text-zona-leste' : 'text-brand-green'}`}
         >
           {aviso.texto}
         </span>
@@ -101,12 +100,11 @@ function CarrosselAdmin({ resumo, periodo, zona }: Props) {
   const { linhas, loading } = useRankingSemana(1)
   return (
     <BotaoGerar
-      rotulo="Tudo"
+      rotulo="Semanal"
       desabilitado={loading}
       aoCompartilhar={async () => {
         const imagens = await gerarCarrossel(resumo, periodo, zona, linhas[0] ?? null)
-        const resultado = await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoCarrossel(periodo, zona) })
-        return resultado === 'baixado' ? `${imagens.length} imagens salvas, na ordem. É só montar o carrossel!` : null
+        await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoCarrossel(periodo, zona) })
       }}
     />
   )
@@ -120,13 +118,12 @@ function StoryDoDia() {
   const { denuncias, loading } = useDenuncias(linhas, null, false, hoje())
   return (
     <BotaoGerar
-      rotulo="Story"
+      rotulo="Diário"
       desabilitado={loading}
       aoCompartilhar={async () => {
         const dados = dadosDoDia(denuncias, dataPorExtenso())
         const imagem = await gerarCartaoDia(dados)
-        const resultado = await compartilharImagem(imagem, `deu-o-prego-story-${hoje()}.png`, { titulo: 'Deu o Prego!', texto: textoDia(dados) })
-        return resultado === 'baixado' ? 'Story salvo. É só postar!' : null
+        await compartilharImagem(imagem, `deu-o-prego-story-${hoje()}.png`, { titulo: 'Deu o Prego!', texto: textoDia(dados) })
       }}
     />
   )
