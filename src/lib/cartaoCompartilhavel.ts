@@ -736,11 +736,17 @@ export async function compartilharImagens(
 
 /**
  * Gera o carrossel do resumo semanal: um cartão por seção do painel, na ordem em que aparecem.
- * Seções sem dados (acessibilidade e ranking vazios) ficam de fora.
+ * Seções sem dados (linha da semana, acessibilidade e ranking vazios) ficam de fora.
  */
-export async function gerarCarrossel(resumo: ResumoPainel, periodo: Periodo, zona: Zona | 'todas') {
-  const cartoes: { nome: string; dados: DadosCartaoPainel | null; ranking?: boolean }[] = [
+export async function gerarCarrossel(
+  resumo: ResumoPainel,
+  periodo: Periodo,
+  zona: Zona | 'todas',
+  linhaDaSemana: LinhaEmAlta | null = null
+) {
+  const cartoes: { nome: string; dados: DadosCartaoPainel | null; ranking?: boolean; semana?: boolean }[] = [
     { nome: 'resumo', dados: dadosDoResumo(resumo, periodo, zona) },
+    { nome: 'linha-da-semana', dados: null, semana: linhaDaSemana !== null },
     { nome: 'por-dia', dados: dadosPorDia(resumo, zona) },
     { nome: 'por-zona', dados: dadosPorZona(resumo, periodo, zona) },
     { nome: 'por-tipo', dados: dadosPorTipo(resumo, periodo, zona) },
@@ -751,6 +757,7 @@ export async function gerarCarrossel(resumo: ResumoPainel, periodo: Periodo, zon
   for (const [i, c] of cartoes.entries()) {
     let blob: Blob | null = null
     if (c.dados) blob = await gerarCartaoPainel(c.dados)
+    else if (c.semana && linhaDaSemana) blob = await gerarCartaoSemana(linhaDaSemana)
     else if (c.ranking) blob = await gerarCartaoRanking(resumo, periodo, zona)
     if (blob) imagens.push({ blob, nome: `deu-o-prego-${String(i + 1).padStart(2, '0')}-${c.nome}.png` })
   }

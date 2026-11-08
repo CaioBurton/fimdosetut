@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useAuth } from '../../hooks/useAuth'
+import { useRankingSemana } from '../../hooks/useRankingSemana'
 import { compartilharImagens, gerarCarrossel, textoCarrossel } from '../../lib/cartaoCompartilhavel'
 import type { Periodo } from '../../lib/dashboardDenuncias'
 import type { ResumoPainel } from '../../lib/resumoPainel'
@@ -10,8 +12,15 @@ interface Props {
   zona: Zona | 'todas'
 }
 
-/** Gera um cartão por seção do painel e compartilha todos juntos, para postar como carrossel. */
-export function BotaoCompartilharTudo({ resumo, periodo, zona }: Props) {
+/** Só admin vê: o carrossel do resumo semanal é feito por quem administra a página no Instagram. */
+export function BotaoCompartilharTudo(props: Props) {
+  const { isAdmin } = useAuth()
+  return isAdmin ? <CarrosselAdmin {...props} /> : null
+}
+
+/** Gera um cartão por seção do painel (e a linha mais problemática da semana) e compartilha todos juntos. */
+function CarrosselAdmin({ resumo, periodo, zona }: Props) {
+  const { linhas, loading: carregandoSemana } = useRankingSemana(1)
   const [gerando, setGerando] = useState(false)
   const [aviso, setAviso] = useState<{ texto: string; erro: boolean } | null>(null)
 
@@ -19,7 +28,7 @@ export function BotaoCompartilharTudo({ resumo, periodo, zona }: Props) {
     setGerando(true)
     setAviso(null)
     try {
-      const imagens = await gerarCarrossel(resumo, periodo, zona)
+      const imagens = await gerarCarrossel(resumo, periodo, zona, linhas[0] ?? null)
       const resultado = await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoCarrossel(periodo, zona) })
       if (resultado === 'baixado') setAviso({ texto: `${imagens.length} imagens salvas, na ordem. É só montar o carrossel!`, erro: false })
     } catch {
@@ -34,7 +43,7 @@ export function BotaoCompartilharTudo({ resumo, periodo, zona }: Props) {
       <button
         type="button"
         onClick={compartilhar}
-        disabled={gerando}
+        disabled={gerando || carregandoSemana}
         className={`chip-brand disabled:opacity-50 ${gerando ? 'animate-pulse' : ''}`}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
