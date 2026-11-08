@@ -6,9 +6,10 @@ import {
   compartilharImagens,
   dadosDaAcessibilidade,
   dadosDoCartao,
-  dadosDoDia,
-  desenharCartaoDia,
-  textoDia,
+  desenharCartaoSemana,
+  horasDoDia,
+  linhaDoDia,
+  textoDoDia,
   dadosDoResumo,
   dadosPorDia,
   dadosPorHora,
@@ -313,34 +314,41 @@ describe('carrossel', () => {
   })
 })
 
-describe('story do dia', () => {
+describe('stories do dia', () => {
   const hojeIso = (h: number, extra: Partial<Denuncia> = {}): Denuncia => ({ ...denuncia, created_at: `2026-11-08T${String(h).padStart(2, '0')}:10:00`, confirmacoes: 0, ...extra })
 
-  it('soma o dia: pendentes, resolvidas, horas e linhas mais denunciadas', () => {
-    const d = dadosDoDia(
-      [hojeIso(7), hojeIso(7), hojeIso(18, { status: 'resolvido' }), hojeIso(9, { linha_id: 'l2', linha: { id: 'l2', codigo: '200', nome: 'CENTRO', zona: 'sul' } })],
-      'domingo, 8 de novembro'
-    )
-    expect(d).toMatchObject({ total: 4, pendentes: 3, resolvidas: 1 })
-    expect(d.horas[7]).toBe(2)
-    expect(d.linhas[0]).toEqual({ codigo: '103', nome: 'MOCAMBINHO-ALTO ALEGRE', total: 3 })
+  it('conta as denúncias por hora', () => {
+    const horas = horasDoDia([hojeIso(7), hojeIso(7), hojeIso(18)])
+    expect(horas).toHaveLength(24)
+    expect([horas[7], horas[18], horas[0]]).toEqual([2, 1, 0])
   })
 
-  it('desenha título, total, linhas e o site; sem denúncias avisa', () => {
+  it('a linha do dia é a mais denunciada, com zona e confirmações das denúncias', () => {
+    const denuncias = [hojeIso(7, { confirmacoes: 2 }), hojeIso(8, { confirmacoes: 1 }), hojeIso(9, { linha_id: 'l2', linha: { id: 'l2', codigo: '200', nome: 'CENTRO', zona: 'sul' } })]
+    const resumo = {
+      ...RESUMO_VAZIO,
+      topLinhas: [{ linhaId: 'l1', codigo: '103', nome: 'MOCAMBINHO-ALTO ALEGRE', total: 2 }],
+    }
+    expect(linhaDoDia(denuncias, resumo)).toMatchObject({ codigo: '103', zona: 'norte', denuncias: 2, confirmacoes: 3 })
+    expect(linhaDoDia([], RESUMO_VAZIO)).toBeNull()
+  })
+
+  it('o cartão da linha do dia fala de hoje e não cita pessoas', () => {
     const { ctx, textos } = contextoFalso()
-    desenharCartaoDia(ctx, dadosDoDia([hojeIso(7), hojeIso(8)], 'domingo, 8 de novembro'), null)
-    const t = textos.join(' | ')
-    expect(t).toContain('ESTATÍSTICAS')
-    expect(t).toContain('DENÚNCIAS HOJE')
-    expect(t).toContain('103 · MOCAMBINHO-ALTO ALEGRE')
-    expect(t).toContain('deuoprego.com.br')
-
-    const vazio = contextoFalso()
-    desenharCartaoDia(vazio.ctx, dadosDoDia([], 'hoje'), null)
-    expect(vazio.textos).toContain('Sem denúncias hoje.')
+    desenharCartaoSemana(ctx, { codigo: '103', nomeLinha: 'MOCAMBINHO', zona: 'norte', denuncias: 4, pessoas: 0, confirmacoes: 0, diario: true }, null, true)
+    expect(textos).toContain('HOJE')
+    expect(textos).toContain('DO DIA')
+    expect(textos.some((t) => t.includes('4 DENÚNCIAS') && !t.includes('PESSOA'))).toBe(true)
   })
 
-  it('texto do compartilhamento leva o total e o site', () => {
-    expect(textoDia(dadosDoDia([hojeIso(7)], 'domingo'))).toMatch(/^1 denúncia em Teresina hoje/)
+  it('no story o fundo cobre 1920 px e o conteúdo desce para o centro', () => {
+    const { ctx } = contextoFalso()
+    desenharCartaoPainel(ctx, dadosDoResumo(RESUMO_VAZIO, 'hoje', 'todas'), null, true)
+    expect(ctx.fillRect).toHaveBeenCalledWith(0, 0, 1080, 1920)
+    expect(ctx.translate).toHaveBeenCalledWith(0, 285)
+  })
+
+  it('texto do compartilhamento leva a data e o site', () => {
+    expect(textoDoDia('domingo, 8 de novembro')).toMatch(/domingo, 8 de novembro.*Deu o Prego!: https?:\/\//)
   })
 })

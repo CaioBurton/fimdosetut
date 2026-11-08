@@ -3,13 +3,12 @@ import { useDenuncias } from '../../hooks/useDenuncias'
 import { useLinhas } from '../../hooks/useLinhas'
 import { useRankingSemana } from '../../hooks/useRankingSemana'
 import {
-  compartilharImagem,
   compartilharImagens,
-  dadosDoDia,
   gerarCarrossel,
-  gerarCartaoDia,
+  gerarCartoesDoDia,
   textoCarrossel,
-  textoDia,
+  textoDoDia,
+  type FormatoDiario,
 } from '../../lib/cartaoCompartilhavel'
 import type { Periodo } from '../../lib/dashboardDenuncias'
 import { hoje } from '../../lib/dia'
@@ -24,26 +23,38 @@ interface Props {
 
 /** Botões Semanal (carrossel) e Diário (story), abertos a todos. */
 export function BotaoCompartilharTudo(props: Props) {
+  // Só um seletor de formato aberto por vez: abrir um fecha o outro.
+  const [menuAberto, setMenuAberto] = useState<'semanal' | 'diario' | null>(null)
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 lg:ml-auto">
-      <CarrosselAdmin {...props} />
-      <StoryDoDia />
+      <CarrosselAdmin {...props} menuAberto={menuAberto === 'semanal'} onMenuAberto={(aberto) => setMenuAberto(aberto ? 'semanal' : null)} />
+      <DiarioDoDia menuAberto={menuAberto === 'diario'} onMenuAberto={(aberto) => setMenuAberto(aberto ? 'diario' : null)} />
     </div>
   )
+}
+
+interface ControleMenu {
+  menuAberto: boolean
+  onMenuAberto: (aberto: boolean) => void
 }
 
 type Aviso = { texto: string; erro: boolean }
 
 /** Botão que gera e compartilha imagens; só avisa (flutuando, sem deslocar o botão) quando dá erro. */
-function BotaoGerar({
+function BotaoGerar<O extends string = never>({
   rotulo,
   desabilitado,
   aoCompartilhar,
-}: {
+  opcoes,
+  menuAberto,
+  onMenuAberto,
+}: ControleMenu & {
   rotulo: ReactNode
   desabilitado: boolean
-  /** Gera e compartilha. Lançar erro mostra a mensagem de falha. */
-  aoCompartilhar: () => Promise<void>
+  /** Gera e compartilha (com a opção escolhida, se houver `opcoes`). Lançar erro mostra a mensagem de falha. */
+  aoCompartilhar: (opcao: O) => Promise<void>
+  /** Se informadas, o botão abre um menu para escolher antes de gerar. */
+  opcoes?: { valor: O; rotulo: string }[]
 }) {
   const [gerando, setGerando] = useState(false)
   const [aviso, setAviso] = useState<Aviso | null>(null)
@@ -54,11 +65,12 @@ function BotaoGerar({
     return () => clearTimeout(t)
   }, [aviso])
 
-  async function clicar() {
+  async function gerar(opcao: O) {
+    onMenuAberto(false)
     setGerando(true)
     setAviso(null)
     try {
-      await aoCompartilhar()
+      await aoCompartilhar(opcao)
     } catch {
       setAviso({ texto: 'Não foi possível gerar a imagem.', erro: true })
     } finally {
@@ -70,7 +82,9 @@ function BotaoGerar({
     <div className="relative flex items-center justify-end">
       <button
         type="button"
-        onClick={clicar}
+        onClick={() => (opcoes ? onMenuAberto(!menuAberto) : gerar(undefined as unknown as O))}
+        aria-haspopup={opcoes ? 'menu' : undefined}
+        aria-expanded={opcoes ? menuAberto : undefined}
         disabled={gerando || desabilitado}
         className={`chip-brand disabled:opacity-50 ${gerando ? 'animate-pulse' : ''}`}
       >
@@ -79,6 +93,24 @@ function BotaoGerar({
         </svg>
         {gerando ? 'Gerando...' : rotulo}
       </button>
+      {menuAberto && opcoes && (
+        <div
+          role="menu"
+          className="absolute bottom-full right-0 z-10 mb-1 flex flex-col overflow-hidden rounded-[2px] border-2 border-brand-green bg-brand-cream text-sm font-bold shadow-[2px_2px_0_#084400]"
+        >
+          {opcoes.map((o) => (
+            <button
+              key={o.valor}
+              type="button"
+              role="menuitem"
+              onClick={() => gerar(o.valor)}
+              className="min-h-11 whitespace-nowrap px-4 text-left text-brand-green hover:bg-brand-green hover:text-brand-cream"
+            >
+              {o.rotulo}
+            </button>
+          ))}
+        </div>
+      )}
       {aviso && (
         // Flutua (absoluto) acima do botão: não o empurra de lugar e não fica sob a barra de navegação.
         <span
@@ -92,15 +124,23 @@ function BotaoGerar({
   )
 }
 
+const OPCOES_FORMATO: { valor: FormatoDiario; rotulo: string }[] = [
+  { valor: 'post', rotulo: 'Post (4:5)' },
+  { valor: 'story', rotulo: 'Story (9:16)' },
+]
+
 /** Gera um cartão por seção do painel (e a linha mais problemática da semana) e compartilha todos juntos. */
-function CarrosselAdmin({ resumo, periodo, zona }: Props) {
+function CarrosselAdmin({ resumo, periodo, zona, menuAberto, onMenuAberto }: Props & ControleMenu) {
   const { linhas, loading } = useRankingSemana(1)
   return (
-    <BotaoGerar
+    <BotaoGerar<FormatoDiario>
+      menuAberto={menuAberto}
+      onMenuAberto={onMenuAberto}
       rotulo="Semanal"
       desabilitado={loading}
-      aoCompartilhar={async () => {
-        const imagens = await gerarCarrossel(resumo, periodo, zona, linhas[0] ?? null)
+      opcoes={OPCOES_FORMATO}
+      aoCompartilhar={async (formato) => {
+        const imagens = await gerarCarrossel(resumo, periodo, zona, linhas[0] ?? null, formato)
         await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoCarrossel(periodo, zona) })
       }}
     />
@@ -109,18 +149,21 @@ function CarrosselAdmin({ resumo, periodo, zona }: Props) {
 
 const dataPorExtenso = () => new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
 
-/** Story (9:16) com as estatísticas de hoje. */
-function StoryDoDia() {
+/** Cartões com as mesmas seções do carrossel semanal, só com os dados de hoje, em post (4:5) ou story (9:16). */
+function DiarioDoDia({ menuAberto, onMenuAberto }: ControleMenu) {
   const { linhas } = useLinhas()
   const { denuncias, loading } = useDenuncias(linhas, null, false, hoje())
   return (
-    <BotaoGerar
+    <BotaoGerar<FormatoDiario>
+      menuAberto={menuAberto}
+      onMenuAberto={onMenuAberto}
       rotulo="Diário"
       desabilitado={loading}
-      aoCompartilhar={async () => {
-        const dados = dadosDoDia(denuncias, dataPorExtenso())
-        const imagem = await gerarCartaoDia(dados)
-        await compartilharImagem(imagem, `deu-o-prego-story-${hoje()}.png`, { titulo: 'Deu o Prego!', texto: textoDia(dados) })
+      opcoes={OPCOES_FORMATO}
+      aoCompartilhar={async (formato) => {
+        const data = dataPorExtenso()
+        const imagens = await gerarCartoesDoDia(denuncias, data, formato)
+        await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoDoDia(data) })
       }}
     />
   )
