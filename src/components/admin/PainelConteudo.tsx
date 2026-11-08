@@ -158,7 +158,6 @@ export function PainelConteudo({
           ))}
         </div>
 
-        <BotaoCompartilharTudo resumo={resumo} periodo={periodo} zona={zona} />
       </div>
 
       {!desktop && (
@@ -370,6 +369,10 @@ export function PainelConteudo({
           </button>
         )}
       </section>
+
+      <div className="lg:col-span-2">
+        <BotaoCompartilharTudo resumo={resumo} periodo={periodo} zona={zona} />
+      </div>
     </div>
   )
 }

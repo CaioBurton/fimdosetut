@@ -14,12 +14,12 @@ describe('BotaoCompartilharTudo', () => {
 
   it('não aparece para quem não é admin', () => {
     render(<BotaoCompartilharTudo resumo={RESUMO_VAZIO} periodo="7d" zona="todas" />)
-    expect(screen.queryByRole('button', { name: /Compartilhar tudo/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Tudo/ })).not.toBeInTheDocument()
   })
 
   it('aparece para admin', () => {
     auth.isAdmin = true
     render(<BotaoCompartilharTudo resumo={RESUMO_VAZIO} periodo="7d" zona="todas" />)
-    expect(screen.getByRole('button', { name: /Compartilhar tudo/ })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /Tudo/ })).toBeEnabled()
   })
 })

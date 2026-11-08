@@ -45,7 +45,7 @@ function CarrosselAdmin({ resumo, periodo, zona }: Props) {
   }
 
   return (
-    <div className="relative flex items-center lg:ml-auto">
+    <div className="relative flex items-center justify-end lg:ml-auto">
       <button
         type="button"
         onClick={compartilhar}
@@ -55,7 +55,7 @@ function CarrosselAdmin({ resumo, periodo, zona }: Props) {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M12 15V3M7 8l5-5 5 5M5 14v5a2 2 0 002 2h10a2 2 0 002-2v-5" />
         </svg>
-        {gerando ? 'Gerando...' : 'Compartilhar tudo (carrossel)'}
+        {gerando ? 'Gerando...' : 'Tudo'}
       </button>
       {aviso && (
         // Flutua (absoluto) para a mensagem não empurrar o botão de lugar.
