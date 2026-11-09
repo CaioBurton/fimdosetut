@@ -1,0 +1,59 @@
+# Backup semanal do Supabase (JSON de todas as tabelas + contas do Auth).
+#
+# O backup tem dados pessoais (LGPD), então é CRIPTOGRAFADO antes de virar artefato:
+# sem a senha (BACKUP_PASSPHRASE) o arquivo não abre, mesmo que o repositório seja público.
+#
+# Segredos necessários (Settings > Secrets and variables > Actions > New repository secret):
+#   SUPABASE_URL                 ex.: https://xxxxxxxxxxxx.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY    chave service_role (Supabase > Project Settings > API)
+#   BACKUP_PASSPHRASE            senha longa e aleatória; guarde-a também fora do GitHub
+#
+# Para abrir um backup baixado:
+#   gpg --decrypt backup-AAAA-MM-DD.tar.gz.gpg | tar -xz
+name: Backup do banco
+
+on:
+  schedule:
+    - cron: '17 6 * * 1' # toda segunda, 06:17 UTC (03:17 em Brasília)
+  workflow_dispatch: # permite rodar na hora, pela aba Actions
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Gerar backup
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/backup.mjs
+
+      - name: Compactar e criptografar
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$BACKUP_PASSPHRASE" ]; then echo "Falta o segredo BACKUP_PASSPHRASE." >&2; exit 1; fi
+          mkdir -p saida
+          tar -czf - backups | gpg --batch --yes --symmetric --cipher-algo AES256 \
+            --passphrase-fd 3 -o "saida/backup-$(date -u +%F).tar.gz.gpg" 3<<<"$BACKUP_PASSPHRASE"
+          rm -rf backups
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backup-supabase
+          path: saida/*.gpg
+          retention-days: 90
+          if-no-files-found: error
