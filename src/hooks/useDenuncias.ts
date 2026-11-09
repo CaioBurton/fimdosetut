@@ -83,7 +83,9 @@ export function useDenuncias(
   linhas: Linha[],
   dias: number | null = DIAS_PADRAO,
   apenasMinhas = false,
-  dia?: string
+  dia?: string,
+  // Falso: não busca nem assina o tempo real (ex.: aba do admin que não usa a lista de denúncias).
+  ativo = true
 ) {
   // Denúncias sem a linha anexada: a linha é ligada abaixo, pelo `linha_id`, assim a lista
   // se completa sozinha quando as linhas terminam de carregar.
@@ -119,6 +121,7 @@ export function useDenuncias(
   }, [brutas, linhas])
 
   useEffect(() => {
+    if (!ativo) return
     let active = true
 
     const guardado = cache.get(chave)
@@ -153,9 +156,10 @@ export function useDenuncias(
     return () => {
       active = false
     }
-  }, [dias, dia, apenasMinhas, chave])
+  }, [dias, dia, apenasMinhas, chave, ativo])
 
   useEffect(() => {
+    if (!ativo) return
     const canal = supabase
       .channel(`${apenasMinhas ? 'minhas-denuncias-realtime' : 'denuncias-realtime'}-${idCanal}`)
       .on(
@@ -196,7 +200,7 @@ export function useDenuncias(
     return () => {
       supabase.removeChannel(canal)
     }
-  }, [apenasMinhas, aplicar, dia, idCanal])
+  }, [apenasMinhas, aplicar, dia, idCanal, ativo])
 
   /** Atualiza campos de uma denúncia já carregada (ex.: o total de confirmações, sem esperar o tempo real). */
   const atualizarDenuncia = useCallback((id: string, campos: Partial<Denuncia>) => {

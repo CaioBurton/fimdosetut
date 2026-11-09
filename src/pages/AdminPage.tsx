@@ -69,7 +69,18 @@ export function AdminPage() {
   const [paginaDenuncias, setPaginaDenuncias] = useState(1)
   const { linhas, criar, atualizar, excluir: excluirLinha } = useLinhas()
   const [historicoCompleto, setHistoricoCompleto] = useState(false)
-  const { denuncias, loading, error } = useDenuncias(linhas, historicoCompleto ? null : DIAS_ADMIN)
+  // As abas Denúncias, Linhas e Usuários usam a lista de denúncias; o Painel usa o resumo do banco.
+  // Só baixa a lista quando uma dessas abas é aberta (e depois a mantém).
+  const [denunciasPedidas, setDenunciasPedidas] = useState(false)
+  const precisaDenuncias = aba === 'denuncias' || aba === 'linhas' || aba === 'usuarios'
+  if (precisaDenuncias && !denunciasPedidas) setDenunciasPedidas(true)
+  const { denuncias, loading, error } = useDenuncias(
+    linhas,
+    historicoCompleto ? null : DIAS_ADMIN,
+    false,
+    undefined,
+    denunciasPedidas
+  )
   const filaFotos = useFotosPendentes()
   const [acaoErro, setAcaoErro] = useState<string | null>(null)
   const [confirmando, setConfirmando] = useState<string | null>(null)
@@ -116,7 +127,7 @@ export function AdminPage() {
               onClick={() => setAba(a.id)}
               className={`chip-brand ${aba === a.id ? 'chip-brand-ativo' : ''}`}
             >
-              {a.id === 'denuncias'
+              {a.id === 'denuncias' && denunciasPedidas && !loading
                 ? `Denúncias (${denuncias.length})`
                 : a.id === 'fotos' && !filaFotos.loading && !filaFotos.error
                   ? `Fotos (${filaFotos.total})`
@@ -147,7 +158,7 @@ export function AdminPage() {
 
         {acaoErro && <p role="alert" className="anim-abre text-center text-sm text-zona-leste">{acaoErro}</p>}
 
-        {!historicoCompleto && (aba === 'painel' || aba === 'denuncias' || aba === 'linhas' || aba === 'usuarios') && (
+        {!historicoCompleto && precisaDenuncias && (
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-brand-green-dark/80">
             <span>Mostrando as denúncias dos últimos {DIAS_ADMIN} dias.</span>
             <button type="button" className="chip-brand" onClick={() => setHistoricoCompleto(true)}>
@@ -158,14 +169,7 @@ export function AdminPage() {
 
         <div key={aba} className="anim-entra space-y-3">
         {aba === 'painel' && (
-          <>
-            {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
-            {loading ? (
-              <p className="text-center text-brand-green-dark/60">Carregando...</p>
-            ) : (
-              <PainelAdmin denuncias={denuncias} onGerenciarLinhas={() => setAba('linhas')} />
-            )}
-          </>
+          <PainelAdmin onGerenciarLinhas={() => setAba('linhas')} />
         )}
 
         {aba === 'linhas' && (
