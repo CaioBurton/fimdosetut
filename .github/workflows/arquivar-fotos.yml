@@ -1,0 +1,54 @@
+# Arquiva no Cloudflare R2 as fotos antigas das denúncias e limpa do R2 as que nenhuma denúncia usa.
+# Detalhes e configuração: scripts/arquivar-fotos.mjs e a seção "Arquivamento das fotos" do README.
+#
+# Fica desligado até a variável ARQUIVAR_FOTOS_ATIVO = true ser criada (o "Run workflow" manual
+# funciona antes disso, para testar; ele começa em modo simulação).
+name: Arquivar fotos no R2
+
+on:
+  schedule:
+    # Toda segunda-feira, 03:23 em Brasília (06:23 UTC).
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      simular:
+        description: 'Só mostrar o que seria feito, sem mudar nada'
+        type: boolean
+        default: true
+
+# Nunca duas execuções ao mesmo tempo.
+concurrency:
+  group: arquivar-fotos
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  arquivar:
+    if: github.event_name == 'workflow_dispatch' || vars.ARQUIVAR_FOTOS_ATIVO == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Arquivar
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          ARQUIVAR_APOS_DIAS: ${{ vars.ARQUIVAR_APOS_DIAS }}
+          ARQUIVAR_LIMITE: ${{ vars.ARQUIVAR_LIMITE }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.simular }}" = "true" ]; then
+            npm run arquivar-fotos -- --simular
+          else
+            npm run arquivar-fotos
+          fi
