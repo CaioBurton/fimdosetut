@@ -1,65 +1,60 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
-import type { Denuncia } from '../../types'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { RESUMO_VAZIO } from '../../lib/resumoPainel'
 import { PainelAdmin } from './PainelAdmin'
 
 vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAdmin: false }) }))
+vi.mock('../painel/DenunciasPorHora', () => ({ DenunciasPorHora: () => null }))
+vi.mock('../painel/LinhaDaSemana', () => ({ LinhaDaSemana: () => null }))
 
-const hoje = new Date().toISOString()
-const antigo = new Date(Date.now() - 100 * 24 * 3600 * 1000).toISOString()
+const usePainelResumo = vi.fn()
+vi.mock('../../hooks/usePainelResumo', () => ({
+  usePainelResumo: (...args: unknown[]) => usePainelResumo(...args),
+}))
 
-function d(p: Partial<Denuncia> & { id: string }): Denuncia {
-  return {
-    linha_id: 'l1',
-    tipo: 'quebrado',
-    status: 'pendente',
-    descricao: 'x',
-    latitude: 0,
-    longitude: 0,
-    created_at: hoje,
-    updated_at: hoje,
-    linha: { id: 'l1', codigo: '063', nome: 'DIRCEU', zona: 'leste' },
-    ...p,
-  }
-}
-
-const dados = [
-  d({ id: '1' }),
-  d({ id: '2', status: 'resolvido' }),
-  d({ id: '3', created_at: antigo, linha_id: 'l2', linha: { id: 'l2', codigo: '801', nome: 'SANTA FE', zona: 'sul' } }),
-]
+beforeEach(() => {
+  usePainelResumo.mockReset()
+  usePainelResumo.mockReturnValue({ resumo: { ...RESUMO_VAZIO, total: 4, pendentes: 1, resolvidas: 3 }, loading: false, error: null })
+})
 
 describe('PainelAdmin', () => {
-  it('mostra o resumo do período (30 dias por padrão) e muda ao escolher "Tudo"', async () => {
+  it('usa o resumo do banco (7 dias por padrão) e pede o histórico completo ao escolher "Tudo"', async () => {
     const user = userEvent.setup()
-    render(<PainelAdmin denuncias={dados} onGerenciarLinhas={() => {}} />)
+    render(<PainelAdmin onGerenciarLinhas={() => {}} />)
 
-    const resumo = screen.getByRole('region', { name: 'Resumo' })
-    expect(within(resumo).getByText('1')).toBeInTheDocument() // pendentes
-    expect(within(resumo).getByText('50% resolvidas')).toBeInTheDocument()
+    expect(usePainelResumo).toHaveBeenLastCalledWith('7d', 'todas')
+    expect(screen.getByText('75% resolvidas')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Tudo' }))
-    expect(within(resumo).getByText('de 3 denúncias no período')).toBeInTheDocument()
+    expect(usePainelResumo).toHaveBeenLastCalledWith('todos', 'todas')
   })
 
-  it('filtra por zona', async () => {
+  it('pede o resumo da zona escolhida', async () => {
     const user = userEvent.setup()
-    render(<PainelAdmin denuncias={dados} onGerenciarLinhas={() => {}} />)
+    render(<PainelAdmin onGerenciarLinhas={() => {}} />)
 
-    await user.click(screen.getByRole('button', { name: 'Tudo' }))
     await user.click(screen.getByRole('button', { name: /Sul/ }))
+    expect(usePainelResumo).toHaveBeenLastCalledWith('7d', 'sul')
+  })
 
-    expect(screen.getByText('de 1 denúncia no período')).toBeInTheDocument()
+  it('mostra o erro de carregamento', () => {
+    usePainelResumo.mockReturnValue({ resumo: RESUMO_VAZIO, loading: false, error: 'Não foi possível carregar o painel.' })
+    render(<PainelAdmin onGerenciarLinhas={() => {}} />)
+    expect(screen.getByText('Não foi possível carregar o painel.')).toBeInTheDocument()
   })
 
   it('leva para a aba de linhas pelo atalho do ranking', async () => {
     const user = userEvent.setup()
     const onGerenciarLinhas = vi.fn()
-    render(<PainelAdmin denuncias={dados} onGerenciarLinhas={onGerenciarLinhas} />)
+    usePainelResumo.mockReturnValue({
+      resumo: { ...RESUMO_VAZIO, total: 1, topLinhas: [{ linhaId: 'l1', codigo: '063', nome: 'DIRCEU', total: 1 }] },
+      loading: false,
+      error: null,
+    })
+    render(<PainelAdmin onGerenciarLinhas={onGerenciarLinhas} />)
 
     await user.click(screen.getByRole('button', { name: 'Gerenciar linhas →' }))
-
     expect(onGerenciarLinhas).toHaveBeenCalled()
   })
 })

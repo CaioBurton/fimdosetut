@@ -1,27 +1,27 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import type { Periodo } from '../../lib/dashboardDenuncias'
-import { resumirDenuncias } from '../../lib/resumoPainel'
-import type { Denuncia, Zona } from '../../types'
+import { usePainelResumo } from '../../hooks/usePainelResumo'
+import type { Zona } from '../../types'
 import { DenunciasPorHora } from '../painel/DenunciasPorHora'
 import { LinhaDaSemana } from '../painel/LinhaDaSemana'
 import { PainelConteudo } from './PainelConteudo'
 
 interface Props {
-  denuncias: Denuncia[]
   onGerenciarLinhas: () => void
 }
 
-/** Painel do admin: calcula o resumo no navegador, com as denúncias já carregadas. */
-export function PainelAdmin({ denuncias, onGerenciarLinhas }: Props) {
+/**
+ * Painel do admin: os números vêm do resumo calculado no banco (como no painel público), então não
+ * baixa as denúncias e "Tudo" mostra o histórico completo.
+ */
+export function PainelAdmin({ onGerenciarLinhas }: Props) {
   const [periodo, setPeriodo] = useState<Periodo>('7d')
   const [zona, setZona] = useState<Zona | 'todas'>('todas')
-  const resumo = useMemo(
-    () => resumirDenuncias(denuncias, periodo, zona),
-    [denuncias, periodo, zona]
-  )
+  const { resumo, loading, error } = usePainelResumo(periodo, zona)
 
   return (
     <div className="-mb-6 space-y-5 lg:mb-0">
+      {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
       <LinhaDaSemana />
       <PainelConteudo
         resumo={resumo}
@@ -30,6 +30,7 @@ export function PainelAdmin({ denuncias, onGerenciarLinhas }: Props) {
         onPeriodo={setPeriodo}
         onZona={setZona}
         onGerenciarLinhas={onGerenciarLinhas}
+        carregando={loading}
         aposPorDia={<DenunciasPorHora />}
       />
     </div>
