@@ -23,7 +23,7 @@ export function useAutoresDenuncias(ids: string[], ativo: boolean) {
       const usuarios = [...new Set(vinculos.map((v) => v.user_id as string))]
       const [{ data: perfis }, { data: nomes }] = await Promise.all([
         supabase.from('profiles').select('id, email').in('id', usuarios),
-        supabase.rpc('nomes_por_usuario'),
+        supabase.rpc('nomes_por_usuario', { ids: usuarios }),
       ])
       if (!vivo) return
       const emailDe = new Map((perfis ?? []).map((p) => [p.id as string, p.email as string]))

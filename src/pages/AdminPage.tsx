@@ -52,6 +52,10 @@ const ABAS: { id: Aba; rotulo: string }[] = [
 
 const POR_PAGINA_TABELA = 10
 
+// O admin abre só com os últimos 30 dias (cobre "hoje", "7 dias" e "30 dias" dos filtros) para não baixar
+// o histórico inteiro a cada acesso (egress do Supabase). O histórico completo vem sob demanda.
+const DIAS_ADMIN = 30
+
 function quando(iso: string) {
   return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
@@ -64,7 +68,8 @@ export function AdminPage() {
   const setAba = (nova: Aba) => setParams({ aba: nova })
   const [paginaDenuncias, setPaginaDenuncias] = useState(1)
   const { linhas, criar, atualizar, excluir: excluirLinha } = useLinhas()
-  const { denuncias, loading, error } = useDenuncias(linhas, null)
+  const [historicoCompleto, setHistoricoCompleto] = useState(false)
+  const { denuncias, loading, error } = useDenuncias(linhas, historicoCompleto ? null : DIAS_ADMIN)
   const filaFotos = useFotosPendentes()
   const [acaoErro, setAcaoErro] = useState<string | null>(null)
   const [confirmando, setConfirmando] = useState<string | null>(null)
@@ -127,7 +132,7 @@ export function AdminPage() {
         {desktop && aba === 'denuncias' && (
           <CabecalhoPagina
             titulo="Denúncias"
-            subtitulo={`${denuncias.length} ${denuncias.length === 1 ? 'denúncia' : 'denúncias'}. Altere o status ou remova conteúdo indevido.`}
+            subtitulo={`${denuncias.length} ${denuncias.length === 1 ? 'denúncia' : 'denúncias'}${historicoCompleto ? '' : ` nos últimos ${DIAS_ADMIN} dias`}. Altere o status ou remova conteúdo indevido.`}
           />
         )}
         {desktop && aba === 'fotos' && (
@@ -141,6 +146,15 @@ export function AdminPage() {
         )}
 
         {acaoErro && <p role="alert" className="anim-abre text-center text-sm text-zona-leste">{acaoErro}</p>}
+
+        {!historicoCompleto && (aba === 'painel' || aba === 'denuncias' || aba === 'linhas' || aba === 'usuarios') && (
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-brand-green-dark/80">
+            <span>Mostrando as denúncias dos últimos {DIAS_ADMIN} dias.</span>
+            <button type="button" className="chip-brand" onClick={() => setHistoricoCompleto(true)}>
+              Carregar histórico completo
+            </button>
+          </div>
+        )}
 
         <div key={aba} className="anim-entra space-y-3">
         {aba === 'painel' && (
@@ -326,7 +340,6 @@ function UsuariosAdmin({
 }) {
   const [verUsuarioId, setVerUsuarioId] = useState<string | null>(null)
   const totalPorUsuario = useDenunciasPorUsuario()
-  const nomePorUsuario = useNomesUsuarios()
   const { user } = useAuth()
   const { usuarios, loading, error, alterarPapel, alterarBloqueio, excluir } = useUsuarios()
   const [confirmando, setConfirmando] = useState<string | null>(null)
@@ -347,6 +360,8 @@ function UsuariosAdmin({
   const atual = Math.min(pagina, totalPaginas)
   const inicio = (atual - 1) * POR_PAGINA_TABELA
   const daPagina = usuarios.slice(inicio, inicio + POR_PAGINA_TABELA)
+  // Só os nomes dos usuários da página atual (não o de todo mundo).
+  const nomePorUsuario = useNomesUsuarios(daPagina.map((u) => u.id))
 
   if (desktop) {
     return (
