@@ -333,6 +333,15 @@ function DenunciasDoUsuario({ usuario, denuncias, onFechar }: { usuario: Perfil;
   )
 }
 
+/** Minúsculas e sem acento, para a busca não depender de maiúsculas nem de acentos. */
+function normalizarBusca(texto: string) {
+  return texto
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
 function UsuariosAdmin({
   onErro,
   desktop,
@@ -348,6 +357,7 @@ function UsuariosAdmin({
   const { usuarios, loading, error, alterarPapel, alterarBloqueio, excluir } = useUsuarios()
   const [confirmando, setConfirmando] = useState<string | null>(null)
   const [pagina, setPagina] = useState(1)
+  const [busca, setBusca] = useState('')
   const usuarioVisto = usuarios.find((u) => u.id === verUsuarioId) ?? null
   const painelDenuncias = usuarioVisto && (
     <DenunciasDoUsuario usuario={usuarioVisto} denuncias={denuncias} onFechar={() => setVerUsuarioId(null)} />
@@ -360,12 +370,43 @@ function UsuariosAdmin({
     if (erro) onErro(erro)
   }
 
-  const totalPaginas = Math.max(1, Math.ceil(usuarios.length / POR_PAGINA_TABELA))
+  const termo = normalizarBusca(busca)
+  // Sem busca, só os nomes da página atual; com busca, os de todos (para poder achar por nome).
+  const paginasSemBusca = Math.max(1, Math.ceil(usuarios.length / POR_PAGINA_TABELA))
+  const inicioSemBusca = (Math.min(pagina, paginasSemBusca) - 1) * POR_PAGINA_TABELA
+  const idsParaNomes = (termo ? usuarios : usuarios.slice(inicioSemBusca, inicioSemBusca + POR_PAGINA_TABELA)).map(
+    (u) => u.id
+  )
+  const nomePorUsuario = useNomesUsuarios(idsParaNomes)
+  const filtrados = termo
+    ? usuarios.filter(
+        (u) =>
+          normalizarBusca(u.email ?? '').includes(termo) ||
+          normalizarBusca(nomePorUsuario.get(u.id) ?? '').includes(termo)
+      )
+    : usuarios
+
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / POR_PAGINA_TABELA))
   const atual = Math.min(pagina, totalPaginas)
   const inicio = (atual - 1) * POR_PAGINA_TABELA
-  const daPagina = usuarios.slice(inicio, inicio + POR_PAGINA_TABELA)
-  // Só os nomes dos usuários da página atual (não o de todo mundo).
-  const nomePorUsuario = useNomesUsuarios(daPagina.map((u) => u.id))
+  const daPagina = filtrados.slice(inicio, inicio + POR_PAGINA_TABELA)
+
+  const campoBusca = (
+    <input
+      type="search"
+      className="input-brand"
+      placeholder="Buscar por nome ou e-mail"
+      aria-label="Buscar usuário"
+      value={busca}
+      onChange={(e) => {
+        setBusca(e.target.value)
+        setPagina(1)
+      }}
+    />
+  )
+  const semResultado = !loading && usuarios.length > 0 && filtrados.length === 0 && (
+    <p className="text-center text-brand-green-dark/60">Nenhum usuário encontrado.</p>
+  )
 
   if (desktop) {
     return (
@@ -376,7 +417,9 @@ function UsuariosAdmin({
         />
         {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
         {loading && <p className="text-center text-brand-green-dark/60">Carregando...</p>}
-        {usuarios.length > 0 && (
+        {usuarios.length > 0 && campoBusca}
+        {semResultado}
+        {daPagina.length > 0 && (
           <TabelaAdmin
             legenda="Lista de usuários"
             colunas={[
@@ -465,7 +508,7 @@ function UsuariosAdmin({
         <RodapeTabela
           inicio={inicio + 1}
           fim={inicio + daPagina.length}
-          total={usuarios.length}
+          total={filtrados.length}
           pagina={atual}
           totalPaginas={totalPaginas}
           onChange={setPagina}
@@ -478,6 +521,8 @@ function UsuariosAdmin({
     <>
       {error && <p className="text-center text-sm text-zona-leste">{error}</p>}
       {loading && <p className="text-center text-brand-green-dark/60">Carregando...</p>}
+      {usuarios.length > 0 && <div className="mb-3">{campoBusca}</div>}
+      {semResultado}
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:space-y-0">
       {daPagina.map((u: Perfil, i) => {
         const euMesmo = u.id === user?.id
