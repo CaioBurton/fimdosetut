@@ -158,3 +158,22 @@ describe('moderação de fotos', () => {
     expect(bucket().remove).not.toHaveBeenCalled()
   })
 })
+
+describe('fotos arquivadas no R2', () => {
+  it('monta a URL do R2 para caminhos com r2:', () => {
+    vi.stubEnv('VITE_FOTOS_ARQUIVO_URL', 'https://fotos.exemplo.com/')
+    expect(urlFoto('r2:abc.webp')).toBe('https://fotos.exemplo.com/abc.webp')
+    expect(urlFoto('abc.webp')).toContain('/denuncias-fotos/abc.webp')
+    vi.unstubAllEnvs()
+  })
+
+  it('não tenta apagar do Supabase as fotos que já estão no R2', async () => {
+    vi.mocked(bucket().remove).mockClear()
+    await removerFotos(['r2:velha.webp', 'nova.webp'])
+    expect(bucket().remove).toHaveBeenCalledWith(['nova.webp'])
+
+    vi.mocked(bucket().remove).mockClear()
+    await removerFotos(['r2:velha.webp'])
+    expect(bucket().remove).not.toHaveBeenCalled()
+  })
+})

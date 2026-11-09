@@ -17,6 +17,10 @@ dist-ssr
 # Backup do banco: tem dados pessoais (LGPD) e a chave service_role. Nunca vai para o Git.
 .env.backup
 backups/
+# Chaves do Cloudflare R2 para rodar o arquivamento de fotos no computador.
+.env.r2
+# Arquivos temporários da CLI do Supabase.
+supabase/.temp/
 
 # Arquivo de referência de marca grande demais para o GitHub (>100MB)
 identidadevisual/forumIDV.pdf
