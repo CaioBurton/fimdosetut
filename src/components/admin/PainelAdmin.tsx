@@ -15,7 +15,7 @@ interface Props {
  * baixa as denúncias e "Tudo" mostra o histórico completo.
  */
 export function PainelAdmin({ onGerenciarLinhas }: Props) {
-  const [periodo, setPeriodo] = useState<Periodo>('7d')
+  const [periodo, setPeriodo] = useState<Periodo>('todos')
   const [zona, setZona] = useState<Zona | 'todas'>('todas')
   const { resumo, loading, error } = usePainelResumo(periodo, zona)
 
