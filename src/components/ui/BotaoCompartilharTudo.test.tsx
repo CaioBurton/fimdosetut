@@ -5,7 +5,7 @@ import { RESUMO_VAZIO } from '../../lib/resumoPainel'
 import { BotaoCompartilharTudo } from './BotaoCompartilharTudo'
 
 vi.mock('../../hooks/useRankingSemana', () => ({ useRankingSemana: () => ({ linhas: [], loading: false, error: false }) }))
-const usePainelResumo = vi.fn(() => ({ resumo: RESUMO_VAZIO, loading: false, error: null }))
+const usePainelResumo = vi.fn((_periodo: string, _zona: string) => ({ resumo: RESUMO_VAZIO, loading: false, error: null }))
 vi.mock('../../hooks/usePainelResumo', () => ({ usePainelResumo: (...args: [string, string]) => usePainelResumo(...args) }))
 vi.mock('../../hooks/useLinhas', () => ({ useLinhas: () => ({ linhas: [] }) }))
 vi.mock('../../hooks/useDenuncias', () => ({ useDenuncias: () => ({ denuncias: [], loading: false }) }))
