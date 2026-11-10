@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useDenuncias } from '../../hooks/useDenuncias'
 import { useLinhas } from '../../hooks/useLinhas'
+import { usePainelResumo } from '../../hooks/usePainelResumo'
 import { useRankingSemana } from '../../hooks/useRankingSemana'
 import {
   compartilharImagens,
@@ -10,24 +11,15 @@ import {
   textoDoDia,
   type FormatoDiario,
 } from '../../lib/cartaoCompartilhavel'
-import type { Periodo } from '../../lib/dashboardDenuncias'
 import { hoje } from '../../lib/dia'
-import type { ResumoPainel } from '../../lib/resumoPainel'
-import type { Zona } from '../../types'
-
-interface Props {
-  resumo: ResumoPainel
-  periodo: Periodo
-  zona: Zona | 'todas'
-}
 
 /** Botões Semanal (carrossel) e Diário (story), abertos a todos. */
-export function BotaoCompartilharTudo(props: Props) {
+export function BotaoCompartilharTudo() {
   // Só um seletor de formato aberto por vez: abrir um fecha o outro.
   const [menuAberto, setMenuAberto] = useState<'semanal' | 'diario' | null>(null)
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 lg:ml-auto">
-      <CarrosselAdmin {...props} menuAberto={menuAberto === 'semanal'} onMenuAberto={(aberto) => setMenuAberto(aberto ? 'semanal' : null)} />
+      <CarrosselAdmin menuAberto={menuAberto === 'semanal'} onMenuAberto={(aberto) => setMenuAberto(aberto ? 'semanal' : null)} />
       <DiarioDoDia menuAberto={menuAberto === 'diario'} onMenuAberto={(aberto) => setMenuAberto(aberto ? 'diario' : null)} />
     </div>
   )
@@ -147,9 +139,14 @@ const OPCOES_FORMATO: { valor: FormatoDiario; rotulo: string }[] = [
   { valor: 'story', rotulo: 'Story (9:16)' },
 ]
 
-/** Gera um cartão por seção do painel (e a linha mais problemática da semana) e compartilha todos juntos. */
-function CarrosselAdmin({ resumo, periodo, zona, menuAberto, onMenuAberto }: Props & ControleMenu) {
-  const { linhas, loading } = useRankingSemana(1)
+/**
+ * Gera um cartão por seção do painel (e a linha mais problemática da semana) e compartilha todos juntos.
+ * Sempre usa os últimos 7 dias e todas as zonas, sem depender do período ou da zona escolhidos no painel.
+ */
+function CarrosselAdmin({ menuAberto, onMenuAberto }: ControleMenu) {
+  const { linhas, loading: carregandoRanking } = useRankingSemana(1)
+  const { resumo, loading: carregandoResumo } = usePainelResumo('7d', 'todas')
+  const loading = carregandoRanking || carregandoResumo
   return (
     <BotaoGerar<FormatoDiario>
       menuAberto={menuAberto}
@@ -158,8 +155,8 @@ function CarrosselAdmin({ resumo, periodo, zona, menuAberto, onMenuAberto }: Pro
       desabilitado={loading}
       opcoes={OPCOES_FORMATO}
       aoCompartilhar={async (formato) => {
-        const imagens = await gerarCarrossel(resumo, periodo, zona, linhas[0] ?? null, formato)
-        await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoCarrossel(periodo, zona) })
+        const imagens = await gerarCarrossel(resumo, '7d', 'todas', linhas[0] ?? null, formato)
+        await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoCarrossel('7d', 'todas') })
       }}
     />
   )

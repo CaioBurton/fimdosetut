@@ -19,15 +19,16 @@ beforeEach(() => {
 })
 
 describe('PainelAdmin', () => {
-  it('usa o resumo do banco ("Tudo" por padrão) e pede 7 dias ao escolher esse período', async () => {
+  it('usa o resumo do banco ("Tudo" por padrão) e pede 30 dias ao escolher esse período', async () => {
     const user = userEvent.setup()
     render(<PainelAdmin onGerenciarLinhas={() => {}} />)
 
-    expect(usePainelResumo).toHaveBeenLastCalledWith('todos', 'todas')
+    // O botão Semanal também pede o resumo de 7 dias, por isso confere as chamadas e não só a última.
+    expect(usePainelResumo).toHaveBeenCalledWith('todos', 'todas')
     expect(screen.getByText('75% resolvidas')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: '7 dias' }))
-    expect(usePainelResumo).toHaveBeenLastCalledWith('7d', 'todas')
+    await user.click(screen.getByRole('button', { name: '30 dias' }))
+    expect(usePainelResumo).toHaveBeenCalledWith('30d', 'todas')
   })
 
   it('pede o resumo da zona escolhida', async () => {
@@ -35,7 +36,7 @@ describe('PainelAdmin', () => {
     render(<PainelAdmin onGerenciarLinhas={() => {}} />)
 
     await user.click(screen.getByRole('button', { name: /Sul/ }))
-    expect(usePainelResumo).toHaveBeenLastCalledWith('todos', 'sul')
+    expect(usePainelResumo).toHaveBeenCalledWith('todos', 'sul')
   })
 
   it('mostra o erro de carregamento', () => {
