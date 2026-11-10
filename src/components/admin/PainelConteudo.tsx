@@ -19,7 +19,7 @@ import { taxaResolucao, type ResumoPainel } from '../../lib/resumoPainel'
 import { TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Zona } from '../../types'
 
 const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'rural', 'outras']
-const PERIODOS: Periodo[] = ['30d', '7d', 'todos']
+const PERIODOS: Periodo[] = ['30d', 'todos', '7d']
 
 const atraso = (i: number) => ({ animationDelay: `${Math.min(i, 8) * 60}ms` })
 
