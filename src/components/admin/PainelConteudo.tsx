@@ -371,7 +371,7 @@ export function PainelConteudo({
       </section>
 
       <div className="lg:col-span-2">
-        <BotaoCompartilharTudo resumo={resumo} periodo={periodo} zona={zona} />
+        <BotaoCompartilharTudo />
       </div>
     </div>
   )
