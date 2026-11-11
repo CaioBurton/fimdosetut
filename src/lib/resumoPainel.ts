@@ -100,7 +100,7 @@ export function resumirDenuncias(
   const filtradas = filtrarDenuncias(denuncias, { ...FILTROS_INICIAIS, periodo, zona })
   const stats = calcularEstatisticas(filtradas)
   const porDia = contarPorDia(
-    denuncias.filter((d) => zona === 'todas' || (d.linha?.zona ?? 'outras') === zona),
+    denuncias.filter((d) => d.local_tipo !== 'parada' && (zona === 'todas' || (d.linha?.zona ?? 'outras') === zona)),
     DIAS_GRAFICO
   )
 

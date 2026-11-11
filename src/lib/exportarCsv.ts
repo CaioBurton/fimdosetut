@@ -48,7 +48,7 @@ export function denunciasParaCsv(denuncias: Denuncia[]) {
       data,
       hora,
       d.linha?.codigo ?? '',
-      d.linha?.nome ?? '',
+      d.local_tipo === 'parada' ? `Parada${d.referencia_parada ? `: ${d.referencia_parada}` : ''}` : (d.linha?.nome ?? ''),
       ZONA_LABELS[d.linha?.zona ?? 'outras'],
       TIPO_LABELS[d.tipo],
       STATUS_LABELS[d.status],

@@ -61,8 +61,11 @@ export function formatarQuando(iso: string) {
 
 export function dadosDoCartao(denuncia: Denuncia): DadosCartaoDenuncia {
   return {
-    codigo: denuncia.linha?.codigo ?? '—',
-    nomeLinha: denuncia.linha?.nome ?? 'Linha removida',
+    codigo: denuncia.local_tipo === 'parada' ? 'PARADA' : (denuncia.linha?.codigo ?? '—'),
+    nomeLinha:
+      denuncia.local_tipo === 'parada'
+        ? denuncia.referencia_parada?.trim() || 'Parada de ônibus'
+        : (denuncia.linha?.nome ?? 'Linha removida'),
     zona: denuncia.linha?.zona ?? 'outras',
     tipo: denuncia.tipo,
     status: denuncia.status,

@@ -50,6 +50,8 @@ export function filtrarDenuncias(
   const busca = normalizar(filtros.busca.trim())
 
   return denuncias.filter((d) => {
+    // O painel é sobre linhas de ônibus: denúncias de parada (sem linha) ficam de fora.
+    if (d.local_tipo === 'parada') return false
     if (filtros.zona !== 'todas' && (d.linha?.zona ?? 'outras') !== filtros.zona) return false
     if (filtros.tipo === 'pcd') {
       if (!ehAcessibilidade(d.tipo)) return false
@@ -96,6 +98,7 @@ export function calcularEstatisticas(denuncias: Denuncia[]): EstatisticasDashboa
 
   const porLinha = new Map<string, { rotulo: string; total: number }>()
   for (const d of denuncias) {
+    if (!d.linha_id) continue
     const rotulo = d.linha ? `${d.linha.codigo} - ${d.linha.nome}` : 'Linha removida'
     const atual = porLinha.get(d.linha_id)
     porLinha.set(d.linha_id, { rotulo, total: (atual?.total ?? 0) + 1 })

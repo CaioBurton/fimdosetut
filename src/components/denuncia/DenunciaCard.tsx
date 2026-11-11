@@ -26,6 +26,7 @@ export function DenunciaCard({
   /** Só para o admin: quem fez a denúncia (nome, e-mail ou "Anônimo"). */
   autor?: string
 }) {
+  const parada = denuncia.local_tipo === 'parada'
   const zona = denuncia.linha?.zona ?? 'outras'
   const cor = ZONA_COLORS[zona]
 
@@ -34,7 +35,11 @@ export function DenunciaCard({
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-bold text-brand-green-dark">
-            {denuncia.linha ? `${denuncia.linha.codigo} - ${denuncia.linha.nome}` : 'Linha removida'}
+            {parada
+              ? `Parada${denuncia.referencia_parada?.trim() ? ` · ${denuncia.referencia_parada.trim()}` : ''}`
+              : denuncia.linha
+                ? `${denuncia.linha.codigo} - ${denuncia.linha.nome}`
+                : 'Linha removida'}
           </p>
           <p className="text-xs text-brand-green-dark/70">{formatarData(denuncia.created_at)}
             {autor && <span className="font-bold"> · Autor: {autor}</span>}
@@ -45,7 +50,13 @@ export function DenunciaCard({
         </Badge>
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
-        <Badge color={cor}>{ZONA_LABELS[zona]}</Badge>
+        {parada ? (
+          <Badge color="#084400" outlined>
+            Parada
+          </Badge>
+        ) : (
+          <Badge color={cor}>{ZONA_LABELS[zona]}</Badge>
+        )}
         <Badge color="#084400" outlined>
           {TIPO_LABELS[denuncia.tipo]}
         </Badge>

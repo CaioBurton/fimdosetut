@@ -14,6 +14,8 @@ export interface FotoPendente {
     tipo: TipoProblema
     descricao: string
     created_at: string
+    local_tipo: 'onibus' | 'parada'
+    referencia_parada: string | null
     linha: { codigo: string; nome: string } | null
   } | null
 }
@@ -40,7 +42,7 @@ export function useFotosPendentes(ativo = true) {
     const { data, error, count } = await supabase
       .from('fotos_pendentes')
       .select(
-        'denuncia_id, foto_path, created_at, denuncia:denuncias(tipo, descricao, created_at, linha:linhas(codigo, nome))',
+        'denuncia_id, foto_path, created_at, denuncia:denuncias(tipo, local_tipo, referencia_parada, descricao, created_at, linha:linhas(codigo, nome))',
         { count: 'exact' }
       )
       .order('created_at', { ascending: true })

@@ -33,4 +33,21 @@ describe('criarIconeZona', () => {
     expect(grande.options.iconSize).toEqual([92, 58])
     expect(grande.options.iconAnchor).toEqual([46, 29])
   })
+
+  it('desenha a denúncia de parada em verde claro, com o ícone de ponto de ônibus e sem código', () => {
+    const icone = criarIconeZona('#1e8e3e', false, '', false, 1, 0, false, true)
+
+    expect(icone.options.html).toContain('fill="#f3fcee"')
+    expect(icone.options.html).not.toContain('fill="#1e8e3e"')
+    expect(icone.options.html).toContain('M12 12.5V21.5')
+    expect(icone.options.html).not.toContain('>!<')
+  })
+
+  it('não confunde o ícone de parada com o de ônibus no cache', () => {
+    const onibus = criarIconeZona('#1e8e3e', false)
+    const parada = criarIconeZona('#1e8e3e', false, '', false, 1, 0, false, true)
+
+    expect(onibus).not.toBe(parada)
+    expect(onibus.options.html).toContain('>!<')
+  })
 })

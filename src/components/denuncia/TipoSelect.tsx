@@ -1,17 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { TIPO_LABELS, type TipoProblema } from '../../types'
+import { TIPO_LABELS, TIPOS_ONIBUS, type TipoProblema } from '../../types'
 
-export const TIPOS: TipoProblema[] = [
-  'quebrado',
-  'acidente',
-  'atraso',
-  'lotacao',
-  'nao_passou',
-  'ar_condicionado',
-  'gps',
-  'pcd',
-  'outro',
-]
+export const TIPOS: TipoProblema[] = TIPOS_ONIBUS
 
 export function IconeTipo({ tipo }: { tipo: TipoProblema }) {
   const props = {
@@ -83,6 +73,50 @@ export function IconeTipo({ tipo }: { tipo: TipoProblema }) {
           <path d="M8.5 11.5a5 5 0 1 0 6.5 6.5" />
         </svg>
       )
+    case 'parada_sem_abrigo':
+      return (
+        <svg {...props}>
+          <path d="M3 9l9-5 9 5M5 9v11M19 9v11M3 20h18" />
+        </svg>
+      )
+    case 'parada_sem_banco':
+      return (
+        <svg {...props}>
+          <path d="M5 12h14M6 12v7M18 12v7M7 12V6h10v6" />
+        </svg>
+      )
+    case 'parada_sem_placa':
+      return (
+        <svg {...props}>
+          <path d="M12 3v18M6 5h12v6H6z" />
+        </svg>
+      )
+    case 'parada_sujeira':
+      return (
+        <svg {...props}>
+          <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+        </svg>
+      )
+    case 'parada_sem_iluminacao':
+      return (
+        <svg {...props}>
+          <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.3.3.5.7.5 1.1h6c0-.4.2-.8.5-1.1A6 6 0 0 0 12 3z" />
+        </svg>
+      )
+    case 'parada_inseguranca':
+      return (
+        <svg {...props}>
+          <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+        </svg>
+      )
+    case 'parada_pcd':
+      return (
+        <svg {...props}>
+          <circle cx="12" cy="4.5" r="1.5" />
+          <path d="M12 7v6h5l2 5M12 10h4" />
+          <path d="M8.5 11.5a5 5 0 1 0 6.5 6.5" />
+        </svg>
+      )
     default:
       return (
         <svg {...props}>
@@ -97,9 +131,11 @@ export function IconeTipo({ tipo }: { tipo: TipoProblema }) {
 interface TipoSelectProps {
   value: TipoProblema
   onChange: (tipo: TipoProblema) => void
+  /** Tipos oferecidos (padrão: os de ônibus). Para parada, passe `TIPOS_PARADA`. */
+  tipos?: TipoProblema[]
 }
 
-export function TipoSelect({ value, onChange }: TipoSelectProps) {
+export function TipoSelect({ value, onChange, tipos = TIPOS }: TipoSelectProps) {
   const [aberto, setAberto] = useState(false)
   const raiz = useRef<HTMLDivElement>(null)
   const listaId = useId()
@@ -168,7 +204,7 @@ export function TipoSelect({ value, onChange }: TipoSelectProps) {
             aria-label="Tipos de problema"
             className="scroll-visivel-claro max-h-[260px] overflow-y-auto overscroll-contain"
           >
-            {TIPOS.map((tipo) => {
+            {tipos.map((tipo) => {
               const ativo = tipo === value
               return (
                 <button
