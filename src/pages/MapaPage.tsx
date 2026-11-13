@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { DenunciaRapida } from '../components/denuncia/DenunciaRapida'
 import { BotaoCompartilharDenuncia } from '../components/denuncia/BotaoCompartilharDenuncia'
 import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
+import { IconeParada } from '../components/ui/IconeParada'
 import { AppLayout } from '../components/layout/AppLayout'
 import { MapaDenuncias, tempoRelativo } from '../components/map/MapaDenuncias'
 import { useConfirmacoes } from '../hooks/useConfirmacoes'
@@ -155,6 +156,10 @@ export function MapaPage() {
                       {ZONA_LABELS[z]}
                     </span>
                   ))}
+                  <span className="flex items-center gap-1.5 text-[#2f5a28]">
+                    <IconeParada cor="#2563eb" tamanho={14} />
+                    Paradas
+                  </span>
                 </div>
               </>
             )}

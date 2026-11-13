@@ -14,6 +14,7 @@ import { criarIconeZona } from './markerIcon'
 import { BotaoMinhaLocalizacao } from './BotaoMinhaLocalizacao'
 import { BotaoCalendario } from './BotaoCalendario'
 import { TextoExpansivel } from '../ui/TextoExpansivel'
+import { IconeParada } from '../ui/IconeParada'
 import { FotoDenuncia } from '../denuncia/FotoDenuncia'
 
 const TERESINA_CENTER: [number, number] = [-5.0892, -42.8019]
@@ -161,7 +162,7 @@ export function MapaDenuncias({
   /** Denúncia a destacar ao abrir (ex.: vinda do "Ver no mapa" da lista): seleciona e centraliza nela. */
   focoId?: string
 }) {
-  const [filtro, setFiltro] = useState<Zona | 'todas'>('todas')
+  const [filtro, setFiltro] = useState<Zona | 'todas' | 'paradas'>('todas')
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null)
   const [mapa, setMapa] = useState<L.Map | null>(null)
   const [minhaPosicao, setMinhaPosicao] = useState<[number, number] | null>(null)
@@ -170,8 +171,12 @@ export function MapaDenuncias({
   const visiveis = useMemo(
     () =>
       denuncias.filter(
-        // O filtro de zona é de linhas: denúncias de parada (sem linha) só aparecem em "Todas".
-        (d) => filtro === 'todas' || (d.local_tipo !== 'parada' && (d.linha?.zona ?? 'outras') === filtro)
+        // O filtro de zona é de linhas: denúncias de parada (sem linha) só aparecem em "Todas" e em "Paradas".
+        (d) =>
+          filtro === 'todas' ||
+          (filtro === 'paradas'
+            ? d.local_tipo === 'parada'
+            : d.local_tipo !== 'parada' && (d.linha?.zona ?? 'outras') === filtro)
       ),
     [denuncias, filtro]
   )
@@ -299,6 +304,15 @@ export function MapaDenuncias({
             {ZONA_LABELS[zona]}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setFiltro('paradas')}
+          aria-pressed={filtro === 'paradas'}
+          className={`chip-brand ${filtro === 'paradas' ? 'chip-brand-ativo' : ''}`}
+        >
+          <IconeParada cor={filtro === 'paradas' ? '#7fb0ff' : '#2563eb'} />
+          Paradas
+        </button>
       </div>
       )}
 
