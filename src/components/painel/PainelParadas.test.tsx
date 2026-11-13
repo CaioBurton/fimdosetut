@@ -43,6 +43,17 @@ describe('PainelParadas', () => {
     expect(within(lista).getByRole('img', { name: 'Sujeira ou lixo: 1 denúncia' })).toBeInTheDocument()
   })
 
+  it('tem o botão de compartilhar o cartão de paradas, só quando há denúncias', () => {
+    mockar({ resumo: { total: 2, pendentes: 1, resolvidas: 1, porTipo: [{ chave: 'parada_sujeira', total: 2 }] } })
+    const { unmount } = render(<PainelParadas periodo="7d" />)
+    expect(screen.getByRole('button', { name: /Compartilhar problemas nas paradas/i })).toBeInTheDocument()
+    unmount()
+
+    mockar({})
+    render(<PainelParadas periodo="7d" />)
+    expect(screen.queryByRole('button', { name: /Compartilhar/i })).not.toBeInTheDocument()
+  })
+
   it('explica quando ainda não há denúncias de parada', () => {
     mockar({})
     render(<PainelParadas periodo="7d" />)

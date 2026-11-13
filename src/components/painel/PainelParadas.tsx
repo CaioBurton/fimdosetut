@@ -1,7 +1,9 @@
 import { usePainelParadas } from '../../hooks/usePainelParadas'
+import { dadosDasParadas } from '../../lib/cartaoCompartilhavel'
 import { PERIODO_LABELS, type Periodo } from '../../lib/dashboardDenuncias'
 import { TIPO_LABELS } from '../../types'
 import { IconeTipo } from '../denuncia/TipoSelect'
+import { BotaoCompartilharPainel } from '../ui/BotaoCompartilharPainel'
 import { IconeParada } from '../ui/IconeParada'
 import { TituloSecao } from '../ui/TituloSecao'
 
@@ -47,10 +49,13 @@ export function PainelParadas({ periodo }: { periodo: Periodo }) {
       {!error && resumo.total > 0 && (
         <div className="space-y-3">
           <section className="card-brand p-3.5 lg:p-5" aria-label="Problemas mais citados nas paradas">
-            <h3 className="ttl flex items-center gap-2 text-lg">
-              <IconeParada tamanho={18} />
-              Problemas mais citados
-            </h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="ttl flex items-center gap-2 text-lg">
+                <IconeParada tamanho={18} />
+                Problemas mais citados
+              </h3>
+              <BotaoCompartilharPainel dados={dadosDasParadas(resumo, periodo)} arquivo="paradas" />
+            </div>
             <p className="mb-3 mt-1 text-xs font-bold text-brand-green-dark/70">
               {plural(resumo.total, 'denúncia de parada', 'denúncias de parada')} no período · já contadas no resumo acima
             </p>
