@@ -6,6 +6,7 @@ import { PainelConteudo } from '../components/admin/PainelConteudo'
 import { DenunciasPorHora } from '../components/painel/DenunciasPorHora'
 import { LinhaDaSemana } from '../components/painel/LinhaDaSemana'
 import { PainelParadas } from '../components/painel/PainelParadas'
+import { BotaoCompartilharTudo } from '../components/ui/BotaoCompartilharTudo'
 import { usePainelResumo } from '../hooks/usePainelResumo'
 import type { Periodo } from '../lib/dashboardDenuncias'
 import type { Zona } from '../types'
@@ -35,8 +36,11 @@ export function PainelPage() {
           onZona={setZona}
           carregando={loading}
           aposPorDia={<DenunciasPorHora />}
+          botoesCompartilhar={false}
         />
         <PainelParadas periodo={periodo} />
+        {/* Semanal e Diário ficam no fim do painel, depois da seção de paradas. */}
+        <BotaoCompartilharTudo />
       </div>
     </AppLayout>
   )

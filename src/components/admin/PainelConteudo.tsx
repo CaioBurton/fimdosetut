@@ -90,6 +90,8 @@ interface Props {
   carregando?: boolean
   /** Conteúdo extra logo abaixo do gráfico "Por dia" (usado no painel público). */
   aposPorDia?: ReactNode
+  /** Falso: não mostra os botões Semanal/Diário no fim (a página os coloca em outro lugar). */
+  botoesCompartilhar?: boolean
 }
 
 export function PainelConteudo({
@@ -101,6 +103,7 @@ export function PainelConteudo({
   onGerenciarLinhas,
   carregando = false,
   aposPorDia,
+  botoesCompartilhar = true,
 }: Props) {
   const desktop = useDesktop()
   const porDia = resumo.porDia
@@ -370,9 +373,11 @@ export function PainelConteudo({
         )}
       </section>
 
-      <div className="lg:col-span-2">
-        <BotaoCompartilharTudo />
-      </div>
+      {botoesCompartilhar && (
+        <div className="lg:col-span-2">
+          <BotaoCompartilharTudo />
+        </div>
+      )}
     </div>
   )
 }

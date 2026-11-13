@@ -97,4 +97,19 @@ describe('PainelPage (público)', () => {
     expect(await within(destaque).findByText(/6 denúncias de 4 pessoas/)).toBeInTheDocument()
     expect(supabase.rpc).toHaveBeenCalledWith('ranking_linhas_semana', { p_limite: 3 })
   })
+
+  it('coloca os botões Semanal e Diário depois da seção de paradas', async () => {
+    render(
+      <MemoryRouter>
+        <PainelPage />
+      </MemoryRouter>
+    )
+
+    const paradas = await screen.findByRole('heading', { name: 'Paradas' })
+    const semanal = screen.getByRole('button', { name: /Semanal/ })
+    const diario = screen.getByRole('button', { name: /Diário/ })
+
+    expect(paradas.compareDocumentPosition(semanal) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(paradas.compareDocumentPosition(diario) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
 })
