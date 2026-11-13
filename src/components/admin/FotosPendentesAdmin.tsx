@@ -57,7 +57,11 @@ export function FotosPendentesAdmin({ fila }: { fila?: ReturnType<typeof useFoto
             </a>
             <div>
               <p className="text-sm font-bold">
-                {f.denuncia?.linha ? `${f.denuncia.linha.codigo} - ${f.denuncia.linha.nome}` : 'Linha removida'}
+                {f.denuncia?.local_tipo === 'parada'
+                  ? `Parada${f.denuncia.referencia_parada ? ` · ${f.denuncia.referencia_parada}` : ''}`
+                  : f.denuncia?.linha
+                    ? `${f.denuncia.linha.codigo} - ${f.denuncia.linha.nome}`
+                    : 'Linha removida'}
                 {f.denuncia && ` · ${TIPO_LABELS[f.denuncia.tipo]}`}
               </p>
               <p className="text-xs text-brand-green-dark/70">Enviada em {formatarData(f.created_at)}</p>

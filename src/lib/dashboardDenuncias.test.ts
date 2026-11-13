@@ -84,3 +84,36 @@ describe('contarPorDia', () => {
     expect(resultado.reduce((soma, r) => soma + r.total, 0)).toBe(2) // a de setembro fica de fora
   })
 })
+
+describe('denúncias de parada no contador único', () => {
+  const parada = d({
+    id: 'p1',
+    local_tipo: 'parada',
+    linha_id: null,
+    linha: undefined,
+    tipo: 'parada_sem_abrigo',
+  })
+
+  it('contam no total junto com os ônibus', () => {
+    const todas = filtrarDenuncias([...dados, parada], FILTROS_INICIAIS, agora)
+    expect(todas).toHaveLength(4)
+    expect(calcularEstatisticas(todas).total).toBe(4)
+  })
+
+  it('não entram em zona nem no ranking de linhas', () => {
+    const stats = calcularEstatisticas([...dados, parada])
+    expect(stats.porZona.reduce((soma, z) => soma + z.total, 0)).toBe(3)
+    expect(stats.topLinhas.map((l) => l.linhaId)).not.toContain('')
+    expect(stats.topLinhas).toHaveLength(2)
+  })
+
+  it('somem quando uma zona é escolhida, porque parada não tem zona', () => {
+    const naZona = filtrarDenuncias([...dados, parada], { ...FILTROS_INICIAIS, zona: 'norte' }, agora)
+    expect(naZona.some((x) => x.id === 'p1')).toBe(false)
+  })
+
+  it('aparecem no "Por tipo de problema"', () => {
+    const stats = calcularEstatisticas([...dados, parada])
+    expect(stats.porTipo.find((t) => t.chave === 'parada_sem_abrigo')?.total).toBe(1)
+  })
+})

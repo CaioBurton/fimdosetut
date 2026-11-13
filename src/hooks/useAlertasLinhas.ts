@@ -56,19 +56,22 @@ export function useAlertasLinhas(userId: string | undefined, linhas: Linha[]) {
         { event: 'INSERT', schema: 'public', table: 'denuncias' },
         (payload) => {
           const nova = payload.new as Denuncia
+          // Denúncia de parada não tem linha: ninguém a recebe como alerta de linha.
+          const linhaIdNova = nova.linha_id
+          if (!linhaIdNova) return
 
           // Só consulta a autoria (privada: só o dono consegue ler a dele) se a linha é de interesse do usuário.
           // Se a lista de linhas não carregou, cai na consulta individual como antes.
           interesses
             .then(async (conjunto) => {
               const interessa = conjunto
-                ? conjunto.has(nova.linha_id)
+                ? conjunto.has(linhaIdNova)
                 : !!(
                     await supabase
                       .from('usuario_linhas')
                       .select('linha_id')
                       .eq('user_id', userId)
-                      .eq('linha_id', nova.linha_id)
+                      .eq('linha_id', linhaIdNova)
                       .maybeSingle()
                   ).data
               if (!interessa) return null
@@ -84,7 +87,7 @@ export function useAlertasLinhas(userId: string | undefined, linhas: Linha[]) {
               if (!avisar) return
               const alerta: AlertaLinha = {
                 id: nova.id,
-                linhaId: nova.linha_id,
+                linhaId: linhaIdNova,
                 tipo: nova.tipo,
                 descricao: nova.descricao,
               }
@@ -92,7 +95,7 @@ export function useAlertasLinhas(userId: string | undefined, linhas: Linha[]) {
                 atual.some((a) => a.id === alerta.id) ? atual : [alerta, ...atual]
               )
 
-              const linha = linhasRef.current.find((l) => l.id === nova.linha_id)
+              const linha = linhasRef.current.find((l) => l.id === linhaIdNova)
               notificarNavegador(
                 `Problema na linha ${linha?.codigo ?? ''}`.trim(),
                 `${TIPO_LABELS[nova.tipo]}: ${nova.descricao}`

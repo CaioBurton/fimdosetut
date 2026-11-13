@@ -7,14 +7,16 @@ export type FiltroTipo = TipoProblema | 'todos'
 interface TipoFiltroSelectProps {
   value: FiltroTipo
   onChange: (valor: FiltroTipo) => void
+  /** Tipos oferecidos (padrão: os de ônibus). */
+  tipos?: TipoProblema[]
 }
 
 /** Lista suspensa de filtro, com o mesmo visual do seletor de linhas, na altura dos chips. */
-export function TipoFiltroSelect({ value, onChange }: TipoFiltroSelectProps) {
+export function TipoFiltroSelect({ value, onChange, tipos = TIPOS }: TipoFiltroSelectProps) {
   const ariaLabel = 'Filtrar por tipo de problema'
   const opcoes: { valor: FiltroTipo; rotulo: string }[] = [
     { valor: 'todos', rotulo: 'Todos os tipos' },
-    ...TIPOS.map((t) => ({ valor: t, rotulo: TIPO_LABELS[t] })),
+    ...tipos.map((t) => ({ valor: t, rotulo: TIPO_LABELS[t] })),
   ]
   const [aberto, setAberto] = useState(false)
   const raiz = useRef<HTMLDivElement>(null)

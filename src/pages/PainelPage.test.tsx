@@ -48,6 +48,8 @@ describe('PainelPage (público)', () => {
     expect(screen.getAllByText('063').length).toBeGreaterThan(0)
     expect(screen.queryByRole('button', { name: /Gerenciar linhas/ })).not.toBeInTheDocument()
     expect(supabase.rpc).toHaveBeenCalledWith('painel_resumo', { dias: null, zona_filtro: null })
+    expect(supabase.rpc).toHaveBeenCalledWith('painel_paradas', { dias: null })
+    expect(screen.getByRole('heading', { name: 'Paradas' })).toBeInTheDocument()
   })
 
   it('refaz a consulta ao escolher outro período', async () => {
@@ -94,5 +96,20 @@ describe('PainelPage (público)', () => {
     const destaque = await screen.findByRole('region', { name: 'Linha mais problemática da semana' })
     expect(await within(destaque).findByText(/6 denúncias de 4 pessoas/)).toBeInTheDocument()
     expect(supabase.rpc).toHaveBeenCalledWith('ranking_linhas_semana', { p_limite: 3 })
+  })
+
+  it('coloca os botões Semanal e Diário depois da seção de paradas', async () => {
+    render(
+      <MemoryRouter>
+        <PainelPage />
+      </MemoryRouter>
+    )
+
+    const paradas = await screen.findByRole('heading', { name: 'Paradas' })
+    const semanal = screen.getByRole('button', { name: /Semanal/ })
+    const diario = screen.getByRole('button', { name: /Diário/ })
+
+    expect(paradas.compareDocumentPosition(semanal) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(paradas.compareDocumentPosition(diario) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })

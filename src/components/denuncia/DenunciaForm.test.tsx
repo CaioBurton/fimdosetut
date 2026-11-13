@@ -129,9 +129,52 @@ describe('DenunciaForm (integração: formulário + LinhaSelect + LocationPicker
       p_latitude: -5.09,
       p_longitude: -42.8,
       p_foto_path: null,
+      p_local_tipo: 'onibus',
+      p_referencia_parada: null,
     })
     expect(supabase.from).not.toHaveBeenCalled()
     expect(onSuccess).toHaveBeenCalled()
+  })
+
+  it('denuncia uma parada sem linha: manda o ponto do mapa e a referência', async () => {
+    vi.mocked(supabase.rpc).mockReturnValue(Promise.resolve({ data: 'd2', error: null }) as never)
+    const user = userEvent.setup()
+    const onSuccess = vi.fn()
+    render(<DenunciaForm linhas={linhas} onSuccess={onSuccess} />)
+
+    await user.click(screen.getByRole('button', { name: 'Parada' }))
+    // Sem lista de paradas: não há seletor de linha nem número de veículo.
+    expect(screen.queryByRole('combobox', { name: 'Linha' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/número do veículo/i)).not.toBeInTheDocument()
+
+    await user.type(screen.getByLabelText(/referência da parada/i), ' Av. Frei Serafim, 1450 ')
+    await user.click(screen.getByRole('combobox', { name: 'Tipo de problema' }))
+    await user.click(screen.getByRole('option', { name: 'Sem banco' }))
+    await user.click(screen.getByRole('button', { name: /usar minha localização atual/i }))
+    await user.click(screen.getByRole('button', { name: 'Enviar denúncia' }))
+
+    expect(supabase.rpc).toHaveBeenCalledWith('criar_denuncia', {
+      p_linha_id: null,
+      p_tipo: 'parada_sem_banco',
+      p_descricao: 'Denúncia: sem banco.',
+      p_numero_veiculo: null,
+      p_latitude: -5.09,
+      p_longitude: -42.8,
+      p_foto_path: null,
+      p_local_tipo: 'parada',
+      p_referencia_parada: 'Av. Frei Serafim, 1450',
+    })
+    expect(onSuccess).toHaveBeenCalled()
+  })
+
+  it('trocar de Ônibus para Parada volta o tipo para o primeiro da lista de paradas', async () => {
+    const user = userEvent.setup()
+    render(<DenunciaForm linhas={linhas} onSuccess={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Parada' }))
+    expect(screen.getByRole('combobox', { name: 'Tipo de problema' })).toHaveTextContent(
+      'Sem abrigo ou cobertura quebrada'
+    )
   })
 
   it('envia o número do veículo quando informado', async () => {

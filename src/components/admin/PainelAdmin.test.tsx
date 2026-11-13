@@ -7,6 +7,9 @@ import { PainelAdmin } from './PainelAdmin'
 vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAdmin: false }) }))
 vi.mock('../painel/DenunciasPorHora', () => ({ DenunciasPorHora: () => null }))
 vi.mock('../painel/LinhaDaSemana', () => ({ LinhaDaSemana: () => null }))
+vi.mock('../painel/PainelParadas', () => ({
+  PainelParadas: ({ periodo }: { periodo: string }) => <section aria-label="Paradas">paradas {periodo}</section>,
+}))
 
 const usePainelResumo = vi.fn()
 vi.mock('../../hooks/usePainelResumo', () => ({
@@ -29,6 +32,19 @@ describe('PainelAdmin', () => {
 
     await user.click(screen.getByRole('button', { name: '30 dias' }))
     expect(usePainelResumo).toHaveBeenCalledWith('30d', 'todas')
+  })
+
+  it('mostra a seção de paradas, que segue o período escolhido, antes dos botões Semanal e Diário', async () => {
+    const user = userEvent.setup()
+    render(<PainelAdmin onGerenciarLinhas={() => {}} />)
+
+    const paradas = screen.getByRole('region', { name: 'Paradas' })
+    expect(paradas).toHaveTextContent('paradas todos')
+    const semanal = screen.getByRole('button', { name: /Semanal/ })
+    expect(paradas.compareDocumentPosition(semanal) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    await user.click(screen.getByRole('button', { name: '30 dias' }))
+    expect(screen.getByRole('region', { name: 'Paradas' })).toHaveTextContent('paradas 30d')
   })
 
   it('pede o resumo da zona escolhida', async () => {

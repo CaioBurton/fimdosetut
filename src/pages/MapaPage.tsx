@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { DenunciaRapida } from '../components/denuncia/DenunciaRapida'
 import { BotaoCompartilharDenuncia } from '../components/denuncia/BotaoCompartilharDenuncia'
 import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
+import { IconeParada } from '../components/ui/IconeParada'
 import { AppLayout } from '../components/layout/AppLayout'
 import { MapaDenuncias, tempoRelativo } from '../components/map/MapaDenuncias'
 import { useConfirmacoes } from '../hooks/useConfirmacoes'
@@ -54,7 +55,7 @@ export function MapaPage() {
       (d) =>
         d.id === focoId ||
         ((status === 'todas' || d.status === status) &&
-        (!termo || normalizar(`${d.linha?.codigo ?? ''} ${d.linha?.nome ?? ''}`).includes(termo)))
+        (!termo || normalizar(`${d.linha?.codigo ?? ''} ${d.linha?.nome ?? ''} ${d.referencia_parada ?? ''}`).includes(termo)))
     )
   }, [denuncias, desktop, busca, status, focoId])
 
@@ -155,6 +156,10 @@ export function MapaPage() {
                       {ZONA_LABELS[z]}
                     </span>
                   ))}
+                  <span className="flex items-center gap-1.5 text-[#2f5a28]">
+                    <IconeParada tamanho={14} />
+                    Paradas
+                  </span>
                 </div>
               </>
             )}
@@ -177,13 +182,19 @@ export function MapaPage() {
                 return (
                   <article key={d.id} className="card-brand flex items-center gap-2.5 p-3 !shadow-[3px_3px_0_#084400]">
                     <span className="ttl bg-brand-green px-2 py-1.5 text-[15px] leading-none text-brand-cream">
-                      {d.linha?.codigo ?? '—'}
+                      {d.local_tipo === 'parada' ? 'Parada' : (d.linha?.codigo ?? '—')}
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-[15px] font-bold leading-tight">{TIPO_LABELS[d.tipo]}</p>
                       <p className="mt-0.5 flex items-center gap-1.5 text-xs font-bold text-[#2f5a28]">
-                        <i className="block h-[9px] w-[9px] rounded-full" style={{ backgroundColor: ZONA_COLORS[zona] }} />
-                        Zona {ZONA_LABELS[zona]} · {tempoRelativo(d.created_at)}
+                        {d.local_tipo === 'parada' ? (
+                          <>Parada de ônibus · {tempoRelativo(d.created_at)}</>
+                        ) : (
+                          <>
+                            <i className="block h-[9px] w-[9px] rounded-full" style={{ backgroundColor: ZONA_COLORS[zona] }} />
+                            Zona {ZONA_LABELS[zona]} · {tempoRelativo(d.created_at)}
+                          </>
+                        )}
                       </p>
                     </div>
                     <span className="rounded-[2px] border-2 border-brand-green px-2 py-1 text-xs font-bold">

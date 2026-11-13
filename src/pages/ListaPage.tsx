@@ -5,6 +5,7 @@ import { Paginacao } from '../components/ui/Paginacao'
 import { RodapeTabela } from '../components/admin/TabelaAdmin'
 import { useDesktop } from '../hooks/useDesktop'
 import { AppLayout } from '../components/layout/AppLayout'
+import { IconeParada } from '../components/ui/IconeParada'
 import { TipoFiltroSelect, type FiltroTipo } from '../components/denuncia/TipoFiltroSelect'
 import { LinhaSelect } from '../components/denuncia/LinhaSelect'
 import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
@@ -16,7 +17,15 @@ import { diaLocal, diaMinimoMapa, hoje } from '../lib/dia'
 import { useAuth } from '../hooks/useAuth'
 import { useAutoresDenuncias } from '../hooks/useAutoresDenuncias'
 import { useLinhas } from '../hooks/useLinhas'
-import { ZONA_COLORS, ZONA_LABELS, type Denuncia, type Zona } from '../types'
+import {
+  TIPOS_ONIBUS,
+  TIPOS_PARADA,
+  ZONA_COLORS,
+  ZONA_LABELS,
+  type Denuncia,
+  type LocalTipo,
+  type Zona,
+} from '../types'
 
 const POR_PAGINA = 12
 
@@ -44,11 +53,13 @@ export function ListaPage() {
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('todos')
   const [pagina, setPagina] = useState(1)
   const [filtroZona, setFiltroZona] = useState<Zona | 'todas'>('todas')
+  const [filtroLocal, setFiltroLocal] = useState<LocalTipo | 'todos'>('todos')
 
   const [filtroLinha, setFiltroLinha] = useState('')
 
   const base = denuncias.filter(
     (d) =>
+      (filtroLocal === 'todos' || d.local_tipo === filtroLocal) &&
       (filtroZona === 'todas' || (d.linha?.zona ?? 'outras') === filtroZona) &&
       (!filtroLinha || d.linha_id === filtroLinha) &&
       (!filtroDia || diaLocal(d.created_at) === filtroDia)
@@ -81,21 +92,24 @@ export function ListaPage() {
         <div className="relative flex flex-col gap-2 p-5 text-brand-cream">
           <h2 className="ttl text-4xl">Denúncias</h2>
           <p className="max-w-[220px] text-sm font-medium leading-snug">
-            Ônibus quebrados avisados por quem usa o transporte todo dia.
+            Ônibus e paradas avisados por quem usa o transporte todo dia.
           </p>
         </div>
       </section>
       )}
       <div className="space-y-4 p-4 lg:px-0">
-        <div className="sem-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Filtrar por zona">
+        {/* Zona e linha só valem para ônibus: denúncias de parada não têm linha. */}
+        <div className={`sem-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 `} aria-label="Filtrar por zona">
           <button
             type="button"
             onClick={() => {
               setFiltroZona('todas')
+              setFiltroLocal('todos')
+              setFiltroTipo('todos')
               setPagina(1)
             }}
-            aria-pressed={filtroZona === 'todas'}
-            className={`chip-brand ${filtroZona === 'todas' ? 'chip-brand-ativo' : ''}`}
+            aria-pressed={filtroZona === 'todas' && filtroLocal === 'todos'}
+            className={`chip-brand ${filtroZona === 'todas' && filtroLocal === 'todos' ? 'chip-brand-ativo' : ''}`}
           >
             Todas
           </button>
@@ -105,10 +119,12 @@ export function ListaPage() {
               type="button"
               onClick={() => {
                 setFiltroZona(zona)
+                setFiltroLocal('onibus')
+                setFiltroTipo('todos')
                 setPagina(1)
               }}
-              aria-pressed={filtroZona === zona}
-              className={`chip-brand ${filtroZona === zona ? 'chip-brand-ativo' : ''}`}
+              aria-pressed={filtroLocal === 'onibus' && filtroZona === zona}
+              className={`chip-brand ${filtroLocal === 'onibus' && filtroZona === zona ? 'chip-brand-ativo' : ''}`}
             >
               <i
                 className="block h-2.5 w-2.5 rounded-full"
@@ -117,10 +133,25 @@ export function ListaPage() {
               {ZONA_LABELS[zona]}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => {
+              setFiltroZona('todas')
+              setFiltroLocal('parada')
+              setFiltroTipo('todos')
+              setFiltroLinha('')
+              setPagina(1)
+            }}
+            aria-pressed={filtroLocal === 'parada'}
+            className={`chip-brand ${filtroLocal === 'parada' ? 'chip-brand-ativo' : ''}`}
+          >
+            <IconeParada />
+            Paradas
+          </button>
         </div>
 
         <div className="flex gap-2">
-          <div className="min-w-0 flex-1">
+          <div className={`min-w-0 flex-1 ${filtroLocal === 'parada' ? 'hidden' : ''}`}>
             <LinhaSelect
               linhas={linhas}
               value={filtroLinha}
@@ -172,6 +203,13 @@ export function ListaPage() {
               ))}
             </div>
             <TipoFiltroSelect
+              tipos={
+                filtroLocal === 'parada'
+                  ? TIPOS_PARADA
+                  : filtroLocal === 'todos'
+                    ? [...TIPOS_ONIBUS, ...TIPOS_PARADA]
+                    : TIPOS_ONIBUS
+              }
               value={filtroTipo}
               onChange={(v) => {
                 setFiltroTipo(v)

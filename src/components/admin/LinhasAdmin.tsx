@@ -36,7 +36,9 @@ export function LinhasAdmin({ linhas, denuncias, onCriar, onAtualizar, onExcluir
 
   const totalPorLinha = useMemo(() => {
     const mapa = new Map<string, number>()
-    for (const d of denuncias) mapa.set(d.linha_id, (mapa.get(d.linha_id) ?? 0) + 1)
+    for (const d of denuncias) {
+      if (d.linha_id) mapa.set(d.linha_id, (mapa.get(d.linha_id) ?? 0) + 1)
+    }
     return mapa
   }, [denuncias])
 

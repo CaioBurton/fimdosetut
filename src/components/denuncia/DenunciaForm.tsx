@@ -5,7 +5,16 @@ import { CabecalhoPagina } from '../ui/CabecalhoPagina'
 import { supabase } from '../../lib/supabaseClient'
 import { limparCacheDenuncias } from '../../hooks/useDenuncias'
 import { enviarFoto, removerFotos, TAMANHO_MAXIMO_ORIGINAL } from '../../lib/fotosDenuncias'
-import { ehAcessibilidade, TIPO_LABELS, type Linha, type TipoProblema } from '../../types'
+import {
+  ehAcessibilidade,
+  LOCAL_LABELS,
+  TIPO_LABELS,
+  TIPOS_PARADA,
+  tiposDoLocal,
+  type Linha,
+  type LocalTipo,
+  type TipoProblema,
+} from '../../types'
 import { LinksLegais } from '../legal/LinksLegais'
 import { VERSAO_DOCUMENTOS } from '../../lib/legal'
 import { SecaoNumerada } from '../ui/SecaoNumerada'
@@ -22,12 +31,14 @@ export function DenunciaForm({
   /** `semConta` é verdadeiro quando a denúncia saiu de uma sessão sem cadastro (convite para criar a conta). */
   onSuccess: (info?: { semConta: boolean; denunciaId?: string }) => void
   /** Linha e tipo já escolhidos (ex.: vindos da denúncia rápida quando o GPS falhou). */
-  inicial?: { linhaId?: string; tipo?: TipoProblema }
+  inicial?: { linhaId?: string; tipo?: TipoProblema; local?: LocalTipo }
 }) {
   const { user, isAnonymous, signInAnonimo } = useAuth()
   const desktop = useDesktop()
+  const [localTipo, setLocalTipo] = useState<LocalTipo>(inicial?.local ?? 'onibus')
   const [linhaId, setLinhaId] = useState(inicial?.linhaId ?? '')
-  const [tipo, setTipo] = useState<TipoProblema>(inicial?.tipo ?? 'quebrado')
+  const [tipo, setTipo] = useState<TipoProblema>(inicial?.tipo ?? (inicial?.local === 'parada' ? TIPOS_PARADA[0] : 'quebrado'))
+  const [referenciaParada, setReferenciaParada] = useState('')
   const [descricao, setDescricao] = useState('')
   const [numeroVeiculo, setNumeroVeiculo] = useState('')
   const [local, setLocal] = useState<{ lat: number; lng: number } | null>(null)
@@ -60,9 +71,17 @@ export function DenunciaForm({
     setFoto(arquivo)
   }
 
+  function trocarLocal(novo: LocalTipo) {
+    if (novo === localTipo) return
+    setLocalTipo(novo)
+    // Cada local tem os seus tipos de problema: volta ao primeiro da lista nova.
+    setTipo(tiposDoLocal(novo)[0])
+    setErro(null)
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!linhaId) {
+    if (localTipo === 'onibus' && !linhaId) {
       setErro('Selecione a linha.')
       return
     }
@@ -108,13 +127,16 @@ export function DenunciaForm({
 
     // A função do banco grava a denúncia e a autoria (privada) juntas, em nome de quem está logado.
     const { data: novaId, error } = await supabase.rpc('criar_denuncia', {
-      p_linha_id: linhaId,
+      // Parada não tem linha nem veículo: vale o ponto marcado no mapa e, se houver, a referência em texto.
+      p_linha_id: localTipo === 'parada' ? null : linhaId,
       p_tipo: tipo,
       p_descricao: descricao.trim() || `Denúncia: ${TIPO_LABELS[tipo].toLowerCase()}.`,
-      p_numero_veiculo: numeroVeiculo.trim() || null,
+      p_numero_veiculo: localTipo === 'parada' ? null : numeroVeiculo.trim() || null,
       p_latitude: local.lat,
       p_longitude: local.lng,
       p_foto_path: fotoPath,
+      p_local_tipo: localTipo,
+      p_referencia_parada: localTipo === 'parada' ? referenciaParada.trim() || null : null,
     })
 
     if (error && fotoPath) await removerFotos([fotoPath])
@@ -137,7 +159,8 @@ export function DenunciaForm({
     onSuccess({ semConta: !user || isAnonymous, denunciaId: typeof novaId === 'string' ? novaId : undefined })
   }
 
-  const destacarVeiculo = ehAcessibilidade(tipo)
+  const parada = localTipo === 'parada'
+  const destacarVeiculo = !parada && ehAcessibilidade(tipo)
   const rotulo = 'mb-1.5 block text-xs font-bold uppercase tracking-wide'
   const dica = erro === 'Marque a localização no mapa.' ? 'Sem o local, a denúncia não aparece no mapa.' : null
 
@@ -172,6 +195,50 @@ export function DenunciaForm({
       </section>
       )}
 
+      <div
+        role="group"
+        aria-label="O que você quer denunciar?"
+        className="grid grid-cols-2 overflow-hidden rounded-[2px] border-2 border-brand-green bg-white lg:max-w-[520px]"
+      >
+        {(['onibus', 'parada'] as const).map((valor) => (
+          <button
+            key={valor}
+            type="button"
+            aria-pressed={localTipo === valor}
+            onClick={() => trocarLocal(valor)}
+            className={`ttl min-h-[52px] text-base ${
+              localTipo === valor ? 'bg-brand-green text-brand-cream' : 'text-brand-green'
+            }`}
+          >
+            {LOCAL_LABELS[valor]}
+          </button>
+        ))}
+      </div>
+
+      {parada ? (
+      <SecaoNumerada numero={1} titulo="Qual parada?" subtitulo="Uma referência para as pessoas acharem">
+        <div>
+          <label htmlFor="referencia-parada" className={rotulo}>
+            Referência da parada{' '}
+            <span className="font-semibold normal-case tracking-normal text-brand-green-dark/70">
+              (opcional)
+            </span>
+          </label>
+          <input
+            id="referencia-parada"
+            type="text"
+            value={referenciaParada}
+            onChange={(e) => setReferenciaParada(e.target.value)}
+            maxLength={80}
+            placeholder="Ex.: Parada do Mix Mateus na Frei Serafim"
+            className="input-brand"
+          />
+          <p className="mt-1.5 text-xs font-semibold text-brand-green-dark/70">
+            Ajuda a achar a parada, mas o que vale é o ponto que você marcar no mapa, no passo 3.
+          </p>
+        </div>
+      </SecaoNumerada>
+      ) : (
       <SecaoNumerada numero={1} titulo="Qual ônibus?" subtitulo="A linha em que você estava">
         <div>
           <span className={rotulo}>Linha</span>
@@ -206,11 +273,12 @@ export function DenunciaForm({
           </p>
         </div>
       </SecaoNumerada>
+      )}
 
       <SecaoNumerada numero={2} titulo="O que aconteceu?" subtitulo="Escolha o problema e descreva">
         <div>
           <span className={rotulo}>Tipo de problema</span>
-          <TipoSelect value={tipo} onChange={setTipo} />
+          <TipoSelect value={tipo} onChange={setTipo} tipos={tiposDoLocal(localTipo)} />
         </div>
         <div>
           <label htmlFor="descricao-denuncia" className={rotulo}>
@@ -302,7 +370,11 @@ export function DenunciaForm({
       </SecaoNumerada>
 
       <div className="lg:col-start-2 lg:row-span-6 lg:row-start-2">
-      <SecaoNumerada numero={3} titulo="Onde?" subtitulo="Marque o local exato no mapa">
+      <SecaoNumerada
+        numero={3}
+        titulo="Onde?"
+        subtitulo={parada ? 'Marque o ponto da parada no mapa' : 'Marque o local exato no mapa'}
+      >
         <LocationPicker
           value={local}
           onChange={(lat, lng) => setLocal({ lat, lng })}

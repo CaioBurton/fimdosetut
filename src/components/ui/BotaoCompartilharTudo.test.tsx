@@ -2,11 +2,14 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { RESUMO_VAZIO } from '../../lib/resumoPainel'
+import { PARADAS_VAZIO } from '../../lib/resumoParadas'
 import { BotaoCompartilharTudo } from './BotaoCompartilharTudo'
 
 vi.mock('../../hooks/useRankingSemana', () => ({ useRankingSemana: () => ({ linhas: [], loading: false, error: false }) }))
 const usePainelResumo = vi.fn((_periodo: string, _zona: string) => ({ resumo: RESUMO_VAZIO, loading: false, error: null }))
 vi.mock('../../hooks/usePainelResumo', () => ({ usePainelResumo: (...args: [string, string]) => usePainelResumo(...args) }))
+const usePainelParadas = vi.fn((_periodo: string) => ({ resumo: PARADAS_VAZIO, loading: false, error: null }))
+vi.mock('../../hooks/usePainelParadas', () => ({ usePainelParadas: (periodo: string) => usePainelParadas(periodo) }))
 vi.mock('../../hooks/useLinhas', () => ({ useLinhas: () => ({ linhas: [] }) }))
 vi.mock('../../hooks/useDenuncias', () => ({ useDenuncias: () => ({ denuncias: [], loading: false }) }))
 
@@ -20,6 +23,11 @@ describe('BotaoCompartilharTudo', () => {
   it('o Semanal usa sempre os últimos 7 dias, sem depender do período do painel', () => {
     render(<BotaoCompartilharTudo />)
     expect(usePainelResumo).toHaveBeenCalledWith('7d', 'todas')
+  })
+
+  it('o Semanal também busca as paradas dos últimos 7 dias', () => {
+    render(<BotaoCompartilharTudo />)
+    expect(usePainelParadas).toHaveBeenCalledWith('7d')
   })
 
   it.each(['Semanal', 'Diário'])('o %s deixa escolher entre post e story', async (nome) => {

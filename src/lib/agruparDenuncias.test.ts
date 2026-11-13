@@ -80,4 +80,23 @@ describe('agruparDenuncias', () => {
     ])
     expect(grupos).toHaveLength(1)
   })
+
+  it('agrupa denúncias de parada (sem linha) do mesmo tipo e próximas', () => {
+    const parada = { local_tipo: 'parada' as const, linha_id: null, tipo: 'parada_sem_abrigo' as const }
+    const grupos = agruparDenuncias([
+      denuncia({ id: 'a', ...parada }),
+      denuncia({ id: 'b', ...parada, latitude: -5.0905, created_at: minutosAtras(10) }),
+      denuncia({ id: 'c', ...parada, tipo: 'parada_sujeira', created_at: minutosAtras(5) }),
+    ])
+    expect(grupos).toHaveLength(2)
+    expect(grupos.find((g) => g.principal.id === 'b')?.denuncias).toHaveLength(2)
+  })
+
+  it('não mistura parada com ônibus no mesmo ponto', () => {
+    const grupos = agruparDenuncias([
+      denuncia({ id: 'a' }),
+      denuncia({ id: 'b', local_tipo: 'parada', linha_id: null, tipo: 'parada_sem_abrigo' }),
+    ])
+    expect(grupos).toHaveLength(2)
+  })
 })

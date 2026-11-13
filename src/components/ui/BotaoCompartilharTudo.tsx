@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useDenuncias } from '../../hooks/useDenuncias'
 import { useLinhas } from '../../hooks/useLinhas'
+import { usePainelParadas } from '../../hooks/usePainelParadas'
 import { usePainelResumo } from '../../hooks/usePainelResumo'
 import { useRankingSemana } from '../../hooks/useRankingSemana'
 import {
@@ -146,7 +147,8 @@ const OPCOES_FORMATO: { valor: FormatoDiario; rotulo: string }[] = [
 function CarrosselAdmin({ menuAberto, onMenuAberto }: ControleMenu) {
   const { linhas, loading: carregandoRanking } = useRankingSemana(1)
   const { resumo, loading: carregandoResumo } = usePainelResumo('7d', 'todas')
-  const loading = carregandoRanking || carregandoResumo
+  const { resumo: paradas, loading: carregandoParadas } = usePainelParadas('7d')
+  const loading = carregandoRanking || carregandoResumo || carregandoParadas
   return (
     <BotaoGerar<FormatoDiario>
       menuAberto={menuAberto}
@@ -155,7 +157,7 @@ function CarrosselAdmin({ menuAberto, onMenuAberto }: ControleMenu) {
       desabilitado={loading}
       opcoes={OPCOES_FORMATO}
       aoCompartilhar={async (formato) => {
-        const imagens = await gerarCarrossel(resumo, '7d', 'todas', linhas[0] ?? null, formato)
+        const imagens = await gerarCarrossel(resumo, '7d', 'todas', linhas[0] ?? null, formato, paradas)
         await compartilharImagens(imagens, { titulo: 'Deu o Prego!', texto: textoCarrossel('7d', 'todas') })
       }}
     />

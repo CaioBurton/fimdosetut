@@ -14,6 +14,7 @@ import { criarIconeZona } from './markerIcon'
 import { BotaoMinhaLocalizacao } from './BotaoMinhaLocalizacao'
 import { BotaoCalendario } from './BotaoCalendario'
 import { TextoExpansivel } from '../ui/TextoExpansivel'
+import { IconeParada } from '../ui/IconeParada'
 import { FotoDenuncia } from '../denuncia/FotoDenuncia'
 
 const TERESINA_CENTER: [number, number] = [-5.0892, -42.8019]
@@ -116,6 +117,7 @@ interface MarcadorDenunciaProps {
   cor: string
   resolvido: boolean
   codigo: string
+  parada: boolean
   selecionado: boolean
   quantidade: number
   pulso: number
@@ -129,7 +131,7 @@ const MarcadorDenuncia = memo(function MarcadorDenuncia(p: MarcadorDenunciaProps
   return (
     <Marker
       position={[p.lat, p.lng]}
-      icon={criarIconeZona(p.cor, p.resolvido, p.codigo, p.selecionado, p.quantidade, p.pulso, p.novo)}
+      icon={criarIconeZona(p.cor, p.resolvido, p.codigo, p.selecionado, p.quantidade, p.pulso, p.novo, p.parada)}
       zIndexOffset={p.selecionado ? 1000 : 0}
       eventHandlers={handlers}
     />
@@ -160,14 +162,22 @@ export function MapaDenuncias({
   /** Denúncia a destacar ao abrir (ex.: vinda do "Ver no mapa" da lista): seleciona e centraliza nela. */
   focoId?: string
 }) {
-  const [filtro, setFiltro] = useState<Zona | 'todas'>('todas')
+  const [filtro, setFiltro] = useState<Zona | 'todas' | 'paradas'>('todas')
   const [selecionadaId, setSelecionadaId] = useState<string | null>(null)
   const [mapa, setMapa] = useState<L.Map | null>(null)
   const [minhaPosicao, setMinhaPosicao] = useState<[number, number] | null>(null)
   const [limites, setLimites] = useState<L.LatLngBounds | null>(null)
 
   const visiveis = useMemo(
-    () => denuncias.filter((d) => filtro === 'todas' || (d.linha?.zona ?? 'outras') === filtro),
+    () =>
+      denuncias.filter(
+        // O filtro de zona é de linhas: denúncias de parada (sem linha) só aparecem em "Todas" e em "Paradas".
+        (d) =>
+          filtro === 'todas' ||
+          (filtro === 'paradas'
+            ? d.local_tipo === 'parada'
+            : d.local_tipo !== 'parada' && (d.linha?.zona ?? 'outras') === filtro)
+      ),
     [denuncias, filtro]
   )
   const grupos = useMemo(() => agruparDenuncias(visiveis), [visiveis])
@@ -255,6 +265,7 @@ export function MapaDenuncias({
               cor={ZONA_COLORS[denuncia.linha?.zona ?? 'outras']}
               resolvido={denuncia.status === 'resolvido'}
               codigo={denuncia.linha?.codigo ?? ''}
+              parada={denuncia.local_tipo === 'parada'}
               selecionado={selecionado}
               quantidade={membros.length}
               pulso={selecionado ? pulso : 0}
@@ -293,6 +304,15 @@ export function MapaDenuncias({
             {ZONA_LABELS[zona]}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setFiltro('paradas')}
+          aria-pressed={filtro === 'paradas'}
+          className={`chip-brand ${filtro === 'paradas' ? 'chip-brand-ativo' : ''}`}
+        >
+          <IconeParada />
+          Paradas
+        </button>
       </div>
       )}
 
@@ -321,11 +341,13 @@ export function MapaDenuncias({
         <div className="card-brand anim-cartao pointer-events-auto flex min-h-0 w-full flex-col gap-2.5 !bg-brand-cream p-3.5">
           <div className="flex shrink-0 items-center gap-3">
             <span className="ttl bg-brand-green px-2.5 py-2 text-xl leading-none text-brand-cream">
-              {selecionada.linha?.codigo ?? '—'}
+              {selecionada.local_tipo === 'parada' ? 'Parada' : (selecionada.linha?.codigo ?? '—')}
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-base font-bold leading-tight">
-                {selecionada.linha?.nome ?? 'Linha removida'}
+                {selecionada.local_tipo === 'parada'
+                  ? selecionada.referencia_parada?.trim() || 'Parada de ônibus'
+                  : (selecionada.linha?.nome ?? 'Linha removida')}
               </p>
               <p className="mt-0.5 text-[13px] text-brand-green-dark/70">
                 {tempoRelativo(selecionada.created_at)} · {TIPO_LABELS[selecionada.tipo]}
@@ -369,13 +391,17 @@ export function MapaDenuncias({
             )}
           </div>
           <div className="flex shrink-0 items-center justify-between gap-2">
-            <span className="flex items-center gap-1.5 text-[13px] font-bold">
-              <i
-                className="block h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: ZONA_COLORS[zonaSel] }}
-              />
-              Zona {ZONA_LABELS[zonaSel]}
-            </span>
+            {selecionada.local_tipo === 'parada' ? (
+              <span className="text-[13px] font-bold">Parada de ônibus</span>
+            ) : (
+              <span className="flex items-center gap-1.5 text-[13px] font-bold">
+                <i
+                  className="block h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: ZONA_COLORS[zonaSel] }}
+                />
+                Zona {ZONA_LABELS[zonaSel]}
+              </span>
+            )}
             {acoesSelecionada && <div className="flex gap-2">{acoesSelecionada(selecionada)}</div>}
           </div>
         </div>
