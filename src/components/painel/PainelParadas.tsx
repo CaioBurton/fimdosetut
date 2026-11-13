@@ -7,21 +7,11 @@ import { TituloSecao } from '../ui/TituloSecao'
 
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`
 
-function Kpi({ rotulo, valor, cor }: { rotulo: string; valor: number; cor?: string }) {
-  return (
-    <div className="card-brand p-3">
-      <p className="text-xs font-bold uppercase tracking-wide text-brand-green-dark/70">{rotulo}</p>
-      <p key={valor} className="ttl anim-contador text-3xl" style={cor ? { color: cor } : undefined}>
-        {valor}
-      </p>
-    </div>
-  )
-}
-
 /**
- * Seção "Paradas" do painel público: quantas denúncias de parada há no período e quais problemas
- * mais aparecem. Segue o período escolhido no painel; o filtro de zona não vale aqui, porque
- * parada não tem zona (só o ponto marcado no mapa).
+ * Seção "Paradas" do painel: quais problemas de parada mais aparecem no período. Os totais não são
+ * repetidos aqui: as paradas já entram no contador único do resumo, junto com os ônibus. Segue o
+ * período escolhido no painel; o filtro de zona não vale aqui, porque parada não tem zona (só o
+ * ponto marcado no mapa).
  */
 export function PainelParadas({ periodo }: { periodo: Periodo }) {
   const { resumo, loading, error } = usePainelParadas(periodo)
@@ -36,7 +26,7 @@ export function PainelParadas({ periodo }: { periodo: Periodo }) {
     >
       <TituloSecao
         id="painel-paradas"
-        dica="Denúncias de problemas em paradas de ônibus: abrigo, banco, placa, sujeira, iluminação, segurança e acessibilidade. Segue o período escolhido acima. O filtro de zona vale só para ônibus."
+        dica="Quais problemas de parada mais aparecem: abrigo, banco, placa, sujeira, iluminação, segurança e acessibilidade. Os números já estão contados no resumo, junto com os ônibus. Segue o período escolhido acima."
       >
         Paradas
       </TituloSecao>
@@ -55,18 +45,15 @@ export function PainelParadas({ periodo }: { periodo: Periodo }) {
       )}
 
       {!error && resumo.total > 0 && (
-        <div className="space-y-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-5 lg:space-y-0">
-          <div className="grid grid-cols-3 gap-2.5 lg:gap-5">
-            <Kpi rotulo="Total" valor={resumo.total} />
-            <Kpi rotulo="Pendentes" valor={resumo.pendentes} cor="#c23838" />
-            <Kpi rotulo="Resolvidas" valor={resumo.resolvidas} />
-          </div>
-
+        <div className="space-y-3">
           <section className="card-brand p-3.5 lg:p-5" aria-label="Problemas mais citados nas paradas">
-            <h3 className="ttl mb-3 flex items-center gap-2 text-lg">
+            <h3 className="ttl flex items-center gap-2 text-lg">
               <IconeParada tamanho={18} />
               Problemas mais citados
             </h3>
+            <p className="mb-3 mt-1 text-xs font-bold text-brand-green-dark/70">
+              {plural(resumo.total, 'denúncia de parada', 'denúncias de parada')} no período · já contadas no resumo acima
+            </p>
             <ul className="space-y-3">
               {resumo.porTipo.map((t, n) => (
                 <li key={t.chave} className="text-[13px]">

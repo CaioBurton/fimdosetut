@@ -33,7 +33,10 @@ describe('PainelParadas', () => {
     render(<PainelParadas periodo="todos" />)
 
     expect(screen.getByRole('heading', { name: 'Paradas' })).toBeInTheDocument()
-    expect(screen.getByText('Pendentes').nextElementSibling).toHaveTextContent('3')
+    // Sem contador próprio: os totais já estão no resumo do painel, que conta ônibus e paradas juntos.
+    expect(screen.queryByText('Pendentes agora')).not.toBeInTheDocument()
+    expect(screen.queryByText('Resolvidas')).not.toBeInTheDocument()
+    expect(screen.getByText(/5 denúncias de parada no período/)).toBeInTheDocument()
     const lista = screen.getByRole('region', { name: 'Problemas mais citados nas paradas' })
     expect(within(lista).getByText('Sem abrigo ou cobertura quebrada')).toBeInTheDocument()
     expect(within(lista).getByRole('img', { name: 'Sem abrigo ou cobertura quebrada: 4 denúncias' })).toBeInTheDocument()

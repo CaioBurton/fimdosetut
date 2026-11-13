@@ -50,9 +50,8 @@ export function filtrarDenuncias(
   const busca = normalizar(filtros.busca.trim())
 
   return denuncias.filter((d) => {
-    // O painel é sobre linhas de ônibus: denúncias de parada (sem linha) ficam de fora.
-    if (d.local_tipo === 'parada') return false
-    if (filtros.zona !== 'todas' && (d.linha?.zona ?? 'outras') !== filtros.zona) return false
+    // Parada não tem zona: com uma zona escolhida, só entram ônibus daquela zona.
+    if (filtros.zona !== 'todas' && (d.local_tipo === 'parada' || (d.linha?.zona ?? 'outras') !== filtros.zona)) return false
     if (filtros.tipo === 'pcd') {
       if (!ehAcessibilidade(d.tipo)) return false
     } else if (filtros.tipo !== 'todos' && d.tipo !== filtros.tipo) return false
@@ -109,7 +108,7 @@ export function calcularEstatisticas(denuncias: Denuncia[]): EstatisticasDashboa
     pendentes: total - resolvidas,
     resolvidas,
     taxaResolucao: total === 0 ? 0 : Math.round((resolvidas / total) * 100),
-    porZona: contar(denuncias.map((d) => d.linha?.zona ?? 'outras')),
+    porZona: contar(denuncias.filter((d) => d.local_tipo !== 'parada').map((d) => d.linha?.zona ?? 'outras')),
     porTipo: contar(denuncias.map((d) => d.tipo)),
     topLinhas: [...porLinha.entries()]
       .map(([linhaId, v]) => ({ linhaId, ...v }))
