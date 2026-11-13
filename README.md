@@ -15,7 +15,7 @@ Qualquer pessoa vê o mapa, a lista e o painel de denúncias. Para registrar uma
 | --- | --- | --- |
 | Mapa com as denúncias do dia (tempo real), botão "Também vi" e denúncia rápida em 3 toques (linha favorita, problema, enviar; GPS automático) | `/` | todos |
 | Lista de denúncias, com filtro Todos/Ônibus/Paradas e filtros por zona, linha, dia, status e tipo, botão "Também vi" (confirmar com conta) e "Compartilhar" (imagem para Instagram e WhatsApp) | `/denuncias` | todos |
-| Painel público com a "Linha mais problemática da semana", totais, gráfico por dia, zonas e linhas mais citadas, e "Compartilhar ranking" (imagem) | `/painel` | todos |
+| Painel público com a "Linha mais problemática da semana", totais, gráfico por dia, zonas e linhas mais citadas, e "Compartilhar ranking" (imagem), mais a seção "Paradas" (totais e problemas mais citados no período) | `/painel` | todos |
 | Nova denúncia de **ônibus** (linha, tipo, descrição e local no mapa) ou de **parada** (referência opcional, tipo, foto e ponto no mapa; não há cadastro de paradas, vale o ponto marcado). Dá para enviar a primeira sem cadastro e criar a conta depois | `/nova` | todos |
 | Perfil: nome, linhas que a pessoa pega, meus selos, minhas denúncias, feedback, baixar meus dados e excluir a conta | `/minhas` | quem tem conta |
 | Entrar e Criar conta | `/login`, `/cadastro` | todos |

@@ -5,6 +5,7 @@ import { AppLayout } from '../components/layout/AppLayout'
 import { PainelConteudo } from '../components/admin/PainelConteudo'
 import { DenunciasPorHora } from '../components/painel/DenunciasPorHora'
 import { LinhaDaSemana } from '../components/painel/LinhaDaSemana'
+import { PainelParadas } from '../components/painel/PainelParadas'
 import { usePainelResumo } from '../hooks/usePainelResumo'
 import type { Periodo } from '../lib/dashboardDenuncias'
 import type { Zona } from '../types'
@@ -35,6 +36,7 @@ export function PainelPage() {
           carregando={loading}
           aposPorDia={<DenunciasPorHora />}
         />
+        <PainelParadas periodo={periodo} />
       </div>
     </AppLayout>
   )
