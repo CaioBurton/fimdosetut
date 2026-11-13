@@ -26,7 +26,7 @@ export function PainelParadas({ periodo }: { periodo: Periodo }) {
     >
       <TituloSecao
         id="painel-paradas"
-        dica="Quais problemas de parada mais aparecem: abrigo, banco, placa, sujeira, iluminação, segurança e acessibilidade. Os números já estão contados no resumo, junto com os ônibus. Segue o período escolhido acima."
+        dica="Quais problemas de parada mais aparecem: abrigo, banco, sujeira, iluminação, segurança e acessibilidade. Os números já estão contados no resumo, junto com os ônibus. Segue o período escolhido acima."
       >
         Paradas
       </TituloSecao>

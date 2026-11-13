@@ -44,7 +44,6 @@ export const TIPOS_ONIBUS: TipoProblema[] = [
 export const TIPOS_PARADA: TipoProblema[] = [
   'parada_sem_abrigo',
   'parada_sem_banco',
-  'parada_sem_placa',
   'parada_sujeira',
   'parada_sem_iluminacao',
   'parada_inseguranca',
