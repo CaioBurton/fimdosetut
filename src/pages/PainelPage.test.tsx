@@ -32,12 +32,7 @@ describe('PainelPage (público)', () => {
       signOut: vi.fn(),
     } as unknown as ReturnType<typeof useAuth>)
     vi.mocked(supabase.rpc).mockReset()
-    // Cada função devolve o seu resumo: a de paradas vem vazia, para não repetir os números dos ônibus.
-    vi.mocked(supabase.rpc).mockImplementation(((nome: string) =>
-      Promise.resolve({
-        data: nome === 'painel_paradas' ? { total: 0, pendentes: 0, resolvidas: 0, hoje: 0, porTipo: [] } : resposta,
-        error: null,
-      })) as never)
+    vi.mocked(supabase.rpc).mockReturnValue(Promise.resolve({ data: resposta, error: null }) as never)
   })
 
   it('mostra o resumo vindo do banco para visitante, sem atalho de admin', async () => {

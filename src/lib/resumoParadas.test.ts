@@ -8,7 +8,6 @@ describe('paradasDaRpc', () => {
         total: 5,
         pendentes: 3,
         resolvidas: 2,
-        hoje: 1,
         porTipo: [
           { chave: 'parada_sem_abrigo', total: 4 },
           { chave: 'parada_sujeira', total: 1 },
@@ -18,7 +17,6 @@ describe('paradasDaRpc', () => {
       total: 5,
       pendentes: 3,
       resolvidas: 2,
-      hoje: 1,
       porTipo: [
         { chave: 'parada_sem_abrigo', total: 4 },
         { chave: 'parada_sujeira', total: 1 },
