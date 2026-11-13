@@ -12,6 +12,7 @@ import { PERIODO_LABELS, type Periodo } from './dashboardDenuncias'
 import { EXPLOSAO_PATH, SITE_HOST, SITE_URL } from './marca'
 import type { LinhaEmAlta } from './rankingSemana'
 import { resumirDenuncias, taxaResolucao, type ResumoPainel } from './resumoPainel'
+import { resumirParadas, type ResumoParadas } from './resumoParadas'
 
 /**
  * Cartões compartilháveis: imagens PNG 1080×1350 (4:5, o formato do feed do Instagram, que também
@@ -217,6 +218,20 @@ export function dadosDaAcessibilidade(resumo: ResumoPainel, periodo: Periodo, zo
     total: a.total,
     linhas: a.topLinhas.slice(0, MAX_ITENS_ACESSIBILIDADE).map((l) => ({ codigo: l.codigo, nome: l.nome, total: l.total })),
     veiculos: a.topVeiculos.slice(0, MAX_ITENS_ACESSIBILIDADE).map((v) => ({ numero: v.numero, total: v.total })),
+  }
+}
+
+/**
+ * Cartão "Problemas nas paradas": os problemas de parada mais citados no período. Parada não tem
+ * zona, então o recorte é só o período (o filtro de zona do painel não vale aqui).
+ */
+export function dadosDasParadas(paradas: ResumoParadas, periodo: Periodo): DadosCartaoPainel {
+  return {
+    tipo: 'barras',
+    titulo: 'Problemas nas paradas',
+    recorte: PERIODO_LABELS[periodo],
+    fecho: `${pluralizar(paradas.total, 'denúncia de parada', 'denúncias de parada')} · ${pluralizar(paradas.pendentes, 'pendente', 'pendentes')}`,
+    itens: paradas.porTipo.slice(0, MAX_BARRAS).map((i) => ({ rotulo: TIPO_LABELS[i.chave], total: i.total })),
   }
 }
 
@@ -787,14 +802,15 @@ async function gerarConjunto(cartoes: CartaoDoConjunto[], prefixo: string) {
 
 /**
  * Gera o carrossel do resumo semanal: um cartão por seção do painel, na ordem em que aparecem.
- * Seções sem dados (linha da semana, acessibilidade e ranking vazios) ficam de fora.
+ * Seções sem dados (linha da semana, acessibilidade, paradas e ranking vazios) ficam de fora.
  */
 export async function gerarCarrossel(
   resumo: ResumoPainel,
   periodo: Periodo,
   zona: Zona | 'todas',
   linhaDaSemana: LinhaEmAlta | null = null,
-  formato: FormatoDiario = 'post'
+  formato: FormatoDiario = 'post',
+  paradas: ResumoParadas | null = null
 ) {
   const story = formato === 'story'
   return gerarConjunto(
@@ -808,6 +824,7 @@ export async function gerarCarrossel(
         nome: 'acessibilidade',
         gerar: resumo.acessibilidade.total > 0 ? () => gerarCartaoPainel(dadosDaAcessibilidade(resumo, periodo, zona), story) : null,
       },
+      { nome: 'paradas', gerar: paradas && paradas.total > 0 ? () => gerarCartaoPainel(dadosDasParadas(paradas, periodo), story) : null },
       { nome: 'ranking', gerar: resumo.topLinhas.length > 0 ? () => gerarCartaoRanking(resumo, periodo, zona, story) : null },
     ],
     `${formato}-`
@@ -840,6 +857,7 @@ export async function gerarCartoesDoDia(denuncias: Denuncia[], dataTexto: string
   const story = formato === 'story'
   const resumo = resumirDenuncias(denuncias, 'hoje', 'todas')
   const linha = linhaDoDia(denuncias, resumo)
+  const paradas = resumirParadas(denuncias)
   return gerarConjunto(
     [
       { nome: 'resumo', gerar: () => gerarCartaoPainel(dadosDoResumo(resumo, 'hoje', 'todas'), story) },
@@ -851,6 +869,7 @@ export async function gerarCartoesDoDia(denuncias: Denuncia[], dataTexto: string
         nome: 'acessibilidade',
         gerar: resumo.acessibilidade.total > 0 ? () => gerarCartaoPainel(dadosDaAcessibilidade(resumo, 'hoje', 'todas'), story) : null,
       },
+      { nome: 'paradas', gerar: paradas.total > 0 ? () => gerarCartaoPainel(dadosDasParadas(paradas, 'hoje'), story) : null },
       { nome: 'ranking', gerar: resumo.topLinhas.length > 0 ? () => gerarCartaoRanking(resumo, 'hoje', 'todas', story) : null },
     ],
     `${formato}-`

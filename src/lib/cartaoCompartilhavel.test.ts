@@ -5,7 +5,10 @@ import {
   compartilharImagem,
   compartilharImagens,
   dadosDaAcessibilidade,
+  dadosDasParadas,
   dadosDoCartao,
+  gerarCarrossel,
+  gerarCartoesDoDia,
   desenharCartaoSemana,
   horasDoDia,
   linhaDoDia,
@@ -239,6 +242,27 @@ describe('cartões das seções do painel', () => {
     expect(desenhar(dadosDaAcessibilidade(RESUMO_VAZIO, '7d', 'todas'))).toContain('Nenhum problema de acessibilidade')
   })
 
+  it('paradas: lista os problemas mais citados, sem zona, e fecha com total e pendentes', () => {
+    const paradas = {
+      total: 5,
+      pendentes: 3,
+      resolvidas: 2,
+      porTipo: [
+        { chave: 'parada_sem_abrigo' as const, total: 4 },
+        { chave: 'parada_sujeira' as const, total: 1 },
+      ],
+    }
+    const dados = dadosDasParadas(paradas, '7d')
+    expect(dados.recorte).toBe('Últimos 7 dias')
+    expect(dados.recorte).not.toContain('zona')
+
+    const t = desenhar(dados)
+    expect(t).toContain('PROBLEMAS NAS PARADAS')
+    expect(t).toContain('Sem abrigo ou cobertura quebrada')
+    expect(t).toContain('Sujeira ou lixo')
+    expect(t).toContain('5 denúncias de parada · 3 pendentes')
+  })
+
   it('texto do compartilhamento leva título, recorte e o site', () => {
     expect(textoPainel(dadosPorZona(resumo, '7d', 'todas'))).toMatch(/^Por zona em Teresina \(.*\)\. Veja no Deu o Prego!: https?:\/\//)
   })
@@ -367,5 +391,46 @@ describe('stories do dia', () => {
 
   it('texto do compartilhamento leva a data e o site', () => {
     expect(textoDoDia('domingo, 8 de novembro')).toMatch(/domingo, 8 de novembro.*Deu o Prego!: https?:\/\//)
+  })
+})
+
+describe('cartão de paradas nos conjuntos Semanal e Diário', () => {
+  beforeEach(() => {
+    // jsdom não desenha: um canvas e um logo de mentira bastam para gerar os arquivos.
+    const { ctx } = contextoFalso()
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(ctx as never)
+    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((cb) => cb(new Blob(['x'], { type: 'image/png' })))
+    vi.stubGlobal(
+      'Image',
+      class {
+        onerror: (() => void) | null = null
+        set src(_: string) {
+          queueMicrotask(() => this.onerror?.())
+        }
+      }
+    )
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+  })
+
+  const nomes = (imagens: { nome: string }[]) => imagens.map((i) => i.nome.replace(/^deu-o-prego-\w+-\d+-/, '').replace('.png', ''))
+  const paradas = { total: 2, pendentes: 1, resolvidas: 1, porTipo: [{ chave: 'parada_sujeira' as const, total: 2 }] }
+
+  it('o carrossel semanal inclui o cartão de paradas quando há denúncias de parada', async () => {
+    const com = await gerarCarrossel(RESUMO_VAZIO, '7d', 'todas', null, 'post', paradas)
+    expect(nomes(com)).toContain('paradas')
+
+    const sem = await gerarCarrossel(RESUMO_VAZIO, '7d', 'todas', null, 'post', { ...paradas, total: 0, porTipo: [] })
+    expect(nomes(sem)).not.toContain('paradas')
+    expect(nomes(await gerarCarrossel(RESUMO_VAZIO, '7d', 'todas'))).not.toContain('paradas')
+  })
+
+  it('os cartões do dia incluem paradas contadas das denúncias de hoje', async () => {
+    const deParada: Denuncia = { ...denuncia, id: 'p1', local_tipo: 'parada', linha_id: null, linha: undefined, tipo: 'parada_sujeira' }
+    expect(nomes(await gerarCartoesDoDia([deParada], 'sexta-feira, 13 de novembro'))).toContain('paradas')
+    expect(nomes(await gerarCartoesDoDia([denuncia], 'sexta-feira, 13 de novembro'))).not.toContain('paradas')
   })
 })
