@@ -5,6 +5,7 @@ import { Paginacao } from '../components/ui/Paginacao'
 import { RodapeTabela } from '../components/admin/TabelaAdmin'
 import { useDesktop } from '../hooks/useDesktop'
 import { AppLayout } from '../components/layout/AppLayout'
+import { IconeParada } from '../components/ui/IconeParada'
 import { TipoFiltroSelect, type FiltroTipo } from '../components/denuncia/TipoFiltroSelect'
 import { LinhaSelect } from '../components/denuncia/LinhaSelect'
 import { BotaoTambemVi } from '../components/denuncia/BotaoTambemVi'
@@ -144,10 +145,7 @@ export function ListaPage() {
             aria-pressed={filtroLocal === 'parada'}
             className={`chip-brand ${filtroLocal === 'parada' ? 'chip-brand-ativo' : ''}`}
           >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={filtroLocal === 'parada' ? "#7fb0ff" : "#2563eb"} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="5" y="2.5" width="14" height="10" rx="1.5" />
-              <path d="M8 6.5h8M9 9.5h.01M15 9.5h.01M12 12.5V21.5M8.5 21.5h7" />
-            </svg>
+            <IconeParada />
             Paradas
           </button>
         </div>

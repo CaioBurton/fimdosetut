@@ -1,5 +1,8 @@
-/** Ícone de ponto de ônibus (o mesmo dos marcadores de parada no mapa). */
-export function IconeParada({ cor, tamanho = 16 }: { cor: string; tamanho?: number }) {
+/**
+ * Ícone de ponto de ônibus (o mesmo dos marcadores de parada no mapa). Por padrão herda a cor do
+ * texto ao redor (`currentColor`): verde nos chips desligados e creme nos ligados.
+ */
+export function IconeParada({ cor = 'currentColor', tamanho = 16 }: { cor?: string; tamanho?: number }) {
   return (
     <svg
       viewBox="0 0 24 24"

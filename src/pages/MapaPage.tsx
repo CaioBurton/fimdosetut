@@ -157,7 +157,7 @@ export function MapaPage() {
                     </span>
                   ))}
                   <span className="flex items-center gap-1.5 text-[#2f5a28]">
-                    <IconeParada cor="#2563eb" tamanho={14} />
+                    <IconeParada tamanho={14} />
                     Paradas
                   </span>
                 </div>

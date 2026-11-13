@@ -310,7 +310,7 @@ export function MapaDenuncias({
           aria-pressed={filtro === 'paradas'}
           className={`chip-brand ${filtro === 'paradas' ? 'chip-brand-ativo' : ''}`}
         >
-          <IconeParada cor={filtro === 'paradas' ? '#7fb0ff' : '#2563eb'} />
+          <IconeParada />
           Paradas
         </button>
       </div>
