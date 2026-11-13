@@ -4,6 +4,8 @@ import { usePainelResumo } from '../../hooks/usePainelResumo'
 import type { Zona } from '../../types'
 import { DenunciasPorHora } from '../painel/DenunciasPorHora'
 import { LinhaDaSemana } from '../painel/LinhaDaSemana'
+import { PainelParadas } from '../painel/PainelParadas'
+import { BotaoCompartilharTudo } from '../ui/BotaoCompartilharTudo'
 import { PainelConteudo } from './PainelConteudo'
 
 interface Props {
@@ -32,7 +34,11 @@ export function PainelAdmin({ onGerenciarLinhas }: Props) {
         onGerenciarLinhas={onGerenciarLinhas}
         carregando={loading}
         aposPorDia={<DenunciasPorHora />}
+        botoesCompartilhar={false}
       />
+      <PainelParadas periodo={periodo} />
+      {/* Igual ao painel público: Semanal e Diário ficam no fim, depois de Paradas. */}
+      <BotaoCompartilharTudo />
     </div>
   )
 }
