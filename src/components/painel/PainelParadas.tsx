@@ -4,19 +4,9 @@ import { TIPO_LABELS } from '../../types'
 import { IconeTipo } from '../denuncia/TipoSelect'
 import { IconeParada } from '../ui/IconeParada'
 import { TituloSecao } from '../ui/TituloSecao'
+import { ResumoContagem } from './ResumoContagem'
 
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`
-
-function Kpi({ rotulo, valor, cor }: { rotulo: string; valor: number; cor?: string }) {
-  return (
-    <div className="card-brand p-3">
-      <p className="text-xs font-bold uppercase tracking-wide text-brand-green-dark/70">{rotulo}</p>
-      <p key={valor} className="ttl anim-contador text-3xl" style={cor ? { color: cor } : undefined}>
-        {valor}
-      </p>
-    </div>
-  )
-}
 
 /**
  * Seção "Paradas" do painel público: quantas denúncias de parada há no período e quais problemas
@@ -56,13 +46,15 @@ export function PainelParadas({ periodo }: { periodo: Periodo }) {
 
       {!error && resumo.total > 0 && (
         <div className="space-y-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-5 lg:space-y-0">
-          <div className="grid grid-cols-3 gap-2.5 lg:gap-5">
-            <Kpi rotulo="Total" valor={resumo.total} />
-            <Kpi rotulo="Pendentes" valor={resumo.pendentes} cor="#c23838" />
-            <Kpi rotulo="Resolvidas" valor={resumo.resolvidas} />
-          </div>
+          <ResumoContagem
+            rotulo="Resumo das paradas"
+            total={resumo.total}
+            pendentes={resumo.pendentes}
+            resolvidas={resumo.resolvidas}
+            hoje={resumo.hoje}
+          />
 
-          <section className="card-brand p-3.5 lg:p-5" aria-label="Problemas mais citados nas paradas">
+          <section className="card-brand p-3.5 lg:col-span-2 lg:p-5" aria-label="Problemas mais citados nas paradas">
             <h3 className="ttl mb-3 flex items-center gap-2 text-lg">
               <IconeParada tamanho={18} />
               Problemas mais citados

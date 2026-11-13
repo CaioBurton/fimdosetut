@@ -24,6 +24,7 @@ describe('PainelParadas', () => {
         total: 5,
         pendentes: 3,
         resolvidas: 2,
+        hoje: 1,
         porTipo: [
           { chave: 'parada_sem_abrigo', total: 4 },
           { chave: 'parada_sujeira', total: 1 },
@@ -33,7 +34,12 @@ describe('PainelParadas', () => {
     render(<PainelParadas periodo="todos" />)
 
     expect(screen.getByRole('heading', { name: 'Paradas' })).toBeInTheDocument()
-    expect(screen.getByText('Pendentes').nextElementSibling).toHaveTextContent('3')
+    // O mesmo contador do painel de ônibus: cartão "Pendentes agora" com a barra de resolvidas.
+    const resumo = screen.getByRole('region', { name: 'Resumo das paradas' })
+    expect(within(resumo).getByText('Pendentes agora').nextElementSibling).toHaveTextContent('3')
+    expect(within(resumo).getByText('de 5 denúncias no período')).toBeInTheDocument()
+    expect(within(resumo).getByText('40% resolvidas')).toBeInTheDocument()
+    expect(screen.getByText('Hoje').nextElementSibling).toHaveTextContent('1')
     const lista = screen.getByRole('region', { name: 'Problemas mais citados nas paradas' })
     expect(within(lista).getByText('Sem abrigo ou cobertura quebrada')).toBeInTheDocument()
     expect(within(lista).getByRole('img', { name: 'Sem abrigo ou cobertura quebrada: 4 denúncias' })).toBeInTheDocument()

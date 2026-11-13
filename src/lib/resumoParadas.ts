@@ -5,16 +5,19 @@ export interface ResumoParadas {
   total: number
   pendentes: number
   resolvidas: number
+  /** Denúncias de hoje, qualquer que seja o período escolhido. */
+  hoje: number
   /** Problemas mais citados, do mais para o menos frequente. */
   porTipo: { chave: TipoProblema; total: number }[]
 }
 
-export const PARADAS_VAZIO: ResumoParadas = { total: 0, pendentes: 0, resolvidas: 0, porTipo: [] }
+export const PARADAS_VAZIO: ResumoParadas = { total: 0, pendentes: 0, resolvidas: 0, hoje: 0, porTipo: [] }
 
 interface RespostaRpc {
   total?: number
   pendentes?: number
   resolvidas?: number
+  hoje?: number
   porTipo?: { chave: TipoProblema; total: number }[]
 }
 
@@ -24,6 +27,7 @@ export function paradasDaRpc(r: RespostaRpc): ResumoParadas {
     total: r.total ?? 0,
     pendentes: r.pendentes ?? 0,
     resolvidas: r.resolvidas ?? 0,
+    hoje: r.hoje ?? 0,
     porTipo: (r.porTipo ?? []).filter((t) => t.chave.startsWith('parada_')),
   }
 }

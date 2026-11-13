@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useDesktop } from '../../hooks/useDesktop'
 import { BotaoCompartilhar } from '../ui/BotaoCompartilhar'
+import { ResumoContagem } from '../painel/ResumoContagem'
 import { BotaoCompartilharPainel } from '../ui/BotaoCompartilharPainel'
 import { BotaoCompartilharTudo } from '../ui/BotaoCompartilharTudo'
 import {
@@ -15,24 +16,13 @@ import {
   type DadosCartaoPainel,
 } from '../../lib/cartaoCompartilhavel'
 import { PERIODO_LABELS, type Periodo } from '../../lib/dashboardDenuncias'
-import { taxaResolucao, type ResumoPainel } from '../../lib/resumoPainel'
+import type { ResumoPainel } from '../../lib/resumoPainel'
 import { TIPO_LABELS, ZONA_COLORS, ZONA_LABELS, type Zona } from '../../types'
 
 const ZONAS: Zona[] = ['norte', 'sul', 'leste', 'sudeste', 'timon', 'rural', 'outras']
 const PERIODOS: Periodo[] = ['30d', 'todos', '7d']
 
 const atraso = (i: number) => ({ animationDelay: `${Math.min(i, 8) * 60}ms` })
-
-function Kpi({ rotulo, valor, cor, ordem = 0 }: { rotulo: string; valor: string | number; cor?: string; ordem?: number }) {
-  return (
-    <div className="card-brand anim-entra p-3" style={atraso(ordem)}>
-      <p className="text-xs font-bold uppercase tracking-wide text-brand-green-dark/70">{rotulo}</p>
-      <p key={valor} className="ttl anim-contador text-3xl" style={cor ? { color: cor } : undefined}>
-        {valor}
-      </p>
-    </div>
-  )
-}
 
 function Barras({
   titulo,
@@ -109,7 +99,6 @@ export function PainelConteudo({
   const porDia = resumo.porDia
   const maxDia = Math.max(1, ...porDia.map((d) => d.total))
   const maxLinha = Math.max(1, ...resumo.topLinhas.map((l) => l.total))
-  const taxa = taxaResolucao(resumo)
   const acess = resumo.acessibilidade
   const dadosResumo = dadosDoResumo(resumo, periodo, zona)
   const dadosZona = dadosPorZona(resumo, periodo, zona)
@@ -163,54 +152,13 @@ export function PainelConteudo({
 
       </div>
 
-      {!desktop && (
-      <section
-        aria-label="Resumo"
-        className="anim-entra relative overflow-hidden rounded-[2px] border-2 border-brand-green bg-brand-green p-[18px] text-brand-cream shadow-[4px_4px_0_#052d00]"
-      >
-        <img
-          src="/brand/explosao-contorno.svg"
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-10 -top-1.5 w-[230px] max-w-none opacity-35 brightness-[2.2]"
-        />
-        <div className="absolute right-3 top-3 z-10">
-          <BotaoCompartilharPainel dados={dadosResumo} arquivo="resumo" />
-        </div>
-        <div className="relative">
-          <p className="text-xs font-bold uppercase tracking-wider">Pendentes agora</p>
-          <p key={resumo.pendentes} className="ttl anim-contador mt-1 text-7xl">{resumo.pendentes}</p>
-          <p className="mt-1.5 text-sm font-medium">
-            de {resumo.total} {resumo.total === 1 ? 'denúncia' : 'denúncias'} no período
-          </p>
-          <div className="mt-3.5 h-3 border border-brand-cream bg-brand-green-dark">
-            <div className="barra-x h-full bg-brand-cream" style={{ width: `${taxa}%`, animationDelay: '250ms' }} />
-          </div>
-          <p className="mt-1.5 text-[13px] font-bold">{taxa}% resolvidas</p>
-        </div>
-      </section>
-      )}
-
-      {desktop ? (
-        <section aria-label="Resumo" className="lg:col-span-2">
-          <div className="mb-2.5 flex items-center justify-between gap-2">
-            <h3 className="ttl text-lg">Resumo</h3>
-            <BotaoCompartilharPainel dados={dadosResumo} arquivo="resumo" />
-          </div>
-          <div className="grid grid-cols-4 gap-5">
-            <Kpi rotulo="Total" valor={resumo.total} ordem={0} />
-            <Kpi rotulo="Pendentes" valor={resumo.pendentes} cor="#c23838" ordem={1} />
-            <Kpi rotulo="Resolvidas" valor={resumo.resolvidas} ordem={2} />
-            <Kpi rotulo="Hoje" valor={resumo.hoje} ordem={3} />
-          </div>
-        </section>
-      ) : (
-        <section className="grid grid-cols-3 gap-2.5">
-          <Kpi rotulo="Total" valor={resumo.total} ordem={1} />
-          <Kpi rotulo="Resolvidas" valor={resumo.resolvidas} ordem={2} />
-          <Kpi rotulo="Hoje" valor={resumo.hoje} cor="#c23838" ordem={3} />
-        </section>
-      )}
+      <ResumoContagem
+        total={resumo.total}
+        pendentes={resumo.pendentes}
+        resolvidas={resumo.resolvidas}
+        hoje={resumo.hoje}
+        acao={<BotaoCompartilharPainel dados={dadosResumo} arquivo="resumo" />}
+      />
 
       <section className="card-brand anim-entra p-3.5 lg:self-stretch lg:p-5" style={atraso(4)} aria-label="Denúncias por dia">
         <div className="flex items-baseline justify-between">
