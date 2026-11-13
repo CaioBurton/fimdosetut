@@ -230,11 +230,11 @@ export function DenunciaForm({
             value={referenciaParada}
             onChange={(e) => setReferenciaParada(e.target.value)}
             maxLength={80}
-            placeholder="Ex.: Av. Frei Serafim, perto do nº 1450"
+            placeholder="Ex.: Parada do Mix Mateus na Frei Serafim"
             className="input-brand"
           />
           <p className="mt-1.5 text-xs font-semibold text-brand-green-dark/70">
-            Não precisa escolher de uma lista: o ponto que você marca no mapa, no passo 3, é o que vale.
+            Ajuda a achar a parada, mas o que vale é o ponto que você marcar no mapa, no passo 3.
           </p>
         </div>
       </SecaoNumerada>

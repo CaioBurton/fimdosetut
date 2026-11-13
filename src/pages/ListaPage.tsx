@@ -97,34 +97,18 @@ export function ListaPage() {
       </section>
       )}
       <div className="space-y-4 p-4 lg:px-0">
-        <div className="flex gap-2" role="group" aria-label="Filtrar por local">
-          {(['todos', 'onibus', 'parada'] as const).map((valor) => (
-            <button
-              key={valor}
-              type="button"
-              onClick={() => {
-                setFiltroLocal(valor)
-                setFiltroTipo('todos')
-                setPagina(1)
-              }}
-              aria-pressed={filtroLocal === valor}
-              className={`chip-brand ${filtroLocal === valor ? 'chip-brand-ativo' : ''}`}
-            >
-              {valor === 'todos' ? 'Todos' : valor === 'onibus' ? 'Ônibus' : 'Paradas'}
-            </button>
-          ))}
-        </div>
-
         {/* Zona e linha só valem para ônibus: denúncias de parada não têm linha. */}
-        <div className={`sem-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 ${filtroLocal === 'parada' ? 'hidden' : ''}`} aria-label="Filtrar por zona">
+        <div className={`sem-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 `} aria-label="Filtrar por zona">
           <button
             type="button"
             onClick={() => {
               setFiltroZona('todas')
+              setFiltroLocal('todos')
+              setFiltroTipo('todos')
               setPagina(1)
             }}
-            aria-pressed={filtroZona === 'todas'}
-            className={`chip-brand ${filtroZona === 'todas' ? 'chip-brand-ativo' : ''}`}
+            aria-pressed={filtroZona === 'todas' && filtroLocal === 'todos'}
+            className={`chip-brand ${filtroZona === 'todas' && filtroLocal === 'todos' ? 'chip-brand-ativo' : ''}`}
           >
             Todas
           </button>
@@ -134,10 +118,12 @@ export function ListaPage() {
               type="button"
               onClick={() => {
                 setFiltroZona(zona)
+                setFiltroLocal('onibus')
+                setFiltroTipo('todos')
                 setPagina(1)
               }}
-              aria-pressed={filtroZona === zona}
-              className={`chip-brand ${filtroZona === zona ? 'chip-brand-ativo' : ''}`}
+              aria-pressed={filtroLocal === 'onibus' && filtroZona === zona}
+              className={`chip-brand ${filtroLocal === 'onibus' && filtroZona === zona ? 'chip-brand-ativo' : ''}`}
             >
               <i
                 className="block h-2.5 w-2.5 rounded-full"
@@ -146,6 +132,24 @@ export function ListaPage() {
               {ZONA_LABELS[zona]}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => {
+              setFiltroZona('todas')
+              setFiltroLocal('parada')
+              setFiltroTipo('todos')
+              setFiltroLinha('')
+              setPagina(1)
+            }}
+            aria-pressed={filtroLocal === 'parada'}
+            className={`chip-brand ${filtroLocal === 'parada' ? 'chip-brand-ativo' : ''}`}
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={filtroLocal === 'parada' ? "#7fb0ff" : "#2563eb"} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="5" y="2.5" width="14" height="10" rx="1.5" />
+              <path d="M8 6.5h8M9 9.5h.01M15 9.5h.01M12 12.5V21.5M8.5 21.5h7" />
+            </svg>
+            Paradas
+          </button>
         </div>
 
         <div className="flex gap-2">
