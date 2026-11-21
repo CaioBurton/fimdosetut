@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { usePerfilUsuario } from '../../hooks/usePerfilUsuario'
 import { supabase } from '../../lib/supabaseClient'
-import { TIPO_LABELS, type Linha, type TipoProblema } from '../../types'
+import { TIPO_LABELS, TIPOS_ONIBUS, type Linha, type TipoProblema } from '../../types'
 
 // Vive só em memória: mantém o card fechado ao navegar pelo app, mas ele volta ao atualizar a página.
 let ocultaNaSessao = false
@@ -25,7 +25,7 @@ function BotaoFecharCard({ onClick }: { onClick: () => void }) {
 
 // "Outro" fica sempre por último.
 const TIPOS: TipoProblema[] = [
-  ...(Object.keys(TIPO_LABELS) as TipoProblema[]).filter((t) => t !== 'outro'),
+  ...TIPOS_ONIBUS.filter((t) => t !== 'outro'),
   'outro',
 ]
 
